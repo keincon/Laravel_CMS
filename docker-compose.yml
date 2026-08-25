@@ -1,0 +1,55 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-cms-app
+    ports:
+      # Host port 0 = Docker assigns a random free port
+      - "0:8000"
+    environment:
+      APP_NAME: "Laravel CMS"
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost
+      CMS_NAME: "Laravel CMS"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: cms
+      DB_USERNAME: cms
+      DB_PASSWORD: cms_secret
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cms
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: laravel-cms-db
+    environment:
+      POSTGRES_DB: cms
+      POSTGRES_USER: cms
+      POSTGRES_PASSWORD: cms_secret
+    volumes:
+      - cms_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cms -d cms"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    networks:
+      - cms
+
+networks:
+  cms:
+    driver: bridge
+
+volumes:
+  cms_pgdata:
