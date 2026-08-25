@@ -3,10 +3,13 @@
     'post' => null,
     'context' => 'page',
     'seoPath' => null,
+    'seoMeta' => null,
+    'dynamicConfig' => null,
+    'breadcrumbs' => [],
 ])
 
 @php
-    $content = $page ?? $post;
+    $content = $page ?? $post ?? $dynamicConfig;
     $layouts = app(\App\Services\LayoutResolverService::class);
     $header = $layouts->resolveHeader($content, $context);
     $footer = $layouts->resolveFooter($content, $context);
@@ -21,8 +24,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <x-seo :page="$page" :post="$post" :path="$seoPath" />
-    <x-ogp :page="$page" :post="$post" :path="$seoPath" />
+    <x-seo :page="$page" :post="$post" :path="$seoPath" :meta="$seoMeta" />
+    <x-ogp :page="$page" :post="$post" :path="$seoPath" :meta="$seoMeta" />
     <x-json-ld :page="$page" :post="$post" />
     @foreach ($ui->stylesheetUrls() as $href)
         <link rel="stylesheet" href="{{ $href }}">
@@ -57,6 +60,12 @@
         }
         .site-search input { border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent); border-radius: .5rem; padding: .4rem .7rem; background: var(--color-background); color: inherit; }
         .cta-btn { display: inline-flex; align-items: center; padding: .5rem 1rem; border-radius: .5rem; background: var(--color-primary); color: #fff !important; text-decoration: none; font-weight: 600; }
+        .post-grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+        .post-card { padding-bottom: 1rem; border-bottom: 1px solid color-mix(in srgb, var(--color-text) 12%, transparent); }
+        .post-card h2 { font-size: 1.2rem; margin: 0 0 .35rem; }
+        .breadcrumb { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; padding: 0; margin: 0 0 1.25rem; font-size: .9rem; opacity: .75; }
+        .breadcrumb li:not(:last-child)::after { content: "/"; margin-left: .35rem; opacity: .6; }
+        .badge-type { display: inline-block; font-size: .75rem; padding: .15rem .5rem; border-radius: .35rem; background: color-mix(in srgb, var(--color-primary) 14%, transparent); color: var(--color-primary); }
     </style>
     @stack('head')
 </head>
@@ -74,6 +83,9 @@
             @endif
 
             <div class="{{ in_array($sidebar, ['left', 'right'], true) ? '' : 'site-content' }}" style="{{ $sidebar === 'none' ? 'margin-inline:auto' : '' }}">
+                @if (! empty($breadcrumbs))
+                    <x-breadcrumb :items="$breadcrumbs" />
+                @endif
                 {{ $slot }}
             </div>
 

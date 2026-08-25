@@ -1,14 +1,30 @@
 @extends('layouts.admin')
 @section('title', $page->exists ? 'Edit Page' : 'New Page')
 @section('content')
-<h1 class="h3 mb-3">{{ $page->exists ? 'Edit Page' : 'New Page' }}</h1>
+<h1 class="h3 mb-3">{{ $page->exists ? 'Edit Static Page' : 'New Static Page' }}</h1>
+<p class="text-muted mb-3">
+    Type: <strong>Static Page</strong> — manually authored content.
+    @if (! empty($reservedSlugs))
+        Reserved system slugs: <code>{{ implode(', ', $reservedSlugs) }}</code>
+    @endif
+</p>
 <form method="POST" action="{{ $page->exists ? route('admin.pages.update', $page) : route('admin.pages.store') }}">
     @csrf
     @if ($page->exists) @method('PUT') @endif
     <div class="row g-4">
         <div class="col-lg-8">
             <div class="mb-3"><label class="form-label">Title</label><input name="title" class="form-control" value="{{ old('title', $page->title) }}" required></div>
-            <div class="mb-3"><label class="form-label">Slug</label><input name="slug" class="form-control" value="{{ old('slug', $page->slug) }}"></div>
+            <div class="mb-3"><label class="form-label">Slug</label><input name="slug" class="form-control" value="{{ old('slug', $page->slug) }}">@error('slug')<div class="text-danger small">{{ $message }}</div>@enderror</div>
+            <div class="mb-3">
+                <label class="form-label">Parent page</label>
+                <select name="parent_id" class="form-select">
+                    <option value="">— None —</option>
+                    @foreach (($parents ?? []) as $parent)
+                        <option value="{{ $parent->id }}" @selected(old('parent_id', $page->parent_id) == $parent->id)>{{ $parent->title }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="mb-3"><label class="form-label">Excerpt</label><textarea name="excerpt" class="form-control" rows="2">{{ old('excerpt', $page->excerpt) }}</textarea></div>
             <div class="mb-3"><label class="form-label">Content</label><textarea name="content" class="form-control" rows="12">{{ old('content', $page->content) }}</textarea></div>
             <x-admin.seo-fields :model="$page" :preview-url="$page->slug ? url('/'.$page->slug) : url('/')" />
         </div>

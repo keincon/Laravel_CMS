@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Api\V1\AuthorResource;
 use App\Http\Resources\Api\V1\CategoryResource;
 use App\Http\Resources\Api\V1\PageResource;
 use App\Http\Resources\Api\V1\PostResource;
@@ -13,6 +14,7 @@ use App\Models\Menu;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Tag;
+use App\Models\User;
 use App\Services\ThemeService;
 use Illuminate\Http\Request;
 
@@ -91,6 +93,23 @@ class PublicApiController extends Controller
     public function showTag(string $slug)
     {
         return new TagResource(Tag::query()->where('slug', $slug)->firstOrFail());
+    }
+
+    public function authors(Request $request)
+    {
+        $authors = User::query()
+            ->whereHas('posts', fn ($q) => $q->published())
+            ->orderBy('name')
+            ->paginate($this->perPage($request));
+
+        return AuthorResource::collection($authors);
+    }
+
+    public function showAuthor(string $username)
+    {
+        $author = User::query()->where('username', $username)->firstOrFail();
+
+        return new AuthorResource($author);
     }
 
     public function menus()

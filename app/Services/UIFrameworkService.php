@@ -64,6 +64,7 @@ class UIFrameworkService
                 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
             ],
             default => [
+                // Prebuilt utility CSS (v2). Prefer blue/cyan/emerald tokens that exist here — not sky-*.
                 'https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css',
             ],
         };
@@ -126,28 +127,28 @@ class UIFrameworkService
         }
 
         return [
-            'btn_primary' => 'inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-sky-600 text-white font-medium hover:bg-sky-700 transition focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2',
-            'btn_secondary' => 'inline-flex items-center justify-center px-5 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2',
-            'btn_success' => 'inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-emerald-600 text-white font-medium hover:bg-emerald-700 transition focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2',
+            'btn_primary' => 'cms-btn cms-btn-primary inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 no-underline',
+            'btn_secondary' => 'cms-btn cms-btn-secondary inline-flex items-center justify-center px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 no-underline',
+            'btn_success' => 'cms-btn cms-btn-success inline-flex items-center justify-center px-5 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 no-underline',
             'btn_block' => 'w-full',
-            'input' => 'block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 shadow-sm focus:border-sky-500 focus:ring-sky-500',
-            'label' => 'block text-sm font-medium text-slate-700 mb-1.5',
-            'select' => 'block w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 shadow-sm focus:border-sky-500 focus:ring-sky-500',
-            'card' => 'bg-white rounded-2xl shadow-lg border border-slate-100',
+            'input' => 'block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+            'label' => 'block text-sm font-medium text-gray-700 mb-1.5',
+            'select' => 'block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500',
+            'card' => 'bg-white rounded-2xl shadow-lg border border-gray-100',
             'card_body' => 'p-6 sm:p-10',
-            'alert_success' => 'rounded-lg bg-emerald-50 text-emerald-800 px-4 py-3 border border-emerald-200',
+            'alert_success' => 'rounded-lg bg-green-50 text-green-800 px-4 py-3 border border-green-200',
             'alert_danger' => 'rounded-lg bg-red-50 text-red-800 px-4 py-3 border border-red-200',
-            'alert_info' => 'rounded-lg bg-sky-50 text-sky-800 px-4 py-3 border border-sky-200',
-            'text_muted' => 'text-slate-500',
-            'heading' => 'text-2xl sm:text-3xl font-semibold text-slate-900 tracking-tight',
-            'subheading' => 'text-slate-500 mt-2 mb-6',
-            'step_active' => 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-sky-600 text-white text-xs font-semibold',
-            'step_done' => 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-semibold',
-            'step_pending' => 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-200 text-slate-600 text-xs font-semibold',
-            'check_ok' => 'text-emerald-600',
+            'alert_info' => 'rounded-lg bg-blue-50 text-blue-800 px-4 py-3 border border-blue-200',
+            'text_muted' => 'text-gray-500',
+            'heading' => 'text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight',
+            'subheading' => 'text-gray-500 mt-2 mb-6',
+            'step_active' => 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-semibold',
+            'step_done' => 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-500 text-white text-xs font-semibold',
+            'step_pending' => 'inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-600 text-xs font-semibold',
+            'check_ok' => 'text-green-600',
             'check_fail' => 'text-red-600',
-            'framework_card' => 'rounded-xl border-2 border-slate-200 p-6 text-center hover:border-sky-300 transition cursor-pointer h-full',
-            'framework_card_selected' => 'rounded-xl border-2 border-sky-600 bg-sky-50 p-6 text-center h-full',
+            'framework_card' => 'rounded-xl border-2 border-gray-200 p-6 text-center hover:border-blue-300 transition cursor-pointer h-full',
+            'framework_card_selected' => 'rounded-xl border-2 border-blue-600 bg-blue-50 p-6 text-center h-full',
         ];
     }
 

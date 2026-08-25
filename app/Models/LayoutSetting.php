@@ -44,6 +44,13 @@ class LayoutSetting extends Model
 
     public static function current(): self
     {
+        $cached = Cache::get('cms.layout_settings');
+        if ($cached instanceof self) {
+            return $cached;
+        }
+
+        Cache::forget('cms.layout_settings');
+
         return Cache::remember('cms.layout_settings', 3600, function () {
             return static::query()->with(['defaultHeader', 'defaultFooter'])->first()
                 ?? static::query()->create([]);

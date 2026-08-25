@@ -17,9 +17,7 @@
         @break
 
     @case('search')
-        <form class="site-search" action="{{ url('/blog') }}" method="GET" role="search">
-            <input type="search" name="search" placeholder="Search…" aria-label="Search">
-        </form>
+        <x-search-form />
         @break
 
     @case('button')

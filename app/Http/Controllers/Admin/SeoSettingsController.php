@@ -21,6 +21,29 @@ class SeoSettingsController extends Controller
         ]);
     }
 
+    public function editTemplates(SeoService $seo): View
+    {
+        return view('admin.settings.seo-templates', [
+            'templates' => $seo->allTemplates(),
+        ]);
+    }
+
+    public function updateTemplates(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'templates' => ['required', 'array'],
+            'templates.*.title' => ['nullable', 'string', 'max:255'],
+            'templates.*.description' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $settings = SeoSetting::current();
+        $settings->seo_templates = $data['templates'];
+        $settings->save();
+        SeoSetting::forgetCache();
+
+        return back()->with('success', 'SEO templates saved.');
+    }
+
     public function update(Request $request): RedirectResponse
     {
         $data = $request->validate([

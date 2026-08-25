@@ -42,6 +42,13 @@ class ThemeSetting extends Model
 
     public static function current(): self
     {
+        $cached = Cache::get('theme_settings.current');
+        if ($cached instanceof self) {
+            return $cached;
+        }
+
+        Cache::forget('theme_settings.current');
+
         return Cache::remember('theme_settings.current', 3600, function () {
             return static::query()->first() ?? static::query()->create(static::defaults());
         });

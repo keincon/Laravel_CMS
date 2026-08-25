@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CmsSetting;
+use App\Models\DynamicPageSetting;
 use App\Models\Media;
 use App\Models\Page;
 use App\Models\Post;
@@ -60,8 +61,14 @@ class SeoService
         $contentTitle = $content?->title ?? null;
         $contentUrl = $this->contentUrl($content, $path);
 
+        $templateType = $content instanceof Post ? 'post' : ($content instanceof Page ? 'page' : null);
+        $templated = $templateType
+            ? $this->applyContentTemplates($templateType, $content, $siteName)
+            : ['title' => null, 'description' => null];
+
         $title = $this->firstFilled(
             $content?->seo_title ?? null,
+            $templated['title'],
             $contentTitle,
             $global->seo_title,
             $siteName
@@ -69,6 +76,7 @@ class SeoService
 
         $description = $this->firstFilled(
             $content?->seo_description ?? null,
+            $templated['description'],
             $content?->excerpt ?? null,
             $this->excerptFromContent($content?->content ?? null),
             $global->meta_description,
@@ -123,22 +131,209 @@ class SeoService
 
         $twitterCard = $global->twitter_card ?: 'summary_large_image';
 
+        return $this->packMeta(
+            title: $title,
+            description: $description,
+            canonical: $canonical,
+            robots: $robots,
+            seoImage: $seoImage,
+            ogTitle: $ogTitle,
+            ogDescription: $ogDescription,
+            ogType: $ogType,
+            ogImage: $ogImage,
+            siteName: $siteName,
+            twitterCard: $twitterCard,
+            keywords: $global->keywords,
+            ogSiteName: $global->og_site_name ?: $siteName,
+            ogLocale: $global->og_locale ?: 'en_US',
+        );
+    }
+
+    /**
+     * Resolve SEO/OGP for a dynamic page type using templates + optional content model.
+     *
+     * @param  array<string, string>  $variables
+     * @return array<string, mixed>
+     */
+    public function resolveDynamic(string $type, array $variables = [], ?string $path = null, ?Model $content = null): array
+    {
+        if ($content instanceof Post || $content instanceof Page) {
+            $base = $this->resolve($content, $path);
+            // Prefer explicit content SEO when present; otherwise fill from templates.
+            if (! empty($content->seo_title) || ! empty($content->seo_description)) {
+                return $base;
+            }
+        }
+
+        $global = $this->settings();
+        $siteName = CmsSetting::getValue('site_name', config('cms.name', config('app.name')));
+        $variables = array_merge([
+            'site_name' => $siteName,
+            'post_title' => '',
+            'post_excerpt' => '',
+            'page_title' => '',
+            'page_excerpt' => '',
+            'category_name' => '',
+            'tag_name' => '',
+            'author_name' => '',
+            'search_query' => '',
+            'archive_label' => '',
+        ], $variables);
+
+        $dynamic = DynamicPageSetting::forType($type);
+        $templates = $this->templatesFor($type);
+
+        $titleTemplate = $this->firstFilled(
+            $dynamic?->seo_title_template,
+            $templates['title'] ?? null,
+            '{page_title} — {site_name}'
+        );
+        $descTemplate = $this->firstFilled(
+            $dynamic?->seo_description_template,
+            $templates['description'] ?? null,
+            ''
+        );
+
+        $title = $this->renderTemplate((string) $titleTemplate, $variables) ?: $siteName;
+        $description = $this->renderTemplate((string) $descTemplate, $variables)
+            ?: ($global->meta_description ?: CmsSetting::getValue('site_description', ''));
+
+        $canonical = $this->contentUrl(null, $path) ?: $this->siteUrl();
+        $robots = $this->firstFilled(
+            $dynamic?->seo_robots,
+            $type === 'search' ? 'noindex, follow' : null,
+            $type === '404' ? 'noindex, follow' : null,
+            $global->robots,
+            'index, follow'
+        );
+
+        $seoImage = $this->mediaUrl($content?->seoImage ?? null)
+            ?: $this->mediaUrl($content?->featuredImage ?? null)
+            ?: $this->mediaUrl($global->defaultImage)
+            ?: $global->organization_logo_url;
+
+        $ogTitle = $title;
+        $ogDescription = $description;
+        $ogImage = $this->mediaUrl($content?->ogImage ?? null)
+            ?: $this->mediaUrl($content?->featuredImage ?? null)
+            ?: $this->mediaUrl($global->ogImage)
+            ?: CmsSetting::getValue('og_image_url')
+            ?: $seoImage;
+
+        return $this->packMeta(
+            title: $title,
+            description: $description,
+            canonical: $canonical,
+            robots: $robots,
+            seoImage: $seoImage,
+            ogTitle: $ogTitle,
+            ogDescription: $ogDescription,
+            ogType: $content instanceof Post ? 'article' : ($global->og_type ?: 'website'),
+            ogImage: $ogImage,
+            siteName: $siteName,
+            twitterCard: $global->twitter_card ?: 'summary_large_image',
+            keywords: $global->keywords,
+            ogSiteName: $global->og_site_name ?: $siteName,
+            ogLocale: $global->og_locale ?: 'en_US',
+        );
+    }
+
+    /**
+     * @return array<string, array{title?: string, description?: string}>
+     */
+    public function allTemplates(): array
+    {
+        $defaults = config('cms.seo_templates', []);
+        $stored = $this->settings()->seo_templates ?? [];
+
+        $merged = [];
+        foreach ($defaults as $key => $def) {
+            $merged[$key] = [
+                'title' => $stored[$key]['title'] ?? $def['title'] ?? '',
+                'description' => $stored[$key]['description'] ?? $def['description'] ?? '',
+            ];
+        }
+
+        return $merged;
+    }
+
+    /**
+     * @return array{title?: string, description?: string}
+     */
+    public function templatesFor(string $type): array
+    {
+        return $this->allTemplates()[$type] ?? [];
+    }
+
+    /**
+     * @param  array<string, string>  $variables
+     */
+    public function renderTemplate(string $template, array $variables): string
+    {
+        $replacements = [];
+        foreach ($variables as $key => $value) {
+            $replacements['{'.$key.'}'] = (string) $value;
+        }
+
+        return trim(strtr($template, $replacements));
+    }
+
+    /**
+     * @return array{title: ?string, description: ?string}
+     */
+    protected function applyContentTemplates(string $type, Model $content, string $siteName): array
+    {
+        $templates = $this->templatesFor($type);
+        $vars = [
+            'site_name' => $siteName,
+            'post_title' => $content->title ?? '',
+            'page_title' => $content->title ?? '',
+            'post_excerpt' => $content->excerpt ?? $this->excerptFromContent($content->content ?? null) ?? '',
+            'page_excerpt' => $content->excerpt ?? $this->excerptFromContent($content->content ?? null) ?? '',
+            'author_name' => $content->author?->name ?? '',
+        ];
+
         return [
-            'title' => $title,
+            'title' => isset($templates['title']) ? $this->renderTemplate($templates['title'], $vars) : null,
+            'description' => isset($templates['description']) ? $this->renderTemplate($templates['description'], $vars) : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function packMeta(
+        ?string $title,
+        ?string $description,
+        ?string $canonical,
+        ?string $robots,
+        ?string $seoImage,
+        ?string $ogTitle,
+        ?string $ogDescription,
+        ?string $ogType,
+        ?string $ogImage,
+        string $siteName,
+        string $twitterCard,
+        ?string $keywords,
+        string $ogSiteName,
+        string $ogLocale,
+    ): array {
+        return [
+            'title' => $title ?: $siteName,
             'description' => Str::limit(strip_tags((string) $description), 300, ''),
-            'keywords' => $global->keywords,
-            'canonical' => $canonical,
-            'robots' => $robots,
+            'keywords' => $keywords,
+            'canonical' => $canonical ?: $this->siteUrl(),
+            'robots' => $robots ?: 'index, follow',
             'image' => $seoImage,
-            'og_title' => $ogTitle,
+            'og_title' => $ogTitle ?: ($title ?: $siteName),
             'og_description' => Str::limit(strip_tags((string) $ogDescription), 300, ''),
-            'og_type' => $ogType,
+            'og_type' => $ogType ?: 'website',
             'og_image' => $ogImage,
-            'og_url' => $canonical,
-            'og_site_name' => $global->og_site_name ?: $siteName,
-            'og_locale' => $global->og_locale ?: 'en_US',
+            'og_url' => $canonical ?: $this->siteUrl(),
+            'og_site_name' => $ogSiteName,
+            'og_locale' => $ogLocale,
             'twitter_card' => $twitterCard,
-            'twitter_title' => $ogTitle,
+            'twitter_title' => $ogTitle ?: ($title ?: $siteName),
             'twitter_description' => Str::limit(strip_tags((string) $ogDescription), 300, ''),
             'twitter_image' => $ogImage,
         ];

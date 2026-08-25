@@ -13,6 +13,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('/categories/{slug}', [PublicApiController::class, 'showCategory'])->name('categories.show');
     Route::get('/tags', [PublicApiController::class, 'tags'])->name('tags.index');
     Route::get('/tags/{slug}', [PublicApiController::class, 'showTag'])->name('tags.show');
+    Route::get('/authors', [PublicApiController::class, 'authors'])->name('authors.index');
+    Route::get('/authors/{username}', [PublicApiController::class, 'showAuthor'])->name('authors.show');
     Route::get('/menus', [PublicApiController::class, 'menus'])->name('menus.index');
     Route::get('/settings', [PublicApiController::class, 'settings'])->name('settings');
     Route::get('/theme', [PublicApiController::class, 'theme'])->name('theme');

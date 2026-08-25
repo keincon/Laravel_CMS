@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Models\Page;
 use App\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -15,8 +16,13 @@ class PageResource extends JsonResource
 
         return [
             'id' => $this->id,
+            'page_kind' => Page::KIND,
+            'type' => 'static',
             'title' => $this->title,
             'slug' => $this->slug,
+            'parent_id' => $this->parent_id,
+            'excerpt' => $this->excerpt,
+            'template' => $this->template,
             'content' => $this->when($request->routeIs('api.v1.pages.show') || $request->routeIs('api.v1.admin.pages.*'), $this->content),
             'status' => $this->when($request->user(), $this->status),
             'published_at' => optional($this->published_at)?->toIso8601String(),

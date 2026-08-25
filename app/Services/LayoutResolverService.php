@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\CmsSetting;
+use App\Models\DynamicPageSetting;
 use App\Models\Footer;
 use App\Models\Header;
 use App\Models\LayoutSetting;
@@ -166,6 +167,10 @@ class LayoutResolverService
 
     public function resolveSidebar(?Model $content = null, string $context = 'page'): string
     {
+        if ($content instanceof DynamicPageSetting && $content->sidebar_position) {
+            return (string) $content->sidebar_position;
+        }
+
         if ($content && $content->getAttribute('sidebar_position')) {
             return (string) $content->getAttribute('sidebar_position');
         }
@@ -183,6 +188,10 @@ class LayoutResolverService
 
         if ($context === 'page' && $layout->page_layout === 'full_width') {
             return 'none';
+        }
+
+        if (in_array($context, ['blog', 'category', 'tag', 'author', 'search', 'archive'], true)) {
+            return $layout->sidebar_position ?: 'right';
         }
 
         return $layout->sidebar_position ?: 'none';

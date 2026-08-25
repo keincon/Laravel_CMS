@@ -7,12 +7,18 @@ use App\Http\Resources\Api\V1\PageResource;
 use App\Http\Resources\Api\V1\PostResource;
 use App\Models\Page;
 use App\Models\Post;
+use App\Services\DynamicPageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class AdminContentController extends Controller
 {
+    public function __construct(
+        protected DynamicPageService $dynamicPages,
+    ) {}
+
     public function storePost(Request $request)
     {
         $data = $this->validatedPost($request);
@@ -58,7 +64,7 @@ class AdminContentController extends Controller
     {
         $page->delete();
 
-        return response()->json(['message' => 'Page deleted.']);
+        return response()->json(['message' => 'Static page deleted.']);
     }
 
     protected function validatedPost(Request $request, ?Post $post = null): array
@@ -87,10 +93,20 @@ class AdminContentController extends Controller
 
     protected function validatedPage(Request $request, ?Page $page = null): array
     {
+        $reserved = $this->dynamicPages->reservedSlugs();
+
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('pages', 'slug')->ignore($page?->id)],
+            'slug' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('pages', 'slug')->ignore($page?->id)->whereNull('deleted_at'),
+                Rule::notIn($reserved),
+            ],
+            'parent_id' => ['nullable', 'exists:pages,id'],
             'content' => ['nullable', 'string'],
+            'excerpt' => ['nullable', 'string'],
             'status' => ['nullable', Rule::in(['draft', 'publish', 'private', 'trash'])],
             'published_at' => ['nullable', 'date'],
             'seo_title' => ['nullable', 'string', 'max:255'],
@@ -100,10 +116,18 @@ class AdminContentController extends Controller
             'og_title' => ['nullable', 'string', 'max:255'],
             'og_description' => ['nullable', 'string'],
             'og_type' => ['nullable', 'string', 'max:50'],
+        ], [
+            'slug.not_in' => 'This slug is reserved for a Dynamic / system route.',
         ]);
 
         $data['slug'] = $data['slug'] ?? Str::slug($data['title']);
         $data['status'] = $data['status'] ?? 'draft';
+
+        if ($this->dynamicPages->isReservedSlug($data['slug'])) {
+            throw ValidationException::withMessages([
+                'slug' => 'This slug is reserved for a Dynamic / system route.',
+            ]);
+        }
 
         return $data;
     }

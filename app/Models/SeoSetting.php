@@ -24,6 +24,7 @@ class SeoSetting extends Model
         'twitter_card',
         'sitemap_enabled',
         'permalink_structure',
+        'seo_templates',
         'organization_name',
         'organization_logo_url',
     ];
@@ -32,6 +33,7 @@ class SeoSetting extends Model
     {
         return [
             'sitemap_enabled' => 'boolean',
+            'seo_templates' => 'array',
         ];
     }
 
@@ -47,6 +49,13 @@ class SeoSetting extends Model
 
     public static function current(): self
     {
+        $cached = Cache::get('seo_settings.current');
+        if ($cached instanceof self) {
+            return $cached;
+        }
+
+        Cache::forget('seo_settings.current');
+
         return Cache::remember('seo_settings.current', 3600, function () {
             return static::query()->first() ?? static::query()->create([]);
         });

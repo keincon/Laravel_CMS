@@ -67,6 +67,7 @@ class LayoutBootstrapService
         }
 
         $this->layouts->clearCaches();
+        app(DynamicPageService::class)->ensureDefaults();
     }
 
     public function saveHeaderDraft(Header $header, array $structure, ?string $note = null): Header

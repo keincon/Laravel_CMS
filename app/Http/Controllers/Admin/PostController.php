@@ -86,9 +86,7 @@ class PostController extends Controller
 
     public function preview(Post $post): View
     {
-        $seoPath = app(\App\Services\PermalinkService::class)->postPath($post);
-
-        return view('site.post', compact('post', 'seoPath'));
+        return app(\App\Services\PageRendererService::class)->renderPost($post->slug);
     }
 
     protected function validated(Request $request, ?Post $post = null): array

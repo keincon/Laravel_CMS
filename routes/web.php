@@ -2,12 +2,15 @@
 
 use App\Http\Controllers\Admin\ApiDocsController;
 use App\Http\Controllers\Admin\ApiTokenController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\DynamicPageController;
 use App\Http\Controllers\Admin\FooterController;
 use App\Http\Controllers\Admin\HeaderController;
 use App\Http\Controllers\Admin\LayoutSettingsController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\SeoSettingsController;
+use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\ThemeSettingsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Setup\SetupController;
@@ -58,6 +61,20 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
     Route::get('/posts/{post}/preview', [PostController::class, 'preview'])->name('posts.preview');
 
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+    Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+    Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+    Route::get('/tags', [TagController::class, 'index'])->name('tags.index');
+    Route::get('/tags/create', [TagController::class, 'create'])->name('tags.create');
+    Route::post('/tags', [TagController::class, 'store'])->name('tags.store');
+    Route::get('/tags/{tag}/edit', [TagController::class, 'edit'])->name('tags.edit');
+    Route::put('/tags/{tag}', [TagController::class, 'update'])->name('tags.update');
+    Route::delete('/tags/{tag}', [TagController::class, 'destroy'])->name('tags.destroy');
+
     Route::get('/headers', [HeaderController::class, 'index'])->name('headers.index');
     Route::post('/headers', [HeaderController::class, 'store'])->name('headers.store');
     Route::get('/headers/{header}/edit', [HeaderController::class, 'edit'])->name('headers.edit');
@@ -72,6 +89,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/settings/seo', [SeoSettingsController::class, 'edit'])->name('settings.seo');
     Route::put('/settings/seo', [SeoSettingsController::class, 'update'])->name('settings.seo.update');
+    Route::get('/settings/seo/templates', [SeoSettingsController::class, 'editTemplates'])->name('settings.seo.templates');
+    Route::put('/settings/seo/templates', [SeoSettingsController::class, 'updateTemplates'])->name('settings.seo.templates.update');
     Route::get('/settings/ogp', [SeoSettingsController::class, 'editOgp'])->name('settings.ogp');
     Route::put('/settings/ogp', [SeoSettingsController::class, 'updateOgp'])->name('settings.ogp.update');
     Route::get('/settings/permalinks', [SeoSettingsController::class, 'editPermalinks'])->name('settings.permalinks');
@@ -87,6 +106,9 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('/appearance/colors/reset', [ThemeSettingsController::class, 'reset'])->name('appearance.colors.reset');
     Route::get('/appearance/mode', [ThemeSettingsController::class, 'mode'])->name('appearance.mode');
     Route::put('/appearance/mode', [ThemeSettingsController::class, 'updateMode'])->name('appearance.mode.update');
+    Route::get('/appearance/dynamic-pages', [DynamicPageController::class, 'index'])->name('appearance.dynamic-pages.index');
+    Route::get('/appearance/dynamic-pages/{type}/edit', [DynamicPageController::class, 'edit'])->name('appearance.dynamic-pages.edit');
+    Route::put('/appearance/dynamic-pages/{type}', [DynamicPageController::class, 'update'])->name('appearance.dynamic-pages.update');
 
     Route::get('/users/tokens', [ApiTokenController::class, 'index'])->name('users.tokens');
     Route::post('/users/tokens', [ApiTokenController::class, 'store'])->name('users.tokens.store');
@@ -95,6 +117,12 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
 Route::get('/', [SiteController::class, 'home'])->name('home');
 Route::get('/blog', [SiteController::class, 'blog'])->name('blog');
+Route::get('/search', [SiteController::class, 'search'])->name('search');
+Route::get('/archive/{year?}/{month?}/{day?}', [SiteController::class, 'archive'])
+    ->whereNumber('year')
+    ->whereNumber('month')
+    ->whereNumber('day')
+    ->name('archive');
 Route::get('/category/{slug}', [SiteController::class, 'category'])->name('category.show');
 Route::get('/tag/{slug}', [SiteController::class, 'tag'])->name('tag.show');
 Route::get('/author/{username}', [SiteController::class, 'author'])->name('author.show');
@@ -102,5 +130,10 @@ Route::get('/author/{username}', [SiteController::class, 'author'])->name('autho
 Route::get('/posts/{slug}', [SiteController::class, 'post'])->name('posts.show.posts');
 Route::get('/blog/{slug}', [SiteController::class, 'post'])->name('posts.show.blog');
 
+$reserved = collect(config('cms.reserved_slugs', [
+    'admin', 'api', 'setup', 'login', 'logout', 'register', 'blog', 'posts',
+    'category', 'tag', 'author', 'search', 'archive',
+]))->map(fn ($slug) => preg_quote((string) $slug, '/'))->implode('|');
+
 Route::get('/{slug}', [SiteController::class, 'page'])->name('pages.show')
-    ->where('slug', '^(?!admin|setup|api|login|blog|posts|category|tag|author).*$');
+    ->where('slug', $reserved !== '' ? "^(?!{$reserved}).*$" : '.*');

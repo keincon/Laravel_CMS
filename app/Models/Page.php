@@ -6,15 +6,25 @@ use App\Support\HasSeoFields;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Page extends Model
 {
     use HasSeoFields;
+    use SoftDeletes;
+
+    /**
+     * Static pages only — never use this model for Blog/Category/etc. systems.
+     */
+    public const KIND = 'static';
 
     protected $fillable = [
+        'parent_id',
         'title',
         'slug',
         'content',
+        'excerpt',
         'status',
         'author_id',
         'featured_image_id',
@@ -43,9 +53,29 @@ class Page extends Model
         ];
     }
 
+    public function isStatic(): bool
+    {
+        return true;
+    }
+
+    public function pageKind(): string
+    {
+        return self::KIND;
+    }
+
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('title');
     }
 
     public function header(): BelongsTo
@@ -69,5 +99,10 @@ class Page extends Model
             ->where(function (Builder $q) {
                 $q->whereNull('published_at')->orWhere('published_at', '<=', now());
             });
+    }
+
+    public function scopeRoots(Builder $query): Builder
+    {
+        return $query->whereNull('parent_id');
     }
 }

@@ -126,7 +126,8 @@ class InstallationService
 
                 $this->createDefaultSettings($config, $pages);
                 $this->createSeoAndThemeSettings($config);
-                app(LayoutBootstrapService::class)->ensureDefaults($pages['home'] ?? null, $pages['blog'] ?? null);
+                app(LayoutBootstrapService::class)->ensureDefaults($pages['home'] ?? null, null);
+                app(DynamicPageService::class)->ensureDefaults();
                 $steps[] = $this->step('settings', 'Creating default settings', 'done');
 
                 $this->uiFramework->set($config['appearance']['ui_framework'] ?? 'tailwind');
@@ -365,11 +366,12 @@ class InstallationService
      */
     protected function createDefaultPages(User $author): array
     {
+        // Static pages only — never seed reserved dynamic slugs like "blog".
         $definitions = [
             'home' => ['title' => 'Home', 'content' => '<p>Welcome to your new website.</p>'],
-            'blog' => ['title' => 'Blog', 'content' => '<p>Blog posts will appear here.</p>'],
             'about' => ['title' => 'About', 'content' => '<p>About us.</p>'],
             'contact' => ['title' => 'Contact', 'content' => '<p>Get in touch.</p>'],
+            'privacy-policy' => ['title' => 'Privacy Policy', 'content' => '<p>Your privacy policy goes here.</p>'],
         ];
 
         $pages = [];
@@ -399,18 +401,20 @@ class InstallationService
             'location' => 'primary',
         ]);
 
-        $order = 0;
-        foreach (['home', 'about', 'blog', 'contact'] as $slug) {
-            if (! isset($pages[$slug])) {
-                continue;
-            }
+        $items = [
+            ['title' => 'Home', 'url' => '/', 'page_id' => $pages['home']->id ?? null],
+            ['title' => 'About', 'url' => '/about', 'page_id' => $pages['about']->id ?? null],
+            ['title' => 'Blog', 'url' => '/blog', 'page_id' => null], // Dynamic Blog Archive
+            ['title' => 'Contact', 'url' => '/contact', 'page_id' => $pages['contact']->id ?? null],
+        ];
 
+        foreach ($items as $order => $item) {
             MenuItem::query()->create([
                 'menu_id' => $menu->id,
-                'title' => $pages[$slug]->title,
-                'page_id' => $pages[$slug]->id,
-                'url' => '/'.$pages[$slug]->slug,
-                'sort_order' => $order++,
+                'title' => $item['title'],
+                'page_id' => $item['page_id'],
+                'url' => $item['url'],
+                'sort_order' => $order,
             ]);
         }
     }
@@ -459,7 +463,7 @@ class InstallationService
             'date_format' => [$website['date_format'], 'string'],
             'ui_framework' => [$config['appearance']['ui_framework'] ?? 'tailwind', 'string'],
             'homepage' => [(string) ($pages['home']->id ?? ''), 'string'],
-            'posts_page' => [(string) ($pages['blog']->id ?? ''), 'string'],
+            'posts_page' => ['', 'string'],
         ];
 
         foreach ($settings as $key => [$value, $type]) {

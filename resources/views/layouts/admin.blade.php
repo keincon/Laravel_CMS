@@ -30,16 +30,20 @@
         <div class="admin-brand">{{ config('cms.name') }}</div>
         <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
         <div class="small text-muted mt-3 mb-1 px-2">Content</div>
-        <a href="{{ route('admin.pages.index') }}" class="{{ request()->routeIs('admin.pages.*') ? 'active' : '' }}">Pages</a>
+        <a href="{{ route('admin.pages.index') }}" class="{{ request()->routeIs('admin.pages.*') ? 'active' : '' }}">Static Pages</a>
         <a href="{{ route('admin.posts.index') }}" class="{{ request()->routeIs('admin.posts.*') ? 'active' : '' }}">Posts</a>
+        <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">Categories</a>
+        <a href="{{ route('admin.tags.index') }}" class="{{ request()->routeIs('admin.tags.*') ? 'active' : '' }}">Tags</a>
         <div class="small text-muted mt-3 mb-1 px-2">Appearance</div>
         <a href="{{ route('admin.headers.index') }}" class="{{ request()->routeIs('admin.headers.*') ? 'active' : '' }}">Header</a>
         <a href="{{ route('admin.footers.index') }}" class="{{ request()->routeIs('admin.footers.*') ? 'active' : '' }}">Footer</a>
         <a href="{{ route('admin.appearance.layout') }}" class="{{ request()->routeIs('admin.appearance.layout') ? 'active' : '' }}">Master Layout</a>
+        <a href="{{ route('admin.appearance.dynamic-pages.index') }}" class="{{ request()->routeIs('admin.appearance.dynamic-pages.*') ? 'active' : '' }}">Dynamic Pages</a>
         <a href="{{ route('admin.appearance.colors') }}" class="{{ request()->routeIs('admin.appearance.colors') ? 'active' : '' }}">Theme Colors</a>
         <a href="{{ route('admin.appearance.mode') }}" class="{{ request()->routeIs('admin.appearance.mode') ? 'active' : '' }}">Color Mode</a>
         <div class="small text-muted mt-3 mb-1 px-2">Settings</div>
-        <a href="{{ route('admin.settings.seo') }}" class="{{ request()->routeIs('admin.settings.seo*') ? 'active' : '' }}">SEO</a>
+        <a href="{{ route('admin.settings.seo') }}" class="{{ request()->routeIs('admin.settings.seo') ? 'active' : '' }}">SEO</a>
+        <a href="{{ route('admin.settings.seo.templates') }}" class="{{ request()->routeIs('admin.settings.seo.templates*') ? 'active' : '' }}">SEO Templates</a>
         <a href="{{ route('admin.settings.ogp') }}" class="{{ request()->routeIs('admin.settings.ogp') ? 'active' : '' }}">Social / OGP</a>
         <a href="{{ route('admin.settings.permalinks') }}" class="{{ request()->routeIs('admin.settings.permalinks') ? 'active' : '' }}">Permalinks</a>
         <a href="{{ route('admin.settings.reading') }}" class="{{ request()->routeIs('admin.settings.reading*') ? 'active' : '' }}">Reading</a>
