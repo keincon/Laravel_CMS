@@ -1,0 +1,20 @@
+/* Harbor — deep navy + sand */
+body.theme-harbor {
+  font-family: "DM Sans", "Gill Sans", "Trebuchet MS", sans-serif;
+  color: #0F172A;
+  background-color: #F5F1EB;
+  background-image:
+    radial-gradient(ellipse 70% 45% at 0% 100%, rgba(30, 58, 95, 0.1), transparent 50%),
+    radial-gradient(ellipse 50% 35% at 100% 0%, rgba(212, 165, 116, 0.16), transparent 50%),
+    linear-gradient(180deg, #F5F1EB 0%, #EDE6DC 100%);
+  background-attachment: fixed;
+}
+body.theme-harbor h1,
+body.theme-harbor h2,
+body.theme-harbor h3 {
+  font-family: "DM Serif Display", "Georgia", "Times New Roman", serif;
+  font-weight: 400;
+  color: #1E3A5F;
+}
+body.theme-harbor a { color: #1E3A5F; }
+body.theme-harbor a:hover { color: #B45309; }

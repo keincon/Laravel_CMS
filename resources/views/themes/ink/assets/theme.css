@@ -1,0 +1,21 @@
+/* Ink — charcoal + coral accent */
+body.theme-ink {
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  color: #0C0A09;
+  background-color: #FAFAF9;
+  background-image:
+    linear-gradient(135deg, rgba(244, 63, 94, 0.06) 0%, transparent 40%),
+    linear-gradient(180deg, #FAFAF9 0%, #F5F5F4 100%),
+    repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(28, 25, 23, 0.03) 80px);
+  background-attachment: fixed;
+}
+body.theme-ink h1,
+body.theme-ink h2,
+body.theme-ink h3 {
+  font-family: "Playfair Display", "Didot", "Bodoni MT", serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #1C1917;
+}
+body.theme-ink a { color: #F43F5E; }
+body.theme-ink a:hover { color: #E11D48; }

@@ -8,24 +8,89 @@ services:
       # Host port 0 = Docker assigns a random free port
       - "0:8000"
     environment:
-      APP_NAME: "Laravel CMS"
+      APP_NAME: "LaravelPress"
       APP_ENV: local
       APP_DEBUG: "true"
       APP_URL: http://localhost
-      CMS_NAME: "Laravel CMS"
+      CMS_NAME: "LaravelPress"
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
       DB_DATABASE: cms
       DB_USERNAME: cms
       DB_PASSWORD: cms_secret
-      SESSION_DRIVER: file
-      CACHE_STORE: file
-      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_CLIENT: phpredis
     volumes:
       - .:/var/www/html
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cms
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-cms-queue
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=1", "--tries=3", "--timeout=90"]
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: cms
+      DB_USERNAME: cms
+      DB_PASSWORD: cms_secret
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_CLIENT: phpredis
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - cms
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel-cms-scheduler
+    command: ["php", "artisan", "schedule:work"]
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: cms
+      DB_USERNAME: cms
+      DB_PASSWORD: cms_secret
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_CLIENT: phpredis
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - cms
@@ -43,6 +108,17 @@ services:
       test: ["CMD-SHELL", "pg_isready -U cms -d cms"]
       interval: 3s
       timeout: 5s
+      retries: 20
+    networks:
+      - cms
+
+  redis:
+    image: redis:7-alpine
+    container_name: laravel-cms-redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
       retries: 20
     networks:
       - cms

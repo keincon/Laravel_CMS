@@ -11,7 +11,16 @@ class CmsSetting extends Model
         'key',
         'value',
         'type',
+        'group',
+        'autoload',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'autoload' => 'boolean',
+        ];
+    }
 
     public static function getValue(string $key, mixed $default = null): mixed
     {

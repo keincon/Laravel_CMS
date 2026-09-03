@@ -8,6 +8,10 @@
 >
     <span class="badge-type">Dynamic · Single Post</span>
     <article style="margin-top:.5rem">
+        @if ($post->featuredImage)
+            <img src="{{ $post->featuredImage->url() }}" alt="{{ $post->featuredImage->alt ?: $post->title }}"
+                 style="width:100%;max-height:420px;object-fit:cover;border-radius:.75rem;margin-bottom:1.25rem">
+        @endif
         <h1>{{ $post->title }}</h1>
         <p style="opacity:.7;font-size:.9rem">
             {{ optional($post->published_at)->toFormattedDateString() }}
@@ -15,8 +19,13 @@
                 · <a href="{{ url('/author/'.$post->author->username) }}">{{ $post->author->name }}</a>
             @endif
         </p>
-        <div>{!! $post->content !!}</div>
+        <div class="cms-content-html">{!! $post->content !!}</div>
+        @if ($post->custom_html)
+            <div class="cms-custom-html" style="margin-top:1.5rem">{!! $post->custom_html !!}</div>
+        @endif
     </article>
+
+    <x-comments :post="$post" :comments="$comments ?? collect()" />
 
     @if (($relatedPosts ?? collect())->isNotEmpty())
         <section style="margin-top:3rem">

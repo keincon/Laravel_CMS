@@ -14,7 +14,7 @@ class SystemRequirementsService
      *     php: array{passed: bool, current: string, required: string, label: string},
      *     extensions: list<array{name: string, passed: bool, label: string}>,
      *     permissions: list<array{path: string, passed: bool, label: string}>,
-     *     database: array{passed: bool, label: string, available: bool}
+     *     database: array{passed: bool, label: string, available: bool, drivers: array<string, array{available: bool, label: string}>}
      * }
      */
     public function check(): array
@@ -65,6 +65,7 @@ class SystemRequirementsService
         $labels = [
             'pdo' => 'PDO',
             'pdo_pgsql' => 'PDO PostgreSQL',
+            'pdo_mysql' => 'PDO MySQL',
             'mbstring' => 'Mbstring',
             'openssl' => 'OpenSSL',
             'tokenizer' => 'Tokenizer',
@@ -115,37 +116,113 @@ class SystemRequirementsService
     }
 
     /**
-     * @return array{passed: bool, label: string, available: bool}
+     * @return array{
+     *     passed: bool,
+     *     label: string,
+     *     available: bool,
+     *     drivers: array<string, array{available: bool, label: string, default_port: int, default_host: string}>
+     * }
      */
     public function checkDatabaseDriver(): array
     {
-        $available = extension_loaded('pdo_pgsql') && in_array('pgsql', PDO::getAvailableDrivers(), true);
+        $drivers = [];
+        $availableCount = 0;
+
+        foreach ($this->supportedDrivers() as $key => $meta) {
+            $available = $this->driverAvailable($key);
+            if ($available) {
+                $availableCount++;
+            }
+
+            $drivers[$key] = [
+                'available' => $available,
+                'label' => $meta['label'],
+                'default_port' => (int) $meta['default_port'],
+                'default_host' => (string) $meta['default_host'],
+            ];
+        }
+
+        $available = $availableCount > 0;
+        $labels = collect($drivers)
+            ->filter(fn (array $d) => $d['available'])
+            ->pluck('label')
+            ->values()
+            ->all();
 
         return [
             'passed' => $available,
             'available' => $available,
+            'drivers' => $drivers,
             'label' => $available
-                ? 'PostgreSQL available'
-                : 'PostgreSQL driver (pdo_pgsql) is not available',
+                ? 'Database drivers available: '.implode(', ', $labels)
+                : 'No database driver available (install pdo_pgsql and/or pdo_mysql)',
         ];
     }
 
     /**
-     * Test a PostgreSQL connection with the given credentials.
+     * @return array<string, array{label: string, extension: string, default_port: int, default_host: string}>
+     */
+    public function supportedDrivers(): array
+    {
+        return config('cms.database_drivers', []);
+    }
+
+    /**
+     * @return array<string, string> type => label (only installed drivers)
+     */
+    public function availableDriverOptions(): array
+    {
+        $options = [];
+
+        foreach ($this->supportedDrivers() as $key => $meta) {
+            if ($this->driverAvailable($key)) {
+                $options[$key] = $meta['label'];
+            }
+        }
+
+        return $options;
+    }
+
+    public function driverAvailable(string $type): bool
+    {
+        $meta = $this->supportedDrivers()[$type] ?? null;
+        if (! $meta) {
+            return false;
+        }
+
+        $extension = $meta['extension'];
+        $pdoDriver = $type === 'mysql' ? 'mysql' : $type;
+
+        return extension_loaded($extension) && in_array($pdoDriver, PDO::getAvailableDrivers(), true);
+    }
+
+    public function defaultPort(string $type): int
+    {
+        return (int) ($this->supportedDrivers()[$type]['default_port'] ?? 5432);
+    }
+
+    /**
+     * Test a database connection with the given credentials.
      * Never log the password.
      *
-     * @param  array{host: string, port: string|int, database: string, username: string, password?: string}  $config
+     * @param  array{type?: string, host: string, port: string|int, database: string, username: string, password?: string}  $config
      * @return array{success: bool, message: string}
      */
     public function testDatabaseConnection(array $config): array
     {
+        $type = $config['type'] ?? 'pgsql';
+
+        if (! $this->driverAvailable($type)) {
+            $label = $this->supportedDrivers()[$type]['label'] ?? $type;
+
+            return [
+                'success' => false,
+                'message' => "The {$label} PHP driver is not installed on this server.",
+            ];
+        }
+
         try {
-            $dsn = sprintf(
-                'pgsql:host=%s;port=%s;dbname=%s',
-                $config['host'],
-                $config['port'],
-                $config['database']
-            );
+            $dsn = $this->buildDsn($type, $config);
 
             $pdo = new PDO(
                 $dsn,
@@ -159,9 +236,11 @@ class SystemRequirementsService
 
             $pdo->query('SELECT 1');
 
+            $label = $this->supportedDrivers()[$type]['label'] ?? strtoupper($type);
+
             return [
                 'success' => true,
-                'message' => 'Database connection successful',
+                'message' => "{$label} connection successful",
             ];
         } catch (Throwable $e) {
             report($e);
@@ -176,10 +255,29 @@ class SystemRequirementsService
     /**
      * Apply temporary DB config for the current request (without writing .env yet).
      *
-     * @param  array{host: string, port: string|int, database: string, username: string, password?: string}  $config
+     * @param  array{type?: string, host: string, port: string|int, database: string, username: string, password?: string}  $config
      */
     public function configureRuntimeConnection(array $config): void
     {
+        $type = $config['type'] ?? 'pgsql';
+
+        if ($type === 'mysql') {
+            config([
+                'database.default' => 'mysql',
+                'database.connections.mysql.host' => $config['host'],
+                'database.connections.mysql.port' => $config['port'],
+                'database.connections.mysql.database' => $config['database'],
+                'database.connections.mysql.username' => $config['username'],
+                'database.connections.mysql.password' => $config['password'] ?? '',
+            ]);
+
+            DB::purge('mysql');
+            DB::setDefaultConnection('mysql');
+            DB::reconnect('mysql');
+
+            return;
+        }
+
         config([
             'database.default' => 'pgsql',
             'database.connections.pgsql.host' => $config['host'],
@@ -190,6 +288,29 @@ class SystemRequirementsService
         ]);
 
         DB::purge('pgsql');
+        DB::setDefaultConnection('pgsql');
         DB::reconnect('pgsql');
+    }
+
+    /**
+     * @param  array{host: string, port: string|int, database: string}  $config
+     */
+    protected function buildDsn(string $type, array $config): string
+    {
+        if ($type === 'mysql') {
+            return sprintf(
+                'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+                $config['host'],
+                $config['port'],
+                $config['database']
+            );
+        }
+
+        return sprintf(
+            'pgsql:host=%s;port=%s;dbname=%s',
+            $config['host'],
+            $config['port'],
+            $config['database']
+        );
     }
 }

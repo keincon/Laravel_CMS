@@ -26,6 +26,9 @@
                 @endforeach
 
                 @if (($row['id'] ?? '') === 'main')
+                    <div class="header-theme-toggle">
+                        <x-theme-toggle />
+                    </div>
                     <button type="button" class="mobile-toggle" @click="open = !open" :aria-expanded="open.toString()" aria-controls="mobile-nav" aria-label="Toggle menu">☰</button>
                 @endif
             </div>

@@ -1,0 +1,20 @@
+/* Paper — warm parchment editorial */
+body.theme-paper {
+  font-family: "Literata", "Charter", "Bitstream Charter", serif;
+  color: #292524;
+  background-color: #FFFBEB;
+  background-image:
+    radial-gradient(ellipse at 50% 0%, rgba(180, 83, 9, 0.08), transparent 55%),
+    repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(146, 64, 14, 0.05) 28px),
+    linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 100%);
+  background-attachment: fixed;
+}
+body.theme-paper h1,
+body.theme-paper h2,
+body.theme-paper h3 {
+  font-family: "Newsreader", "Palatino Linotype", "Book Antiqua", serif;
+  font-weight: 600;
+  color: #78350F;
+}
+body.theme-paper a { color: #B45309; }
+body.theme-paper a:hover { color: #92400E; }

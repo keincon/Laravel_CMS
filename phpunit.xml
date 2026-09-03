@@ -32,5 +32,9 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="CMS_LEGACY_RETIRED" value="false"/>
+        <env name="CMS_LEGACY_DUAL_WRITE" value="false"/>
+        <env name="CMS_LEGACY_ADMIN_UI" value="true"/>
+        <env name="CMS_LEGACY_PUBLIC_FALLBACK" value="true"/>
     </php>
 </phpunit>

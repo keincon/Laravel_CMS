@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ContentRevision;
 use App\Models\Footer;
 use App\Models\Header;
+use App\Models\Media;
 use App\Models\Page;
 use App\Services\DynamicPageService;
 use Illuminate\Http\RedirectResponse;
@@ -22,43 +23,63 @@ class PageController extends Controller
         protected DynamicPageService $dynamicPages,
     ) {}
 
-    public function index(): View
+    public function index(Request $request): View|RedirectResponse
     {
-        $roots = Page::query()
-            ->with(['children' => fn ($q) => $q->orderBy('title')])
-            ->roots()
-            ->orderBy('title')
-            ->get();
-
-        $ordered = collect();
-        foreach ($roots as $root) {
-            $ordered->push($root);
-            foreach ($root->children as $child) {
-                $ordered->push($child);
-            }
+        $legacy = app(\App\Services\Content\LegacyRetirementService::class);
+        if (! $legacy->adminUiEnabled() || (config('cms.admin.prefer_contents', true) && ! $request->boolean('legacy'))) {
+            return redirect()->route('admin.contents.index', ['type' => 'page']);
         }
 
-        // Include orphaned children whose parent was deleted hard / missing.
-        $seen = $ordered->pluck('id')->all();
-        $orphans = Page::query()->whereNotNull('parent_id')->whereNotIn('id', $seen)->orderBy('title')->get();
-        $ordered = $ordered->concat($orphans);
+        $status = (string) $request->query('status', 'all');
+        $q = trim((string) $request->query('q', ''));
+
+        $counts = [
+            'all' => Page::query()->count(),
+            'publish' => Page::query()->where('status', 'publish')->count(),
+            'draft' => Page::query()->where('status', 'draft')->count(),
+            'private' => Page::query()->where('status', 'private')->count(),
+            'trash' => Page::onlyTrashed()->count(),
+        ];
+
+        if ($status === 'trash') {
+            $pagesQuery = Page::onlyTrashed()->with('author')->orderByDesc('deleted_at');
+        } else {
+            $pagesQuery = Page::query()
+                ->with(['author', 'parent'])
+                ->when($status !== 'all', fn ($query) => $query->where('status', $status))
+                ->orderBy('title');
+        }
+
+        $pagesQuery->when($q !== '', function ($query) use ($q) {
+            $query->where(function ($inner) use ($q) {
+                $inner->where('title', 'like', '%'.$q.'%')
+                    ->orWhere('slug', 'like', '%'.$q.'%');
+            });
+        });
+
+        $pages = $pagesQuery->paginate(20)->withQueryString();
 
         return view('admin.pages.index', [
-            'pages' => $ordered,
+            'pages' => $pages,
+            'status' => $status,
+            'q' => $q,
+            'counts' => $counts,
             'dynamicPages' => $this->dynamicPages->all(),
         ]);
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
-        return view('admin.pages.edit', [
-            'page' => new Page(['status' => 'draft', 'template' => 'default', 'header_mode' => 'master', 'footer_mode' => 'master']),
-            'headers' => Header::query()->orderBy('name')->get(),
-            'footers' => Footer::query()->orderBy('name')->get(),
-            'parents' => Page::query()->orderBy('title')->get(),
-            'templates' => $this->templates(),
-            'reservedSlugs' => $this->dynamicPages->reservedSlugs(),
-        ]);
+        if (! app(\App\Services\Content\LegacyRetirementService::class)->adminUiEnabled()) {
+            return redirect()->route('admin.contents.create', ['type' => 'page']);
+        }
+
+        return view('admin.pages.edit', $this->formData(new Page([
+            'status' => 'draft',
+            'template' => 'default',
+            'header_mode' => 'master',
+            'footer_mode' => 'master',
+        ])));
     }
 
     public function store(Request $request): RedirectResponse
@@ -67,42 +88,118 @@ class PageController extends Controller
         $data['author_id'] = Auth::id();
         $page = Page::query()->create($data);
         $this->revision($page, $data, 'Page created');
+        $this->dualWritePage($page);
 
-        return redirect()->route('admin.pages.edit', $page)->with('success', 'Static page created.');
+        return redirect()->route('admin.pages.edit', $page)->with('success', 'Page created.');
     }
 
-    public function edit(Page $page): View
+    public function edit(int $page): View|RedirectResponse
     {
-        return view('admin.pages.edit', [
-            'page' => $page,
-            'headers' => Header::query()->orderBy('name')->get(),
-            'footers' => Footer::query()->orderBy('name')->get(),
-            'parents' => Page::query()->where('id', '!=', $page->id)->orderBy('title')->get(),
-            'templates' => $this->templates(),
+        if (! app(\App\Services\Content\LegacyRetirementService::class)->adminUiEnabled()) {
+            return redirect()->route('admin.contents.index', ['type' => 'page']);
+        }
+        $page = Page::withTrashed()->findOrFail($page);
+
+        return view('admin.pages.edit', $this->formData($page) + [
             'revisions' => $page->revisions()->limit(10)->get(),
-            'reservedSlugs' => $this->dynamicPages->reservedSlugs(),
         ]);
     }
 
-    public function update(Request $request, Page $page): RedirectResponse
+    public function update(Request $request, int $page): RedirectResponse
     {
+        $page = Page::withTrashed()->findOrFail($page);
         $data = $this->validated($request, $page);
         $page->update($data);
         $this->revision($page, $data, 'Page updated');
+        $this->dualWritePage($page);
 
-        return back()->with('success', 'Static page saved.');
+        return back()->with('success', 'Page saved.');
     }
 
-    public function destroy(Page $page): RedirectResponse
+    public function destroy(int $page): RedirectResponse
     {
+        $page = Page::withTrashed()->findOrFail($page);
+
+        if ($page->trashed()) {
+            $page->forceDelete();
+
+            return redirect()->route('admin.pages.index', ['status' => 'trash'])
+                ->with('success', 'Page permanently deleted.');
+        }
+
         $page->delete();
 
-        return redirect()->route('admin.pages.index')->with('success', 'Static page deleted.');
+        return redirect()->route('admin.pages.index')->with('success', 'Page moved to Trash.');
+    }
+
+    public function restore(int $page): RedirectResponse
+    {
+        $page = Page::onlyTrashed()->findOrFail($page);
+        $page->restore();
+
+        return redirect()->route('admin.pages.edit', $page)->with('success', 'Page restored.');
+    }
+
+    public function bulk(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'action' => ['required', 'in:trash,restore,delete,publish,draft'],
+            'pages' => ['required', 'array', 'min:1'],
+            'pages.*' => ['integer'],
+        ]);
+
+        $pages = Page::withTrashed()->whereIn('id', $data['pages'])->get();
+
+        foreach ($pages as $page) {
+            match ($data['action']) {
+                'trash' => $page->trashed() ? null : $page->delete(),
+                'restore' => $page->trashed() ? $page->restore() : null,
+                'publish' => $page->update(['status' => 'publish', 'published_at' => $page->published_at ?: now()]),
+                'draft' => $page->update(['status' => 'draft']),
+                'delete' => $page->forceDelete(),
+            };
+        }
+
+        return back()->with('success', 'Bulk action applied.');
+    }
+
+    public function duplicate(int $page): RedirectResponse
+    {
+        $page = Page::withTrashed()->findOrFail($page);
+        $copy = $page->replicate(['slug', 'deleted_at']);
+        $copy->title = $page->title.' (Copy)';
+        $copy->slug = $page->slug.'-copy-'.now()->format('His');
+        $copy->status = 'draft';
+        $copy->published_at = null;
+        $copy->author_id = Auth::id();
+        $copy->save();
+        $this->revision($copy, $copy->toArray(), 'Page duplicated');
+
+        return redirect()->route('admin.pages.edit', $copy)->with('success', 'Draft copy created.');
     }
 
     public function preview(Page $page): View
     {
         return app(\App\Services\PageRendererService::class)->renderStatic($page);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function formData(Page $page): array
+    {
+        return [
+            'page' => $page,
+            'headers' => Header::query()->orderBy('name')->get(),
+            'footers' => Footer::query()->orderBy('name')->get(),
+            'parents' => Page::query()
+                ->when($page->exists, fn ($q) => $q->where('id', '!=', $page->id))
+                ->orderBy('title')
+                ->get(),
+            'media' => Media::query()->latest()->limit(40)->get(),
+            'templates' => $this->templates(),
+            'reservedSlugs' => $this->dynamicPages->reservedSlugs(),
+        ];
     }
 
     protected function validated(Request $request, ?Page $page = null): array
@@ -121,7 +218,8 @@ class PageController extends Controller
             'parent_id' => ['nullable', 'exists:pages,id'],
             'content' => ['nullable', 'string'],
             'excerpt' => ['nullable', 'string'],
-            'status' => ['required', Rule::in(['draft', 'publish', 'private', 'trash'])],
+            'status' => ['required', Rule::in(['draft', 'publish', 'private'])],
+            'featured_image_id' => ['nullable', 'exists:media,id'],
             'template' => ['required', Rule::in(array_keys($this->templates()))],
             'header_mode' => ['required', Rule::in(['master', 'custom', 'disable'])],
             'header_id' => ['nullable', 'exists:headers,id'],
@@ -136,6 +234,9 @@ class PageController extends Controller
             'og_description' => ['nullable', 'string'],
             'og_type' => ['nullable', 'string', 'max:50'],
             'published_at' => ['nullable', 'date'],
+            'custom_css' => ['nullable', 'string'],
+            'custom_js' => ['nullable', 'string'],
+            'custom_html' => ['nullable', 'string'],
         ], [
             'slug.not_in' => 'This slug is reserved for a Dynamic / system route. Choose another slug.',
         ]);
@@ -180,5 +281,14 @@ class PageController extends Controller
             'payload' => $payload,
             'note' => $note,
         ]);
+    }
+
+    protected function dualWritePage(Page $page): void
+    {
+        try {
+            app(\App\Services\Content\DualWriteContentSync::class)->syncPage($page->fresh());
+        } catch (\Throwable) {
+            // Dual-write must not break legacy admin if content types are not seeded yet.
+        }
     }
 }

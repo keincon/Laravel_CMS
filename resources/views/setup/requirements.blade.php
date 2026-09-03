@@ -48,6 +48,14 @@
             </span>
             <span>{{ $checks['database']['label'] }}</span>
         </li>
+        @foreach (($checks['database']['drivers'] ?? []) as $driverKey => $driver)
+            <li class="ps-4">
+                <span class="{{ $driver['available'] ? $ui->class('check_ok') : $ui->class('check_fail') }}">
+                    {{ $driver['available'] ? '✓' : '✗' }}
+                </span>
+                <span>{{ $driver['label'] }}{{ $driver['available'] ? '' : ' driver missing' }}</span>
+            </li>
+        @endforeach
     </ul>
 
     @unless ($checks['passed'])

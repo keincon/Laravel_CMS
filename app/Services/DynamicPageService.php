@@ -81,18 +81,24 @@ class DynamicPageService
 
     public function themeView(string $type, ?string $template = null): string
     {
-        $theme = config('cms.theme', 'default');
+        $theme = app(\App\Services\Themes\ThemeManager::class)->activeSlug();
         $def = $this->typeDefinitions()[$type] ?? [];
         $base = $def['view'] ?? "dynamic.{$type}";
 
         $candidates = [
             "themes.{$theme}.{$base}",
             "themes.{$theme}.dynamic.{$type}",
+            "themes.default.{$base}",
+            "themes.default.dynamic.{$type}",
             "site.{$type}",
         ];
 
         if ($template && $template !== 'default') {
-            array_unshift($candidates, "themes.{$theme}.dynamic.{$type}-{$template}");
+            array_unshift(
+                $candidates,
+                "themes.{$theme}.dynamic.{$type}-{$template}",
+                "themes.default.dynamic.{$type}-{$template}"
+            );
         }
 
         foreach ($candidates as $view) {
@@ -101,12 +107,12 @@ class DynamicPageService
             }
         }
 
-        return "themes.{$theme}.dynamic.{$type}";
+        return "themes.default.dynamic.{$type}";
     }
 
     public function staticPageView(?string $template = null): string
     {
-        $theme = config('cms.theme', 'default');
+        $theme = app(\App\Services\Themes\ThemeManager::class)->activeSlug();
         $template = $template ?: 'default';
         $normalized = str_replace('_', '-', $template);
 
@@ -114,6 +120,9 @@ class DynamicPageService
             "themes.{$theme}.pages.{$normalized}",
             "themes.{$theme}.pages.{$template}",
             "themes.{$theme}.pages.default",
+            "themes.default.pages.{$normalized}",
+            "themes.default.pages.{$template}",
+            'themes.default.pages.default',
             'site.page',
             'site.home',
         ];

@@ -32,6 +32,10 @@
             <p class="mt-1 text-sm" :class="labelClass" x-text="label"></p>
             <p class="mt-1 text-sm {{ $ui->class('text_muted') }}">
                 Minimum 12 characters with uppercase, lowercase, number, and symbol.
+                Example: <code>MySite2026!</code>
+            </p>
+            <p class="mt-1 text-sm {{ $ui->class('check_fail') }}" x-show="password.length > 0 && !meetsPolicy" x-cloak>
+                Password does not meet all requirements yet — Install will fail if you continue with a weak password.
             </p>
             @error('password')
                 <p class="mt-1 text-sm {{ $ui->class('check_fail') }}">{{ $message }}</p>
@@ -55,6 +59,7 @@
                 color: '#e2e8f0',
                 label: 'Enter a password',
                 labelClass: '{{ $ui->class('text_muted') }}',
+                meetsPolicy: false,
                 evaluate() {
                     const p = this.password;
                     let score = 0;
@@ -63,6 +68,11 @@
                     if (/[a-z]/.test(p) && /[A-Z]/.test(p)) score++;
                     if (/[0-9]/.test(p)) score++;
                     if (/[^A-Za-z0-9]/.test(p)) score++;
+                    this.meetsPolicy = p.length >= 12
+                        && /[a-z]/.test(p)
+                        && /[A-Z]/.test(p)
+                        && /[0-9]/.test(p)
+                        && /[^A-Za-z0-9]/.test(p);
 
                     const map = [
                         { percent: 10, color: '#ef4444', label: 'Too weak', cls: '{{ $ui->class('check_fail') }}' },

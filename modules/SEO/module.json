@@ -1,0 +1,7 @@
+{
+  "name": "SEO",
+  "version": "1.0.0",
+  "description": "SEO metadata helpers exposed as a LaravelPress module",
+  "enabled": true,
+  "provider": "Modules\\SEO\\SEOServiceProvider"
+}

@@ -36,7 +36,7 @@ class ThemeSetting extends Model
             'background_color' => '#F8FAFC',
             'surface_color' => '#FFFFFF',
             'text_color' => '#0F172A',
-            'color_mode' => 'system',
+            'color_mode' => 'light',
         ];
     }
 

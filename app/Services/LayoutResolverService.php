@@ -96,35 +96,107 @@ class LayoutResolverService
 
     public function defaultHeader(): ?Header
     {
-        return Cache::remember('cms.default_header', 3600, function () {
-            $layout = $this->layoutSettings();
-            if ($layout->default_header_id) {
-                return Header::query()->where('id', $layout->default_header_id)->where('status', 'published')->first();
-            }
+        // Cache IDs only — file cache cannot safely store Eloquent models.
+        $id = Cache::get('cms.default_header');
+        if ($id instanceof Header) {
+            // Migrate legacy cached model → id
+            Cache::put('cms.default_header', $id->id, 3600);
+            return $id;
+        }
+        if (! is_numeric($id) && $id !== null) {
+            Cache::forget('cms.default_header');
+            $id = null;
+        }
 
-            return Header::query()->where('is_default', true)->where('status', 'published')->first()
-                ?? Header::query()->where('status', 'published')->orderBy('id')->first();
-        });
+        if ($id === null && ! Cache::has('cms.default_header')) {
+            $header = $this->resolveDefaultHeader();
+            Cache::put('cms.default_header', $header?->id, 3600);
+
+            return $header;
+        }
+
+        return $id ? Header::query()->where('status', 'published')->find((int) $id) : null;
     }
 
     public function defaultFooter(): ?Footer
     {
-        return Cache::remember('cms.default_footer', 3600, function () {
-            $layout = $this->layoutSettings();
-            if ($layout->default_footer_id) {
-                return Footer::query()->where('id', $layout->default_footer_id)->where('status', 'published')->first();
-            }
+        $id = Cache::get('cms.default_footer');
+        if ($id instanceof Footer) {
+            Cache::put('cms.default_footer', $id->id, 3600);
+            return $id;
+        }
+        if (! is_numeric($id) && $id !== null) {
+            Cache::forget('cms.default_footer');
+            $id = null;
+        }
 
-            return Footer::query()->where('is_default', true)->where('status', 'published')->first()
-                ?? Footer::query()->where('status', 'published')->orderBy('id')->first();
-        });
+        if ($id === null && ! Cache::has('cms.default_footer')) {
+            $footer = $this->resolveDefaultFooter();
+            Cache::put('cms.default_footer', $footer?->id, 3600);
+
+            return $footer;
+        }
+
+        return $id ? Footer::query()->where('status', 'published')->find((int) $id) : null;
     }
 
     public function primaryMenu(): ?Menu
     {
-        return Cache::remember('cms.menu.primary', 3600, function () {
-            return Menu::query()->with(['items.page'])->where('slug', 'primary')->first();
-        });
+        $id = Cache::get('cms.menu.primary');
+        if ($id instanceof Menu) {
+            Cache::put('cms.menu.primary', $id->id, 3600);
+
+            return Menu::query()->with(['items.page'])->find($id->id);
+        }
+        if (! is_numeric($id) && $id !== null) {
+            // Drops __PHP_Incomplete_Class and other bad payloads.
+            Cache::forget('cms.menu.primary');
+            $id = null;
+        }
+
+        if ($id === null && ! Cache::has('cms.menu.primary')) {
+            $menu = Menu::query()->with(['items.page'])
+                ->where(function ($q) {
+                    $q->where('slug', 'primary')->orWhere('location', 'primary');
+                })
+                ->orderByRaw("CASE WHEN slug = 'primary' THEN 0 ELSE 1 END")
+                ->first();
+            Cache::put('cms.menu.primary', $menu?->id, 3600);
+
+            return $menu;
+        }
+
+        return $id
+            ? Menu::query()->with(['items.page'])->find((int) $id)
+            : null;
+    }
+
+    protected function resolveDefaultHeader(): ?Header
+    {
+        $layout = $this->layoutSettings();
+        if ($layout->default_header_id) {
+            $header = Header::query()->where('id', $layout->default_header_id)->where('status', 'published')->first();
+            if ($header) {
+                return $header;
+            }
+        }
+
+        return Header::query()->where('is_default', true)->where('status', 'published')->first()
+            ?? Header::query()->where('status', 'published')->orderBy('id')->first();
+    }
+
+    protected function resolveDefaultFooter(): ?Footer
+    {
+        $layout = $this->layoutSettings();
+        if ($layout->default_footer_id) {
+            $footer = Footer::query()->where('id', $layout->default_footer_id)->where('status', 'published')->first();
+            if ($footer) {
+                return $footer;
+            }
+        }
+
+        return Footer::query()->where('is_default', true)->where('status', 'published')->first()
+            ?? Footer::query()->where('status', 'published')->orderBy('id')->first();
     }
 
     /**

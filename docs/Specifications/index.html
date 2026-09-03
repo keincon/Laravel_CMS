@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LaravelPress System Diagrams</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <main class="max-w-5xl mx-auto px-6 py-10 space-y-10">
+    <header>
+      <p class="text-sm uppercase tracking-wide text-slate-500">LaravelPress</p>
+      <h1 class="text-3xl font-semibold mt-1">System Architecture Diagrams</h1>
+      <p class="mt-2 text-slate-600">ASCII diagrams for architecture, publishing, auth, media, revisions, and modules. 日本語併記の詳細は <code>docs/Specifications/</code> を参照。</p>
+    </header>
+
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold">System architecture</h2>
+      <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm leading-6">Browser
+  |
+  v
+Controller → FormRequest → Policy
+  |
+  v
+Application Service
+  |
+  v
+Domain Model
+  |
+  v
+PostgreSQL     Redis (cache/queue)</pre>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold">Publishing workflow</h2>
+      <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm leading-6">draft ──► pending ──► published
+  │                      ▲
+  └──► scheduled ────────┘
+published ──► trash ──► draft</pre>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold">Authentication flow</h2>
+      <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm leading-6">/login
+  |
+  v
+AuthController → session
+  |
+  v
+Gate / Spatie roles+permissions
+  |
+  v
+/admin/* (2FA columns reserved on users)</pre>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold">Media flow</h2>
+      <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm leading-6">Upload (MIME validated server-side)
+  |
+  v
+media row
+  |
+  v
+Queue: GenerateMediaVariants
+  |
+  v
+media_variants (thumbnail/small/medium/large)</pre>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold">Revision flow</h2>
+      <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm leading-6">Content update
+  |
+  v
+content_revisions (+revision_number)
+  |
+  v
+Restore → transaction → overwrite content fields</pre>
+    </section>
+
+    <section class="space-y-3">
+      <h2 class="text-xl font-semibold">Plugin / module flow</h2>
+      <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-sm leading-6">modules/Seo/ServiceProvider
+  |
+  v
+Module discovery (enabled only)
+  |
+  v
+Hooks::addAction / addFilter
+  |
+  v
+Register routes, blocks, widgets</pre>
+    </section>
+  </main>
+</body>
+</html>

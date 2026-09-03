@@ -1,0 +1,20 @@
+/* Meadow — botanical greens */
+body.theme-meadow {
+  font-family: "Nunito Sans", "Trebuchet MS", "Segoe UI", sans-serif;
+  color: #1A2E05;
+  background-color: #F7FEE7;
+  background-image:
+    radial-gradient(circle at 20% 15%, rgba(132, 204, 22, 0.14), transparent 42%),
+    radial-gradient(circle at 85% 70%, rgba(63, 98, 18, 0.08), transparent 45%),
+    repeating-linear-gradient(0deg, transparent, transparent 47px, rgba(101, 163, 13, 0.04) 48px);
+  background-attachment: fixed;
+}
+body.theme-meadow h1,
+body.theme-meadow h2,
+body.theme-meadow h3 {
+  font-family: "Libre Baskerville", "Georgia", "Times New Roman", serif;
+  font-weight: 700;
+  color: #3F6212;
+}
+body.theme-meadow a { color: #4D7C0F; }
+body.theme-meadow a:hover { color: #65A30D; }

@@ -1,0 +1,21 @@
+{
+  "name": "Paper",
+  "slug": "paper",
+  "version": "1.0.0",
+  "author": "LaravelPress",
+  "description": "Warm parchment editorial with soft brown ink and amber highlights.",
+  "color_mode": "light",
+  "colors": {
+    "primary_color": "#92400E",
+    "secondary_color": "#A8A29E",
+    "accent_color": "#B45309",
+    "success_color": "#16A34A",
+    "warning_color": "#D97706",
+    "danger_color": "#DC2626",
+    "info_color": "#0891B2",
+    "background_color": "#FFFBEB",
+    "surface_color": "#FFFDF7",
+    "text_color": "#292524"
+  },
+  "templates": ["home", "single", "page", "archive", "category", "tag", "search", "404"]
+}

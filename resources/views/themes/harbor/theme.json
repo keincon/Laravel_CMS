@@ -1,0 +1,21 @@
+{
+  "name": "Harbor",
+  "slug": "harbor",
+  "version": "1.0.0",
+  "author": "LaravelPress",
+  "description": "Deep navy and sand coastal palette for calm, maritime-inspired pages.",
+  "color_mode": "light",
+  "colors": {
+    "primary_color": "#1E3A5F",
+    "secondary_color": "#64748B",
+    "accent_color": "#D4A574",
+    "success_color": "#16A34A",
+    "warning_color": "#D97706",
+    "danger_color": "#DC2626",
+    "info_color": "#0891B2",
+    "background_color": "#F5F1EB",
+    "surface_color": "#FFFCFA",
+    "text_color": "#0F172A"
+  },
+  "templates": ["home", "single", "page", "archive", "category", "tag", "search", "404"]
+}

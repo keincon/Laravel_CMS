@@ -1,116 +1,83 @@
-# Laravel CMS
+# LaravelPress
 
-WordPress-style CMS built with Laravel 13 and PostgreSQL.
+Laravel-native WordPress-compatible CMS (Laravel 13 + PostgreSQL + Redis).
 
-## Phase 1 — First-run setup wizard
-
-Fresh installs open a guided wizard at `/setup`. The site and admin area stay locked until installation finishes.
-
-## Docker (recommended)
+## Docker
 
 ```bash
 docker compose up -d --build
-```
-
-The app publishes container port `8000` to a **random free host port**.
-
-```bash
-# Show the mapped URL port
 docker compose port app 8000
 ```
 
-Example: if that prints `0.0.0.0:32782`, open:
+Open `http://127.0.0.1:<mapped-port>`.
 
-```text
-http://127.0.0.1:32782
+Services: **app**, **postgres**, **redis**, **queue**, **scheduler**.
+
+| Service | Notes |
+|---------|--------|
+| postgres | `cms` / `cms` / `cms_secret` (host `postgres` on compose network) |
+| redis | cache, session, queue |
+
+### Existing install — seed LaravelPress builtins
+
+```bash
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan laravelpress:install --fresh-caps
 ```
 
-You will be redirected to `/setup`.
+### Tests
 
-PostgreSQL credentials for the setup wizard (compose network):
+```bash
+docker compose exec app php artisan test
+```
+
+## Architecture (least-destructive migration)
+
+Legacy `posts` / `pages` / `categories` / `tags` remain for the current admin UI.
+
+LaravelPress adds generic tables and dual-writes Post/Page saves into `contents`. The public site dual-reads `contents` first (posts, pages, categories/tags via terms, authors), then falls back to legacy tables.
+
+### Commands
+
+```bash
+docker compose exec app php artisan laravelpress:install --fresh-caps
+docker compose exec app php artisan laravelpress:content migrate-legacy
+docker compose exec app php artisan laravelpress:content export
+docker compose exec app php artisan laravelpress:content import --dry-run
+docker compose exec app php artisan laravelpress:content import-wxr --path=imports/wordpress.xml --dry-run
+```
+
+### Production notes
+
+- `ForceHttps` when `APP_ENV=production`
+- `TRUSTED_PROXIES` for reverse proxies (see `docs/Specifications/12-Security.md`)
+- API rate limit: `CMS_API_RATE_LIMIT` (default 120/min)
+- Search: `CMS_SEARCH_DRIVER=database|meilisearch` + `MEILISEARCH_HOST`
+
+See `docs/Specifications/` and `docs/Specifications/index.html`.
+
+## Admin JS
+
+Vanilla modules under `resources/js/admin/` (`api`, `toast`, `modal`, `form`, `media`, `editor`, `posts`, …).
+
+## First-run setup
+
+Fresh installs use `/setup`. If `storage/app/cms/installed.json` exists, setup returns 404.
+
+**Docker database defaults (use these in the wizard):**
 
 | Field | Value |
-|-------|-------|
+|--------|--------|
 | Host | `postgres` |
 | Port | `5432` |
 | Database | `cms` |
 | Username | `cms` |
 | Password | `cms_secret` |
 
-Stop:
+Admin password must be ≥12 chars with upper, lower, number, and symbol.
+
+If Install fails with a generic error and the app log shows `Environment modified. Restarting server...`, rebuild the app image so it uses PHP’s built-in server (not `artisan serve`):
 
 ```bash
-docker compose down
+docker compose up -d --build app
 ```
-
-### Quick start (without Docker)
-
-```bash
-composer install --no-dev
-cp .env.example .env
-php artisan key:generate
-php artisan serve
-```
-
-## SEO, OGP, Theme & API
-
-After installation, sign in at `/login` and open `/admin`.
-
-| Area | Path |
-|------|------|
-| SEO settings | `/admin/settings/seo` |
-| Social / OGP | `/admin/settings/ogp` |
-| Permalinks | `/admin/settings/permalinks` |
-| Theme colors | `/admin/appearance/colors` |
-| Color mode | `/admin/appearance/mode` |
-| API docs | `/admin/settings/api` |
-| API tokens | `/admin/users/tokens` |
-
-Public endpoints (no auth):
-
-- `GET /api/v1/posts`
-- `GET /api/v1/pages`
-- `GET /api/v1/theme`
-- `GET /sitemap.xml`
-- `GET /robots.txt`
-
-## Master Header / Footer / Pages / Posts
-
-After installation:
-
-| Area | Path |
-|------|------|
-| Header builder | `/admin/headers` |
-| Footer builder | `/admin/footers` |
-| Master layout | `/admin/appearance/layout` |
-| Reading (homepage) | `/admin/settings/reading` |
-| Pages | `/admin/pages` |
-| Posts | `/admin/posts` |
-
-Public pages/posts render through `<x-layout.master>` which injects the published Master Header/Footer, SEO/OGP, theme colors, and optional sidebar. Landing templates can disable header/footer per page.
-
-### Setup flow
-
-1. Welcome  
-2. System requirements (PHP 8.3+, extensions, writable paths, PostgreSQL driver)  
-3. Database configuration (test connection)  
-4. Website settings (name, URL, timezone, language, date format)  
-5. Administrator account (strong password, Administrator role)  
-6. UI framework (Tailwind CSS or Bootstrap 5)  
-7. Install (migrations, roles, permissions, defaults, mark installed)  
-8. Complete → website + `/admin`
-
-### Installation detection
-
-- Marker file: `storage/app/cms/installed.json`
-- Database record: `installations` table + `cms_settings`
-
-`CheckInstallation` middleware redirects uninstalled traffic to `/setup`, and returns 404 for `/setup` after install.
-
-### Languages (initial)
-
-- English (`en`)
-- Japanese (`ja`)
-- Myanmar (`my`)
-
-Configured in `config/cms.php` for easy extension.

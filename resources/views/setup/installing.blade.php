@@ -44,9 +44,10 @@
         <template x-if="failed">
             <div>
                 <h2 class="{{ $ui->class('heading') }}">Installation could not be completed.</h2>
-                <p class="{{ $ui->class('subheading') }}">Please check your database configuration and try again.</p>
+                <p class="{{ $ui->class('subheading') }}" x-text="errorMessage"></p>
                 <div class="actions between">
-                    <x-ui.button href="{{ route('setup.database') }}" variant="secondary" type="button">← Back</x-ui.button>
+                    <x-ui.button href="{{ route('setup.database') }}" variant="secondary" type="button">← Database</x-ui.button>
+                    <x-ui.button href="{{ route('setup.administrator') }}" variant="secondary" type="button">Administrator</x-ui.button>
                     <x-ui.button type="button" variant="primary" @click="start">Try Again</x-ui.button>
                 </div>
             </div>
@@ -60,6 +61,7 @@
                 running: false,
                 done: false,
                 failed: false,
+                errorMessage: 'Please check your settings and try again.',
                 steps: [
                     { key: 'validate', label: 'Validating configuration', status: 'pending' },
                     { key: 'database_test', label: 'Testing database', status: 'pending' },
@@ -117,11 +119,13 @@
                         } else {
                             this.failed = true;
                             this.running = false;
+                            this.errorMessage = json.message || this.errorMessage;
                         }
                     } catch (e) {
                         clearInterval(tick);
                         this.failed = true;
                         this.running = false;
+                        this.errorMessage = 'The install request was interrupted (often the PHP server restarting after writing .env). Rebuild/restart Docker so it uses the built-in server, then click Try Again. If it still fails, check storage/logs/laravel.log.';
                     }
                 }
             }

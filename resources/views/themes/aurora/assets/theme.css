@@ -1,0 +1,21 @@
+/* Aurora — cool teal/sky magazine */
+body.theme-aurora {
+  font-family: "Source Sans 3", "Segoe UI", "Helvetica Neue", sans-serif;
+  color: #134E4A;
+  background-color: #F0FDFA;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(56, 189, 248, 0.18), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, rgba(13, 148, 136, 0.12), transparent 50%),
+    linear-gradient(180deg, #F0FDFA 0%, #E6FFFB 100%);
+  background-attachment: fixed;
+}
+body.theme-aurora h1,
+body.theme-aurora h2,
+body.theme-aurora h3 {
+  font-family: "Fraunces", "Iowan Old Style", "Palatino Linotype", serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #0F766E;
+}
+body.theme-aurora a { color: #0284C7; }
+body.theme-aurora a:hover { color: #0D9488; }

@@ -12,3 +12,4 @@
 @endif
 <meta name="robots" content="{{ $meta['robots'] }}">
 <link rel="canonical" href="{{ $meta['canonical'] }}">
+<x-favicon />

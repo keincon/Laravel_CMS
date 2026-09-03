@@ -1,0 +1,21 @@
+{
+  "name": "Ink",
+  "slug": "ink",
+  "version": "1.0.0",
+  "author": "LaravelPress",
+  "description": "Charcoal typography with a vivid coral accent for bold editorial contrast.",
+  "color_mode": "light",
+  "colors": {
+    "primary_color": "#1C1917",
+    "secondary_color": "#44403C",
+    "accent_color": "#F43F5E",
+    "success_color": "#16A34A",
+    "warning_color": "#D97706",
+    "danger_color": "#DC2626",
+    "info_color": "#0891B2",
+    "background_color": "#FAFAF9",
+    "surface_color": "#FFFFFF",
+    "text_color": "#0C0A09"
+  },
+  "templates": ["home", "single", "page", "archive", "category", "tag", "search", "404"]
+}

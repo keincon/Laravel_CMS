@@ -39,7 +39,7 @@ class ThemeService
 
     public function mode(): string
     {
-        return $this->settings()->color_mode ?: 'system';
+        return $this->settings()->color_mode ?: 'light';
     }
 
     /**
@@ -93,21 +93,33 @@ class ThemeService
 
     public function cssBlock(): string
     {
-        $lines = [':root {'];
+        $colors = $this->colors();
+        $primary = $colors['primary'] ?? '#2563EB';
+
+        $lines = [':root, [data-theme="light"] {'];
         foreach ($this->cssVariables() as $name => $value) {
             $lines[] = '    '.$name.': '.$value.';';
         }
+        $lines[] = '    --color-border: #e2e8f0;';
+        $lines[] = '    --color-muted: #64748b;';
+        $lines[] = '    --color-elevated: #ffffff;';
         $lines[] = '}';
         $lines[] = '';
         $lines[] = '[data-theme="dark"] {';
-        $lines[] = '    --color-background: #0f172a;';
-        $lines[] = '    --color-surface: #1e293b;';
-        $lines[] = '    --color-text: #e2e8f0;';
-        $lines[] = '    --bs-body-bg: #0f172a;';
-        $lines[] = '    --bs-body-color: #e2e8f0;';
+        $lines[] = '    --color-background: #0b1220;';
+        $lines[] = '    --color-surface: #111827;';
+        $lines[] = '    --color-elevated: #1f2937;';
+        $lines[] = '    --color-text: #e5e7eb;';
+        $lines[] = '    --color-muted: #94a3b8;';
+        $lines[] = '    --color-border: #334155;';
+        $lines[] = '    --color-primary: '.$primary.';';
+        $lines[] = '    --bs-body-bg: #0b1220;';
+        $lines[] = '    --bs-body-color: #e5e7eb;';
+        $lines[] = '    --bs-primary: '.$primary.';';
         $lines[] = '}';
 
-        return implode("\n", $lines);
+        return implode("
+", $lines);
     }
 
     /**

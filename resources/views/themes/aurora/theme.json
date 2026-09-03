@@ -1,0 +1,24 @@
+{
+  "name": "Aurora",
+  "slug": "aurora",
+  "version": "1.1.0",
+  "author": "LaravelPress",
+  "description": "Cool teal and sky magazine aesthetic with optional screen overrides, CSS, and JS.",
+  "color_mode": "light",
+  "colors": {
+    "primary_color": "#0D9488",
+    "secondary_color": "#38BDF8",
+    "accent_color": "#0284C7",
+    "success_color": "#16A34A",
+    "warning_color": "#D97706",
+    "danger_color": "#DC2626",
+    "info_color": "#0891B2",
+    "background_color": "#F0FDFA",
+    "surface_color": "#FFFFFF",
+    "text_color": "#134E4A"
+  },
+  "stylesheets": ["theme.css"],
+  "scripts": ["theme.js"],
+  "screens": ["dynamic/blog"],
+  "templates": ["home", "single", "page", "archive", "category", "tag", "search", "404"]
+}

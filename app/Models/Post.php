@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Post extends Model
 {
@@ -18,6 +20,11 @@ class Post extends Model
         'content',
         'excerpt',
         'status',
+        'is_sticky',
+        'comment_status',
+        'custom_css',
+        'custom_js',
+        'custom_html',
         'author_id',
         'featured_image_id',
         'published_at',
@@ -42,12 +49,18 @@ class Post extends Model
     {
         return [
             'published_at' => 'datetime',
+            'is_sticky' => 'boolean',
         ];
     }
 
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    public function featuredImage(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'featured_image_id');
     }
 
     public function categories(): BelongsToMany
@@ -70,7 +83,17 @@ class Post extends Model
         return $this->belongsTo(Footer::class);
     }
 
-    public function revisions(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function comments(): HasMany
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function approvedComments(): HasMany
+    {
+        return $this->comments()->approved()->whereNull('parent_id')->with(['children' => fn ($q) => $q->approved()->oldest(), 'user'])->latest();
+    }
+
+    public function revisions(): MorphMany
     {
         return $this->morphMany(ContentRevision::class, 'revisable')->latest();
     }
@@ -81,5 +104,20 @@ class Post extends Model
             ->where(function (Builder $q) {
                 $q->whereNull('published_at')->orWhere('published_at', '<=', now());
             });
+    }
+
+    public function scopeStickyFirst(Builder $query): Builder
+    {
+        return $query->orderByDesc('is_sticky');
+    }
+
+    public function scopeNotTrashed(Builder $query): Builder
+    {
+        return $query->where('status', '!=', 'trash');
+    }
+
+    public function isCommentsOpen(): bool
+    {
+        return ($this->comment_status ?: 'open') === 'open';
     }
 }

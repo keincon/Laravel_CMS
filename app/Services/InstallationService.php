@@ -8,8 +8,8 @@ use App\Models\Installation;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Page;
-use App\Models\Permission;
 use App\Models\Role;
+use App\Services\RolePermissionService;
 use App\Models\SeoSetting;
 use App\Models\Theme;
 use App\Models\ThemeSetting;
@@ -21,7 +21,6 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 use Throwable;
 
 class InstallationService
@@ -49,9 +48,26 @@ class InstallationService
         }
 
         // Prefer database confirmation when the installations table exists.
+        // If the file marker is valid but the DB row is missing (volume restore /
+        // partial install), treat as installed and heal the row when possible.
         try {
             if (Schema::hasTable('installations')) {
-                return Installation::query()->exists();
+                if (Installation::query()->exists()) {
+                    return true;
+                }
+
+                try {
+                    Installation::query()->create([
+                        'version' => (string) ($payload['version'] ?? '1.0.0'),
+                        'installed_at' => now(),
+                        'installed_by' => $payload['installed_by'] ?? null,
+                        'meta' => ['healed_from_file' => true],
+                    ]);
+                } catch (Throwable) {
+                    // Still trust the file marker for routing.
+                }
+
+                return true;
             }
         } catch (Throwable) {
             // Database may be unavailable; file marker is enough for routing.
@@ -103,11 +119,12 @@ class InstallationService
             $steps[] = $this->step('migrate', 'Creating database tables', 'done');
 
             DB::transaction(function () use ($config, &$steps) {
-                $roles = $this->createRoles();
+                $roles = app(RolePermissionService::class)->syncDefaults();
                 $steps[] = $this->step('roles', 'Creating roles', 'done');
-
-                $this->createPermissions($roles);
                 $steps[] = $this->step('permissions', 'Creating permissions', 'done');
+
+                app(LaravelPressBootstrapService::class)->seedBuiltins();
+                $steps[] = $this->step('content_types', 'Seeding content types & taxonomies', 'done');
 
                 $admin = $this->createAdministrator($config['administrator'], $roles['Administrator']);
                 $steps[] = $this->step('administrator', 'Creating administrator', 'done');
@@ -149,14 +166,16 @@ class InstallationService
                 'steps' => $steps,
             ];
         } catch (Throwable $e) {
+            $safe = $this->sanitizeErrorMessage($e->getMessage());
+
             Log::error('CMS installation failed', [
                 'exception' => $e::class,
-                'message' => $this->sanitizeErrorMessage($e->getMessage()),
+                'message' => $safe,
             ]);
 
             return [
                 'success' => false,
-                'message' => 'Installation could not be completed. Please check your database configuration and try again.',
+                'message' => $this->friendlyInstallError($e),
                 'steps' => $steps,
             ];
         }
@@ -249,7 +268,7 @@ class InstallationService
             'APP_URL' => $website['url'],
             'APP_TIMEZONE' => $website['timezone'] ?? 'UTC',
             'APP_LOCALE' => $website['language'] ?? 'en',
-            'DB_CONNECTION' => 'pgsql',
+            'DB_CONNECTION' => $db['type'] ?? 'pgsql',
             'DB_HOST' => $db['host'],
             'DB_PORT' => (string) $db['port'],
             'DB_DATABASE' => $db['database'],
@@ -277,7 +296,21 @@ class InstallationService
         // Ensure commented sqlite leftovers do not confuse operators.
         $content = preg_replace('/^#\s*DB_HOST=.*/m', '', $content) ?? $content;
 
-        File::put($envPath, $content);
+        // Prefer atomic replace so watchers see one consistent write, and skip
+        // rewriting when Docker already injects the same DB settings (compose).
+        $skipWrite = (bool) env('CMS_SKIP_ENV_WRITE', false)
+            || (
+                getenv('DB_HOST')
+                && (string) getenv('DB_HOST') === (string) $db['host']
+                && (string) getenv('DB_DATABASE') === (string) $db['database']
+                && (string) getenv('DB_USERNAME') === (string) $db['username']
+            );
+
+        if (! $skipWrite) {
+            $tmp = $envPath.'.install-tmp';
+            File::put($tmp, $content);
+            File::move($tmp, $envPath);
+        }
 
         if (! empty($website['timezone'])) {
             config(['app.timezone' => $website['timezone']]);
@@ -291,6 +324,16 @@ class InstallationService
         if (! empty($website['name'])) {
             config(['app.name' => $website['name']]);
         }
+
+        // Always apply DB config for this request even if .env write was skipped.
+        config([
+            'database.default' => $db['type'] ?? 'pgsql',
+            'database.connections.'.($db['type'] ?? 'pgsql').'.host' => $db['host'],
+            'database.connections.'.($db['type'] ?? 'pgsql').'.port' => $db['port'],
+            'database.connections.'.($db['type'] ?? 'pgsql').'.database' => $db['database'],
+            'database.connections.'.($db['type'] ?? 'pgsql').'.username' => $db['username'],
+            'database.connections.'.($db['type'] ?? 'pgsql').'.password' => $db['password'] ?? '',
+        ]);
     }
 
     /**
@@ -298,16 +341,7 @@ class InstallationService
      */
     protected function createRoles(): array
     {
-        $roles = [];
-
-        foreach (config('cms.roles', []) as $name) {
-            $roles[$name] = Role::query()->firstOrCreate(
-                ['slug' => Str::slug($name)],
-                ['name' => $name, 'description' => "{$name} role"]
-            );
-        }
-
-        return $roles;
+        return app(RolePermissionService::class)->syncDefaults();
     }
 
     /**
@@ -315,32 +349,7 @@ class InstallationService
      */
     protected function createPermissions(array $roles): void
     {
-        $permissionModels = [];
-
-        foreach (config('cms.permissions', []) as $slug) {
-            $permissionModels[] = Permission::query()->firstOrCreate(
-                ['slug' => $slug],
-                [
-                    'name' => Str::headline(str_replace('_', ' ', $slug)),
-                    'description' => Str::headline(str_replace('_', ' ', $slug)),
-                ]
-            );
-        }
-
-        if (isset($roles['Administrator'])) {
-            $roles['Administrator']->permissions()->sync(
-                collect($permissionModels)->pluck('id')->all()
-            );
-        }
-
-        if (isset($roles['Editor'])) {
-            $roles['Editor']->permissions()->sync(
-                collect($permissionModels)
-                    ->filter(fn (Permission $p) => ! in_array($p->slug, ['manage_settings', 'manage_users', 'manage_roles'], true))
-                    ->pluck('id')
-                    ->all()
-            );
-        }
+        // Permissions are synced with roles in RolePermissionService::syncDefaults().
     }
 
     /**
@@ -356,7 +365,7 @@ class InstallationService
             'email_verified_at' => now(),
         ]);
 
-        $user->roles()->attach($role->id);
+        $user->assignRole($role);
 
         return $user;
     }
@@ -432,15 +441,17 @@ class InstallationService
 
     protected function createDefaultTheme(): void
     {
-        Theme::query()->create([
-            'name' => 'Default',
-            'slug' => 'default',
-            'version' => '1.0.0',
-            'is_active' => true,
-            'settings' => [
-                'layout' => 'default',
-            ],
-        ]);
+        $manager = app(\App\Services\Themes\ThemeManager::class);
+        $manager->syncDiskThemesToDatabase();
+        if (! Theme::query()->where('is_active', true)->exists()) {
+            $manager->activate('default', applyColors: false);
+        }
+        // Ensure downloadable ZIP packs exist for bundled themes.
+        try {
+            app(\App\Services\Themes\ThemePackageService::class)->buildBundledPacksFromDisk();
+        } catch (Throwable) {
+            // Zip extension optional during install; packs can be rebuilt from admin.
+        }
     }
 
     /**
@@ -524,6 +535,33 @@ class InstallationService
     protected function step(string $key, string $label, string $status): array
     {
         return compact('key', 'label', 'status');
+    }
+
+
+    protected function friendlyInstallError(Throwable $e): string
+    {
+        $message = $e->getMessage();
+
+        if ($message === 'already_installed') {
+            return 'This CMS is already installed.';
+        }
+        if ($message === 'database_connection_failed') {
+            return 'Could not connect with the saved database settings. Go back to Database and use host "postgres" (not 127.0.0.1), user/password "cms" / "cms_secret".';
+        }
+        if (str_contains($message, 'Administrator password')) {
+            return 'Administrator password must be at least 12 characters and include upper, lower, number, and a symbol (example: MySite2026!). Go back to Administrator and set a stronger password.';
+        }
+        if (str_contains($message, 'Missing setup configuration')) {
+            return 'Setup is incomplete. Please restart the wizard from Welcome.';
+        }
+        if (str_contains($message, 'Connection refused') || str_contains($message, 'could not translate host name')) {
+            return 'Database host is unreachable. In Docker use host "postgres".';
+        }
+        if (stripos($message, 'authentication failed') !== false || stripos($message, 'no password supplied') !== false) {
+            return 'Database username or password is incorrect. Docker defaults: cms / cms_secret.';
+        }
+
+        return 'Installation could not be completed: '.$this->sanitizeErrorMessage($message);
     }
 
     protected function sanitizeErrorMessage(string $message): string

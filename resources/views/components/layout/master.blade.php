@@ -16,10 +16,14 @@
     $sidebar = $layouts->resolveSidebar($content, $context);
     $dims = $layouts->dimensionCss();
     $ui = app(\App\Services\UIFrameworkService::class);
+    $themeManager = app(\App\Services\Themes\ThemeManager::class);
+    $activeThemeSlug = $themeManager->activeSlug();
+    $themeStylesheets = $themeManager->stylesheetUrls($activeThemeSlug);
+    $themeScripts = $themeManager->scriptUrls($activeThemeSlug);
 @endphp
 
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -31,7 +35,11 @@
         <link rel="stylesheet" href="{{ $href }}">
     @endforeach
     <x-theme />
+    @foreach ($themeStylesheets as $href)
+        <link rel="stylesheet" href="{{ $href }}">
+    @endforeach
     <style>{!! $dims['css'] !!}</style>
+    <x-custom-code position="head" :page="$page" :post="$post" />
     <style>
         body { margin: 0; background: var(--color-background); color: var(--color-text); font-family: "Segoe UI", system-ui, sans-serif; }
         a { color: var(--color-primary); }
@@ -65,11 +73,28 @@
         .post-card h2 { font-size: 1.2rem; margin: 0 0 .35rem; }
         .breadcrumb { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; padding: 0; margin: 0 0 1.25rem; font-size: .9rem; opacity: .75; }
         .breadcrumb li:not(:last-child)::after { content: "/"; margin-left: .35rem; opacity: .6; }
+
+        .theme-toggle {
+            display: inline-flex; align-items: center; gap: .4rem;
+            border: 1px solid var(--color-border, color-mix(in srgb, var(--color-text) 18%, transparent));
+            background: var(--color-elevated, var(--color-surface));
+            color: var(--color-text);
+            border-radius: 999px; padding: .35rem .75rem;
+            font-size: .82rem; font-weight: 650; cursor: pointer;
+        }
+        .theme-toggle:hover { border-color: var(--color-primary); }
+        .theme-toggle[data-theme-active="dark"] .theme-toggle-sun { display: inline; }
+        .theme-toggle[data-theme-active="dark"] .theme-toggle-moon { display: none; }
+        .theme-toggle[data-theme-active="light"] .theme-toggle-sun { display: none; }
+        .theme-toggle[data-theme-active="light"] .theme-toggle-moon { display: inline; }
+        .header-theme-toggle { margin-left: auto; }
         .badge-type { display: inline-block; font-size: .75rem; padding: .15rem .5rem; border-radius: .35rem; background: color-mix(in srgb, var(--color-primary) 14%, transparent); color: var(--color-primary); }
     </style>
     @stack('head')
 </head>
-<body>
+<body class="theme-{{ $activeThemeSlug }}">
+    <x-custom-code position="body_open" :page="$page" :post="$post" />
+    <x-admin-bar :page="$page" :post="$post" />
     @if ($header['show'] && $header['structure'])
         <x-header.master :structure="$header['structure']" />
     @endif
@@ -104,6 +129,10 @@
     @foreach ($ui->scriptUrls() as $src)
         <script src="{{ $src }}" defer></script>
     @endforeach
+    @foreach ($themeScripts as $src)
+        <script src="{{ $src }}" defer></script>
+    @endforeach
     @stack('scripts')
+    <x-custom-code position="body_close" :page="$page" :post="$post" />
 </body>
 </html>

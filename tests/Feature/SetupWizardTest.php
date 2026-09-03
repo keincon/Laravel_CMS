@@ -65,5 +65,6 @@ class SetupWizardTest extends TestCase
         $response->assertSee('System Requirements');
         $response->assertSee('PHP');
         $response->assertSee('PostgreSQL');
+        $response->assertSee('MySQL');
     }
 }

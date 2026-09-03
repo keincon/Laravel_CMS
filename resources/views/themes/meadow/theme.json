@@ -1,0 +1,21 @@
+{
+  "name": "Meadow",
+  "slug": "meadow",
+  "version": "1.0.0",
+  "author": "LaravelPress",
+  "description": "Botanical greens inspired by gardens and natural editorial layouts.",
+  "color_mode": "light",
+  "colors": {
+    "primary_color": "#3F6212",
+    "secondary_color": "#65A30D",
+    "accent_color": "#84CC16",
+    "success_color": "#16A34A",
+    "warning_color": "#D97706",
+    "danger_color": "#DC2626",
+    "info_color": "#0891B2",
+    "background_color": "#F7FEE7",
+    "surface_color": "#FFFFFF",
+    "text_color": "#1A2E05"
+  },
+  "templates": ["home", "single", "page", "archive", "category", "tag", "search", "404"]
+}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,8 +19,10 @@
         .btn-primary { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
     </style>
     @stack('head')
+    <x-custom-code position="head" :page="$page ?? null" :post="$post ?? null" />
 </head>
 <body>
+    <x-custom-code position="body_open" :page="$page ?? null" :post="$post ?? null" />
     <div class="site-wrap">
         <nav class="site-nav mb-4">
             <a href="{{ url('/') }}">Home</a>
@@ -31,5 +33,6 @@
         </nav>
         @yield('content')
     </div>
+    <x-custom-code position="body_close" :page="$page ?? null" :post="$post ?? null" />
 </body>
 </html>

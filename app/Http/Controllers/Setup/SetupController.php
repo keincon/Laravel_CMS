@@ -48,17 +48,43 @@ class SetupController extends Controller
         $this->ensureRequirementsPassed();
 
         $saved = Session::get('setup.database', []);
+        $options = $this->requirements->availableDriverOptions();
+        $type = $saved['type'] ?? null;
+        if (! is_string($type) || $type === '' || ! array_key_exists($type, $options)) {
+            if (array_key_exists('pgsql', $options)) {
+                $type = 'pgsql';
+            } else {
+                $first = array_key_first($options);
+                if (is_string($first) && $first !== '') {
+                    $type = $first;
+                } else {
+                    $type = 'pgsql';
+                }
+            }
+        }
+        $defaults = $this->requirements->supportedDrivers()[$type] ?? ['default_port' => 5432, 'default_host' => '127.0.0.1'];
 
         return view('setup.database', [
             'cmsName' => config('cms.name'),
             'currentStep' => 3,
+            'driverOptions' => $options,
+            'driverMeta' => collect($this->requirements->supportedDrivers())
+                ->map(fn (array $meta, string $key) => [
+                    'label' => $meta['label'],
+                    'default_port' => (int) $meta['default_port'],
+                    'default_host' => (string) $meta['default_host'],
+                    'available' => $this->requirements->driverAvailable($key),
+                ])
+                ->all(),
             'database' => [
-                'type' => 'pgsql',
-                'host' => $saved['host'] ?? env('DB_HOST', 'postgres'),
-                'port' => $saved['port'] ?? env('DB_PORT', '5432'),
+                'type' => $type,
+                'host' => $saved['host'] ?? env('DB_HOST', $defaults['default_host'] ?? '127.0.0.1'),
+                'port' => $saved['port'] ?? env('DB_PORT', (string) ($defaults['default_port'] ?? 5432)),
                 'database' => $saved['database'] ?? env('DB_DATABASE', 'cms'),
                 'username' => $saved['username'] ?? env('DB_USERNAME', 'cms'),
                 'password' => '',
+                // Prefill for Docker compose (password field is blank by default otherwise).
+                'password_plain' => env('DB_PASSWORD', ''),
                 'tested' => (bool) Session::get('setup.database_tested', false),
             ],
         ]);
@@ -68,17 +94,20 @@ class SetupController extends Controller
     {
         $data = $request->validated();
 
-        $result = $this->requirements->testDatabaseConnection([
+        $payload = [
+            'type' => $data['type'],
             'host' => $data['host'],
             'port' => $data['port'],
             'database' => $data['database'],
             'username' => $data['username'],
             'password' => $data['password'] ?? '',
-        ]);
+        ];
+
+        $result = $this->requirements->testDatabaseConnection($payload);
 
         if ($result['success']) {
             Session::put('setup.database', [
-                'type' => 'pgsql',
+                'type' => $data['type'],
                 'host' => $data['host'],
                 'port' => (string) $data['port'],
                 'database' => $data['database'],
@@ -106,14 +135,28 @@ class SetupController extends Controller
         }
 
         $data = $request->validated();
+        $saved = Session::get('setup.database', []);
+
+        // Require re-test if connection settings changed after the last successful test.
+        if (
+            ($saved['type'] ?? null) !== $data['type']
+            || ($saved['host'] ?? null) !== $data['host']
+            || (string) ($saved['port'] ?? '') !== (string) $data['port']
+            || ($saved['database'] ?? null) !== $data['database']
+            || ($saved['username'] ?? null) !== $data['username']
+        ) {
+            Session::forget('setup.database_tested');
+
+            return back()->withInput()->with('error', 'Database settings changed. Please test the connection again.');
+        }
 
         Session::put('setup.database', [
-            'type' => 'pgsql',
+            'type' => $data['type'],
             'host' => $data['host'],
             'port' => (string) $data['port'],
             'database' => $data['database'],
             'username' => $data['username'],
-            'password' => $this->installation->encryptPassword($data['password'] ?? ''),
+            'password' => $saved['password'] ?? $this->installation->encryptPassword($data['password'] ?? ''),
         ]);
 
         return redirect()->route('setup.website');
@@ -230,14 +273,21 @@ class SetupController extends Controller
             $config = $this->buildInstallConfig();
         } catch (Throwable $e) {
             report($e);
+            $hint = str_contains(strtolower($e->getMessage()), 'decrypt') || str_contains($e::class, 'Decrypt')
+                ? 'Saved passwords could not be read. Go back to Database and Administrator, re-enter passwords, then install again.'
+                : 'Setup data is incomplete or invalid. Please restart the wizard.';
 
-            return $this->installFailedResponse($request);
+            return $this->installFailedResponse($request, [], $hint);
         }
 
         $result = $this->installation->install($config);
 
         if (! $result['success']) {
-            return $this->installFailedResponse($request, $result['steps'] ?? []);
+            return $this->installFailedResponse(
+                $request,
+                $result['steps'] ?? [],
+                $result['message'] ?? null
+            );
         }
 
         Session::forget([
@@ -291,18 +341,20 @@ class SetupController extends Controller
         ]);
     }
 
-    protected function installFailedResponse(Request $request, array $steps = []): JsonResponse|RedirectResponse
+    protected function installFailedResponse(Request $request, array $steps = [], ?string $message = null): JsonResponse|RedirectResponse
     {
+        $message ??= 'Installation could not be completed. Please check your settings and try again.';
+
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Installation could not be completed. Please check your database configuration and try again.',
+                'message' => $message,
                 'steps' => $steps,
                 'redirect' => route('setup.failed'),
             ], 422);
         }
 
-        return redirect()->route('setup.failed');
+        return redirect()->route('setup.failed')->with('error', $message);
     }
 
     /**
@@ -320,6 +372,7 @@ class SetupController extends Controller
 
         return [
             'database' => [
+                'type' => $db['type'] ?? 'pgsql',
                 'host' => $db['host'],
                 'port' => $db['port'],
                 'database' => $db['database'],

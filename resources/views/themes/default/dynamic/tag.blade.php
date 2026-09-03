@@ -5,7 +5,11 @@
     :seo-meta="$seoMeta ?? null"
     :breadcrumbs="$breadcrumbs ?? []"
 >
-    <span class="badge-type">Dynamic · Tag</span>
+    @if (config(\'app.debug\'))
+
+        <span class="badge-type">Dynamic · Tag</span>
+
+    @endif
     <h1 style="margin-top:.5rem">#{{ $tag->name }}</h1>
     @if ($tag->description)
         <p style="opacity:.8;margin-bottom:1.5rem">{{ $tag->description }}</p>

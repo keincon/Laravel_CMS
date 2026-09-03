@@ -1,16 +1,21 @@
 @props(['post'])
 
 @php
-    $url = app(\App\Services\PermalinkService::class)->postUrl($post);
-    $excerpt = $post->excerpt ?: \Illuminate\Support\Str::limit(strip_tags((string) $post->content), 160);
+    $permalinks = app(\App\Services\PermalinkService::class);
+    $url = $permalinks->postUrl($post);
+    $body = $post->content ?? $post->body ?? '';
+    $excerpt = $post->excerpt ?: \Illuminate\Support\Str::limit(strip_tags((string) $body), 160);
+    $authorName = $post->author
+        ? (method_exists($post->author, 'publicName') ? $post->author->publicName() : $post->author->name)
+        : null;
 @endphp
 
 <article class="post-card">
-    <h2><a href="{{ $url }}">{{ $post->title }}</a></h2>
+    <h2><a href="{{ $url }}">{{ $post->title }}@if(!empty($post->is_sticky)) <span style="font-size:.75rem;opacity:.7">· Sticky</span>@endif</a></h2>
     <p style="opacity:.7;font-size:.9rem;margin:.25rem 0">
         {{ optional($post->published_at)->toFormattedDateString() }}
-        @if ($post->author)
-            · <a href="{{ url('/author/'.$post->author->username) }}">{{ $post->author->name }}</a>
+        @if ($authorName)
+            · <a href="{{ url('/author/'.($post->author->username ?? '')) }}">{{ $authorName }}</a>
         @endif
     </p>
     <p>{{ $excerpt }}</p>

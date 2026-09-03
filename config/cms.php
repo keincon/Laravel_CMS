@@ -30,7 +30,6 @@ return [
     */
     'extensions' => [
         'pdo',
-        'pdo_pgsql',
         'mbstring',
         'openssl',
         'tokenizer',
@@ -39,6 +38,26 @@ return [
         'json',
         'fileinfo',
         'bcmath',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Database drivers offered during setup (at least one PDO driver required)
+    |--------------------------------------------------------------------------
+    */
+    'database_drivers' => [
+        'pgsql' => [
+            'label' => 'PostgreSQL',
+            'extension' => 'pdo_pgsql',
+            'default_port' => 5432,
+            'default_host' => '127.0.0.1',
+        ],
+        'mysql' => [
+            'label' => 'MySQL',
+            'extension' => 'pdo_mysql',
+            'default_port' => 3306,
+            'default_host' => '127.0.0.1',
+        ],
     ],
 
     /*
@@ -111,6 +130,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'permissions' => [
+        // Legacy CMS capabilities
         'manage_settings',
         'manage_users',
         'manage_roles',
@@ -121,6 +141,94 @@ return [
         'manage_menus',
         'manage_themes',
         'manage_comments',
+        // LaravelPress capabilities
+        'create_posts',
+        'edit_posts',
+        'edit_others_posts',
+        'publish_posts',
+        'delete_posts',
+        'create_pages',
+        'edit_pages',
+        'edit_others_pages',
+        'publish_pages',
+        'delete_pages',
+        'upload_media',
+        'moderate_comments',
+        'manage_options',
+        'manage_plugins',
+        'read',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Media image variants (queued processing)
+    |--------------------------------------------------------------------------
+    */
+    'media_variants' => [
+        'thumbnail' => ['width' => 150, 'height' => 150, 'crop' => true],
+        'small' => ['width' => 300, 'height' => 300, 'crop' => false],
+        'medium' => ['width' => 768, 'height' => 768, 'crop' => false],
+        'large' => ['width' => 1280, 'height' => 1280, 'crop' => false],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Content status labels
+    |--------------------------------------------------------------------------
+    */
+    'content_statuses' => [
+        'draft' => 'Draft',
+        'pending' => 'Pending Review',
+        'private' => 'Private',
+        'scheduled' => 'Scheduled',
+        'published' => 'Published',
+        'trash' => 'Trash',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Search driver: database | meilisearch
+    |--------------------------------------------------------------------------
+    */
+    'search' => [
+        'driver' => env('CMS_SEARCH_DRIVER', 'database'),
+        'meilisearch' => [
+            'host' => env('MEILISEARCH_HOST'),
+            'key' => env('MEILISEARCH_KEY'),
+            'index' => env('MEILISEARCH_INDEX', 'laravelpress'),
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public / authenticated API rate limit (requests per minute)
+    |--------------------------------------------------------------------------
+    */
+            'api' => [
+                'rate_limit' => (int) env('CMS_API_RATE_LIMIT', 120),
+            ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin: prefer LaravelPress contents UI
+    |--------------------------------------------------------------------------
+    */
+    'admin' => [
+        'prefer_contents' => (bool) env('CMS_ADMIN_PREFER_CONTENTS', true),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Legacy posts/pages tables (soft retirement; tables retained)
+    |--------------------------------------------------------------------------
+    | When retired (CMS_LEGACY_RETIRED=true or storage marker), dual-write,
+    | public fallback, and legacy admin UI are all off regardless of flags.
+    */
+    'legacy' => [
+        'retired' => (bool) env('CMS_LEGACY_RETIRED', true),
+        'dual_write' => (bool) env('CMS_LEGACY_DUAL_WRITE', false),
+        'public_fallback' => (bool) env('CMS_LEGACY_PUBLIC_FALLBACK', false),
+        'admin_ui' => (bool) env('CMS_LEGACY_ADMIN_UI', false),
     ],
 
     /*

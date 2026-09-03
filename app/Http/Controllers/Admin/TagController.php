@@ -30,7 +30,7 @@ class TagController extends Controller
     {
         $tag = Tag::query()->create($this->validated($request));
 
-        return redirect()->route('admin.tags.edit', $tag)->with('success', 'Tag created.');
+        return redirect()->route('admin.tags.index')->with('success', 'Tag created.');
     }
 
     public function edit(Tag $tag): View

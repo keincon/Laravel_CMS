@@ -16,6 +16,7 @@ class CategoryController extends Controller
     {
         return view('admin.categories.index', [
             'categories' => Category::query()->with('parent')->withCount('posts')->orderBy('name')->paginate(30),
+            'parents' => Category::query()->orderBy('name')->get(),
         ]);
     }
 
@@ -31,7 +32,7 @@ class CategoryController extends Controller
     {
         $category = Category::query()->create($this->validated($request));
 
-        return redirect()->route('admin.categories.edit', $category)->with('success', 'Category created.');
+        return redirect()->route('admin.categories.index')->with('success', 'Category created.');
     }
 
     public function edit(Category $category): View

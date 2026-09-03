@@ -4,12 +4,15 @@ namespace App\Services;
 
 use App\Models\Category;
 use App\Models\CmsSetting;
+use App\Models\Content;
 use App\Models\DynamicPageSetting;
 use App\Models\LayoutSetting;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\Tag;
+use App\Models\Term;
 use App\Models\User;
+use App\Services\Search\SearchService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -31,8 +34,37 @@ class PageRendererService
             return $this->renderBlog($request, isHomepage: true);
         }
 
-        $page = $layout->homepagePage
-            ?? Page::query()->published()->where('slug', 'home')->first();
+        // Prefer LaravelPress page content when dual-written.
+        $homepageSlug = $layout->homepagePage?->slug ?? 'home';
+        $contentHome = Content::query()
+            ->ofType('page')
+            ->published()
+            ->with(['author', 'featuredMedia'])
+            ->where('slug', $homepageSlug)
+            ->first();
+
+        if ($contentHome) {
+            $view = $this->dynamicPages->staticPageView($contentHome->template ?: 'default');
+
+            return view($view, [
+                'page' => $contentHome,
+                'content' => $contentHome,
+                'pageKind' => 'static',
+                'dynamicConfig' => null,
+                'seoMeta' => $this->seo->resolveDynamic('page', [
+                    'page_title' => $contentHome->title,
+                    'page_excerpt' => $contentHome->excerpt ?: '',
+                ], '/'),
+                'seoPath' => '/',
+                'context' => 'home',
+            ]);
+        }
+
+        $page = null;
+        if ($this->legacyPublicFallback()) {
+            $page = $layout->homepagePage
+                ?? Page::query()->published()->where('slug', 'home')->first();
+        }
 
         if (! $page) {
             return $this->renderBlog($request, isHomepage: true);
@@ -41,8 +73,14 @@ class PageRendererService
         return $this->renderStatic($page, context: 'home');
     }
 
+    protected function legacyPublicFallback(): bool
+    {
+        return app(\App\Services\Content\LegacyRetirementService::class)->publicFallbackEnabled();
+    }
+
     public function renderStatic(Page $page, string $context = 'page'): View
     {
+        $page->loadMissing(['featuredImage', 'author']);
         $view = $this->dynamicPages->staticPageView($page->template);
         $config = null;
 
@@ -61,9 +99,24 @@ class PageRendererService
         $config = $this->requireEnabled('blog');
         $perPage = $this->dynamicPages->postsPerPage('blog');
 
-        $query = Post::query()->published()->with(['author', 'categories', 'tags'])->latest('published_at');
-
-        $posts = $query->paginate($perPage)->withQueryString();
+        // Prefer LaravelPress contents; legacy Post archive only when fallback enabled.
+        if (Content::query()->ofType('post')->published()->exists() || ! $this->legacyPublicFallback()) {
+            $posts = Content::query()
+                ->ofType('post')
+                ->published()
+                ->with(['author', 'featuredMedia', 'terms'])
+                ->latest('published_at')
+                ->paginate($perPage)
+                ->withQueryString();
+        } else {
+            $posts = Post::query()
+                ->published()
+                ->with(['author', 'categories', 'tags', 'featuredImage'])
+                ->stickyFirst()
+                ->latest('published_at')
+                ->paginate($perPage)
+                ->withQueryString();
+        }
 
         $seoVars = [
             'page_title' => $config->title ?: 'Blog',
@@ -89,7 +142,59 @@ class PageRendererService
     public function renderPost(string $slug): View
     {
         $config = $this->requireEnabled('post');
-        $post = Post::query()->published()->with(['author', 'categories', 'tags'])->where('slug', $slug)->firstOrFail();
+
+        $content = Content::query()
+            ->ofType('post')
+            ->published()
+            ->with(['author', 'featuredMedia', 'terms'])
+            ->where('slug', $slug)
+            ->first();
+
+        if ($content) {
+            $seoPath = $this->permalinks->contentPath($content);
+            $seoVars = [
+                'post_title' => $content->title,
+                'post_excerpt' => $content->excerpt ?: '',
+                'author_name' => $content->author?->publicName() ?? '',
+            ];
+
+            // Prefer Content-native comments; optional legacy Post comments bridge.
+            $comments = $content->approvedComments()->get();
+            if ($comments->isEmpty() && $this->legacyPublicFallback()) {
+                $legacyPost = Post::query()->where('slug', $content->slug)->first();
+                $comments = $legacyPost
+                    ? $legacyPost->approvedComments()->get()
+                    : collect();
+            }
+
+            return $this->renderDynamic('post', [
+                'post' => $content, // Content exposes content/featuredImage accessors for themes
+                'content' => $content,
+                'comments' => $comments,
+                'relatedPosts' => Content::query()
+                    ->ofType('post')
+                    ->published()
+                    ->where('id', '!=', $content->id)
+                    ->latest('published_at')
+                    ->limit(3)
+                    ->get(),
+                'dynamicConfig' => $config,
+                'seoMeta' => $this->seo->resolveDynamic('post', $seoVars, $seoPath),
+                'seoPath' => $seoPath,
+                'context' => 'post',
+                'breadcrumbs' => $this->breadcrumbs([
+                    ['label' => 'Home', 'url' => url('/')],
+                    ['label' => 'Blog', 'url' => url('/blog')],
+                    ['label' => $content->title, 'url' => null],
+                ]),
+            ]);
+        }
+
+        if (! $this->legacyPublicFallback()) {
+            throw new NotFoundHttpException;
+        }
+
+        $post = Post::query()->published()->with(['author', 'categories', 'tags', 'featuredImage', 'approvedComments.user', 'approvedComments.children.user'])->where('slug', $slug)->firstOrFail();
         $seoPath = $this->permalinks->postPath($post);
 
         $related = Post::query()
@@ -108,6 +213,7 @@ class PageRendererService
 
         return $this->renderDynamic('post', [
             'post' => $post,
+            'comments' => $post->approvedComments,
             'relatedPosts' => $related,
             'dynamicConfig' => $config,
             'seoMeta' => $this->seo->resolveDynamic('post', $seoVars, $seoPath, $post),
@@ -124,6 +230,41 @@ class PageRendererService
     public function renderCategory(string $slug): View
     {
         $config = $this->requireEnabled('category');
+
+        $term = Term::query()
+            ->whereHas('taxonomy', fn ($q) => $q->where('slug', 'category'))
+            ->where('slug', $slug)
+            ->first();
+
+        if ($term && $term->contents()->ofType('post')->published()->exists()) {
+            $posts = $term->contents()
+                ->ofType('post')
+                ->published()
+                ->with('author')
+                ->latest('published_at')
+                ->paginate($this->dynamicPages->postsPerPage('category'))
+                ->withQueryString();
+
+            $seoVars = [
+                'category_name' => $term->name,
+                'page_excerpt' => $term->description ?: '',
+            ];
+
+            return $this->renderDynamic('category', [
+                'category' => $term,
+                'posts' => $posts,
+                'dynamicConfig' => $config,
+                'layoutStyle' => $config->layout ?: 'list',
+                'seoMeta' => $this->seo->resolveDynamic('category', $seoVars, 'category/'.$term->slug),
+                'seoPath' => 'category/'.$term->slug,
+                'context' => 'category',
+                'breadcrumbs' => $this->breadcrumbs([
+                    ['label' => 'Home', 'url' => url('/')],
+                    ['label' => $term->name, 'url' => null],
+                ]),
+            ]);
+        }
+
         $category = Category::query()->where('slug', $slug)->firstOrFail();
         $posts = $category->posts()->published()->with('author')->latest('published_at')
             ->paginate($this->dynamicPages->postsPerPage('category'))
@@ -152,6 +293,41 @@ class PageRendererService
     public function renderTag(string $slug): View
     {
         $config = $this->requireEnabled('tag');
+
+        $term = Term::query()
+            ->whereHas('taxonomy', fn ($q) => $q->whereIn('slug', ['post_tag', 'tag']))
+            ->where('slug', $slug)
+            ->first();
+
+        if ($term && $term->contents()->ofType('post')->published()->exists()) {
+            $posts = $term->contents()
+                ->ofType('post')
+                ->published()
+                ->with('author')
+                ->latest('published_at')
+                ->paginate($this->dynamicPages->postsPerPage('tag'))
+                ->withQueryString();
+
+            $seoVars = [
+                'tag_name' => $term->name,
+                'page_excerpt' => $term->description ?: '',
+            ];
+
+            return $this->renderDynamic('tag', [
+                'tag' => $term,
+                'posts' => $posts,
+                'dynamicConfig' => $config,
+                'layoutStyle' => $config->layout ?: 'list',
+                'seoMeta' => $this->seo->resolveDynamic('tag', $seoVars, 'tag/'.$term->slug),
+                'seoPath' => 'tag/'.$term->slug,
+                'context' => 'tag',
+                'breadcrumbs' => $this->breadcrumbs([
+                    ['label' => 'Home', 'url' => url('/')],
+                    ['label' => '#'.$term->name, 'url' => null],
+                ]),
+            ]);
+        }
+
         $tag = Tag::query()->where('slug', $slug)->firstOrFail();
         $posts = $tag->posts()->published()->with('author')->latest('published_at')
             ->paginate($this->dynamicPages->postsPerPage('tag'))
@@ -181,12 +357,23 @@ class PageRendererService
     {
         $config = $this->requireEnabled('author');
         $author = User::query()->where('username', $username)->firstOrFail();
-        $posts = Post::query()->published()->where('author_id', $author->id)->latest('published_at')
-            ->paginate($this->dynamicPages->postsPerPage('author'))
-            ->withQueryString();
+
+        if (Content::query()->ofType('post')->published()->where('author_id', $author->id)->exists()) {
+            $posts = Content::query()
+                ->ofType('post')
+                ->published()
+                ->where('author_id', $author->id)
+                ->latest('published_at')
+                ->paginate($this->dynamicPages->postsPerPage('author'))
+                ->withQueryString();
+        } else {
+            $posts = Post::query()->published()->where('author_id', $author->id)->latest('published_at')
+                ->paginate($this->dynamicPages->postsPerPage('author'))
+                ->withQueryString();
+        }
 
         $seoVars = [
-            'author_name' => $author->name,
+            'author_name' => $author->publicName(),
         ];
 
         return $this->renderDynamic('author', [
@@ -199,7 +386,7 @@ class PageRendererService
             'context' => 'author',
             'breadcrumbs' => $this->breadcrumbs([
                 ['label' => 'Home', 'url' => url('/')],
-                ['label' => $author->name, 'url' => null],
+                ['label' => $author->publicName(), 'url' => null],
             ]),
         ]);
     }
@@ -215,6 +402,7 @@ class PageRendererService
             'pages' => collect(),
             'categories' => collect(),
             'tags' => collect(),
+            'cms' => collect(),
         ];
         $total = 0;
 
@@ -222,17 +410,33 @@ class PageRendererService
             $term = '%'.$q.'%';
             $like = $this->likeOperator();
 
-            $results['posts'] = Post::query()->published()
-                ->where(fn ($builder) => $builder->where('title', $like, $term)->orWhere('content', $like, $term)->orWhere('excerpt', $like, $term))
-                ->latest('published_at')
-                ->limit($perPage)
-                ->get();
+            if (Content::query()->ofType('post')->published()->exists()) {
+                $results['posts'] = Content::query()->ofType('post')->published()
+                    ->where(fn ($builder) => $builder->where('title', $like, $term)->orWhere('body', $like, $term)->orWhere('excerpt', $like, $term))
+                    ->latest('published_at')
+                    ->limit($perPage)
+                    ->get();
+            } else {
+                $results['posts'] = Post::query()->published()
+                    ->where(fn ($builder) => $builder->where('title', $like, $term)->orWhere('content', $like, $term)->orWhere('excerpt', $like, $term))
+                    ->latest('published_at')
+                    ->limit($perPage)
+                    ->get();
+            }
 
-            $results['pages'] = Page::query()->published()
-                ->where(fn ($builder) => $builder->where('title', $like, $term)->orWhere('content', $like, $term)->orWhere('excerpt', $like, $term))
-                ->latest('published_at')
-                ->limit($perPage)
-                ->get();
+            if (Content::query()->ofType('page')->published()->exists()) {
+                $results['pages'] = Content::query()->ofType('page')->published()
+                    ->where(fn ($builder) => $builder->where('title', $like, $term)->orWhere('body', $like, $term)->orWhere('excerpt', $like, $term))
+                    ->latest('published_at')
+                    ->limit($perPage)
+                    ->get();
+            } else {
+                $results['pages'] = Page::query()->published()
+                    ->where(fn ($builder) => $builder->where('title', $like, $term)->orWhere('content', $like, $term)->orWhere('excerpt', $like, $term))
+                    ->latest('published_at')
+                    ->limit($perPage)
+                    ->get();
+            }
 
             $results['categories'] = Category::query()
                 ->where(fn ($builder) => $builder->where('name', $like, $term)->orWhere('description', $like, $term))
@@ -246,10 +450,14 @@ class PageRendererService
                 ->limit(20)
                 ->get();
 
+            // Also surface generic search hits (media/users/terms) via SearchService.
+            $results['cms'] = app(SearchService::class)->search($q, ['media', 'user', 'term'], 20);
+
             $total = $results['posts']->count()
                 + $results['pages']->count()
                 + $results['categories']->count()
-                + $results['tags']->count();
+                + $results['tags']->count()
+                + $results['cms']->count();
         }
 
         $seoVars = [
@@ -343,13 +551,43 @@ class PageRendererService
     public function resolveSlug(string $slug): View
     {
         if ($this->permalinks->structure() === PermalinkService::STRUCTURE_ROOT) {
-            $post = Post::query()->published()->where('slug', $slug)->first();
-            if ($post) {
-                return $this->renderPost($post->slug);
+            $contentExists = Content::query()->ofType('post')->published()->where('slug', $slug)->exists();
+            $legacyExists = $this->legacyPublicFallback()
+                && Post::query()->published()->where('slug', $slug)->exists();
+            if ($contentExists || $legacyExists) {
+                return $this->renderPost($slug);
             }
         }
 
         if ($this->dynamicPages->isReservedSlug($slug)) {
+            throw new NotFoundHttpException;
+        }
+
+        $contentPage = Content::query()
+            ->ofType('page')
+            ->published()
+            ->with(['author', 'featuredMedia'])
+            ->where('slug', $slug)
+            ->first();
+
+        if ($contentPage) {
+            $view = $this->dynamicPages->staticPageView($contentPage->template ?: 'default');
+
+            return view($view, [
+                'page' => $contentPage,
+                'content' => $contentPage,
+                'pageKind' => 'static',
+                'dynamicConfig' => null,
+                'seoMeta' => $this->seo->resolveDynamic('page', [
+                    'page_title' => $contentPage->title,
+                    'page_excerpt' => $contentPage->excerpt ?: '',
+                ], $contentPage->slug === 'home' ? '/' : $contentPage->slug),
+                'seoPath' => $contentPage->slug === 'home' ? '/' : $contentPage->slug,
+                'context' => 'page',
+            ]);
+        }
+
+        if (! $this->legacyPublicFallback()) {
             throw new NotFoundHttpException;
         }
 

@@ -23,6 +23,16 @@ class Media extends Model
         return $this->belongsTo(User::class, 'uploaded_by');
     }
 
+    public function variants(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MediaVariant::class);
+    }
+
+    public function meta(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MediaMeta::class);
+    }
+
     public function url(): string
     {
         return Storage::disk($this->disk)->url($this->path);

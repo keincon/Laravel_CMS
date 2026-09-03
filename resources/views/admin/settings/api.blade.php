@@ -12,6 +12,12 @@
 </div>
 
 <div class="mb-4 p-3 border rounded bg-white">
+    <h2 class="h6">CORS</h2>
+    <p class="mb-2">Browser clients on other origins need CORS headers for <code>/api/*</code>.</p>
+    <p class="mb-0"><a href="{{ route('admin.settings.cors') }}">Configure CORS →</a></p>
+</div>
+
+<div class="mb-4 p-3 border rounded bg-white">
     <h2 class="h6">Authentication</h2>
     <p class="mb-2">Admin endpoints require a Bearer personal access token:</p>
     <pre class="bg-dark text-white p-3 rounded small mb-2">Authorization: Bearer YOUR_TOKEN</pre>

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Content;
 use App\Models\Post;
 use App\Models\SeoSetting;
 
@@ -13,6 +14,8 @@ class PermalinkService
 
     public const STRUCTURE_ROOT = 'root_slug';
 
+    public const STRUCTURE_DATED = 'dated_slug';
+
     /**
      * @return array<string, string>
      */
@@ -22,6 +25,7 @@ class PermalinkService
             self::STRUCTURE_POSTS => '/posts/{slug}',
             self::STRUCTURE_BLOG => '/blog/{slug}',
             self::STRUCTURE_ROOT => '/{slug}',
+            self::STRUCTURE_DATED => '/blog/{year}/{month}/{slug}',
         ];
     }
 
@@ -34,16 +38,37 @@ class PermalinkService
 
     public function postPath(Post $post): string
     {
-        return match ($this->structure()) {
-            self::STRUCTURE_POSTS => 'posts/'.$post->slug,
-            self::STRUCTURE_ROOT => $post->slug,
-            default => 'blog/'.$post->slug,
-        };
+        return $this->resolvePath($post->slug, $post->published_at);
     }
 
-    public function postUrl(Post $post): string
+    public function contentPath(Content $content): string
     {
+        $type = $content->type?->slug ?? 'post';
+
+        if ($type === 'page') {
+            return $content->slug;
+        }
+
+        return $this->resolvePath($content->slug, $content->published_at);
+    }
+
+    public function postUrl(Post|Content $post): string
+    {
+        if ($post instanceof Content) {
+            return $this->contentUrl($post);
+        }
+
         return app(SeoService::class)->siteUrl().'/'.$this->postPath($post);
+    }
+
+    public function entryUrl(Post|Content $entry): string
+    {
+        return $this->postUrl($entry);
+    }
+
+    public function contentUrl(Content $content): string
+    {
+        return app(SeoService::class)->siteUrl().'/'.$this->contentPath($content);
     }
 
     public function categoryPath(string $slug): string
@@ -54,5 +79,20 @@ class PermalinkService
     public function tagPath(string $slug): string
     {
         return 'tag/'.$slug;
+    }
+
+    private function resolvePath(string $slug, mixed $publishedAt): string
+    {
+        return match ($this->structure()) {
+            self::STRUCTURE_POSTS => 'posts/'.$slug,
+            self::STRUCTURE_ROOT => $slug,
+            self::STRUCTURE_DATED => sprintf(
+                'blog/%s/%s/%s',
+                optional($publishedAt)?->format('Y') ?? now()->format('Y'),
+                optional($publishedAt)?->format('m') ?? now()->format('m'),
+                $slug,
+            ),
+            default => 'blog/'.$slug,
+        };
     }
 }

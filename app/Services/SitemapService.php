@@ -3,10 +3,12 @@
 namespace App\Services;
 
 use App\Models\Category;
+use App\Models\Content;
 use App\Models\Page;
 use App\Models\Post;
 use App\Models\SeoSetting;
 use App\Models\Tag;
+use App\Models\Term;
 use Illuminate\Support\Facades\Response;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
@@ -29,52 +31,102 @@ class SitemapService
         }
 
         $urls = [];
+        $seen = [];
 
-        $urls[] = [
-            'loc' => $this->seo->siteUrl().'/',
-            'lastmod' => now()->toAtomString(),
-            'changefreq' => 'daily',
-            'priority' => '1.0',
-        ];
+        $push = function (string $loc, ?string $lastmod, string $changefreq, string $priority) use (&$urls, &$seen): void {
+            if (isset($seen[$loc])) {
+                return;
+            }
+            $seen[$loc] = true;
+            $urls[] = compact('loc', 'lastmod', 'changefreq', 'priority');
+        };
 
-        Page::query()->published()->orderBy('slug')->each(function (Page $page) use (&$urls) {
+        $push($this->seo->siteUrl().'/', now()->toAtomString(), 'daily', '1.0');
+
+        Content::query()->ofType('page')->published()->orderBy('slug')->each(function (Content $page) use ($push) {
             if ($page->slug === 'home') {
                 return;
             }
 
-            $urls[] = [
-                'loc' => $this->seo->siteUrl().'/'.$page->slug,
-                'lastmod' => optional($page->updated_at)?->toAtomString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.8',
-            ];
+            $push(
+                $this->seo->siteUrl().'/'.$page->slug,
+                optional($page->updated_at)?->toAtomString(),
+                'weekly',
+                '0.8'
+            );
         });
 
-        Post::query()->published()->orderByDesc('published_at')->each(function (Post $post) use (&$urls) {
-            $urls[] = [
-                'loc' => $this->permalinks->postUrl($post),
-                'lastmod' => optional($post->updated_at)?->toAtomString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.7',
-            ];
+        Page::query()->published()->orderBy('slug')->each(function (Page $page) use ($push) {
+            if ($page->slug === 'home') {
+                return;
+            }
+
+            $push(
+                $this->seo->siteUrl().'/'.$page->slug,
+                optional($page->updated_at)?->toAtomString(),
+                'weekly',
+                '0.8'
+            );
         });
 
-        Category::query()->orderBy('slug')->each(function (Category $category) use (&$urls) {
-            $urls[] = [
-                'loc' => $this->seo->siteUrl().'/'.$this->permalinks->categoryPath($category->slug),
-                'lastmod' => optional($category->updated_at)?->toAtomString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.5',
-            ];
+        Content::query()->ofType('post')->published()->orderByDesc('published_at')->each(function (Content $post) use ($push) {
+            $push(
+                $this->permalinks->contentUrl($post),
+                optional($post->updated_at)?->toAtomString(),
+                'weekly',
+                '0.7'
+            );
         });
 
-        Tag::query()->orderBy('slug')->each(function (Tag $tag) use (&$urls) {
-            $urls[] = [
-                'loc' => $this->seo->siteUrl().'/'.$this->permalinks->tagPath($tag->slug),
-                'lastmod' => optional($tag->updated_at)?->toAtomString(),
-                'changefreq' => 'weekly',
-                'priority' => '0.4',
-            ];
+        Post::query()->published()->orderByDesc('published_at')->each(function (Post $post) use ($push) {
+            $push(
+                $this->permalinks->postUrl($post),
+                optional($post->updated_at)?->toAtomString(),
+                'weekly',
+                '0.7'
+            );
+        });
+
+        Term::query()
+            ->whereHas('taxonomy', fn ($q) => $q->where('slug', 'category'))
+            ->orderBy('slug')
+            ->each(function (Term $term) use ($push) {
+                $push(
+                    $this->seo->siteUrl().'/'.$this->permalinks->categoryPath($term->slug),
+                    optional($term->updated_at)?->toAtomString(),
+                    'weekly',
+                    '0.5'
+                );
+            });
+
+        Category::query()->orderBy('slug')->each(function (Category $category) use ($push) {
+            $push(
+                $this->seo->siteUrl().'/'.$this->permalinks->categoryPath($category->slug),
+                optional($category->updated_at)?->toAtomString(),
+                'weekly',
+                '0.5'
+            );
+        });
+
+        Term::query()
+            ->whereHas('taxonomy', fn ($q) => $q->whereIn('slug', ['post_tag', 'tag']))
+            ->orderBy('slug')
+            ->each(function (Term $term) use ($push) {
+                $push(
+                    $this->seo->siteUrl().'/'.$this->permalinks->tagPath($term->slug),
+                    optional($term->updated_at)?->toAtomString(),
+                    'weekly',
+                    '0.4'
+                );
+            });
+
+        Tag::query()->orderBy('slug')->each(function (Tag $tag) use ($push) {
+            $push(
+                $this->seo->siteUrl().'/'.$this->permalinks->tagPath($tag->slug),
+                optional($tag->updated_at)?->toAtomString(),
+                'weekly',
+                '0.4'
+            );
         });
 
         $xml = view('seo.sitemap', ['urls' => $urls])->render();
