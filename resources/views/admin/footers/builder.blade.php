@@ -1,10 +1,10 @@
 @extends('layouts.admin')
-@section('title', 'Footer Builder')
+@section('title', __('admin.appearance.footer_builder'))
 @section('content')
 <div x-data="footerBuilder(@js($structure), @js($available))" x-cloak>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h1 class="h3 mb-1">Footer Builder</h1>
+            <h1 class="h3 mb-1">{{ __('admin.appearance.footer_builder') }}</h1>
             <p class="text-muted mb-0">{{ $footer->name }} · <strong>{{ $footer->status }}</strong></p>
         </div>
         <a href="{{ route('admin.footers.index') }}" class="btn btn-outline-secondary">← Back</a>

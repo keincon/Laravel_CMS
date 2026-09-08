@@ -1,11 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Custom Code')
+@section('title', __('admin.nav.custom_code'))
 
 @section('content')
 <p class="page-intro mb-4">
-    Add site-wide HTML, CSS, and JavaScript — like WordPress Additional CSS and header/footer scripts.
-    Only trusted administrators should edit this.
+    {{ __('admin.appearance.custom_code_intro') }}
 </p>
 
 <form method="POST" action="{{ route('admin.appearance.custom-code.update') }}" class="panel" x-data="{ tab: 'css' }">

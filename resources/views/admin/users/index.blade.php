@@ -1,21 +1,21 @@
 @extends('layouts.admin')
 
-@section('title', 'Users')
+@section('title', __('admin.users.title'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-        <p class="page-intro mb-0">Manage accounts and WordPress-style roles (Spatie permissions).</p>
+        <p class="page-intro mb-0">{{ __('admin.users.intro') }}</p>
     </div>
     <div class="d-flex gap-2">
-        <a class="btn btn-outline-secondary" href="{{ route('admin.users.roles') }}">Roles</a>
-        <a class="btn btn-primary" href="{{ route('admin.users.create') }}">Add New</a>
+        <a class="btn btn-outline-secondary" href="{{ route('admin.users.roles') }}">{{ __('admin.users.roles') }}</a>
+        <a class="btn btn-primary" href="{{ route('admin.users.create') }}">{{ __('admin.users.add_new') }}</a>
     </div>
 </div>
 
 <div class="users-role-tabs mb-3">
     <a href="{{ route('admin.users.index', array_filter(['q' => $q ?: null])) }}" class="{{ $roleFilter === '' ? 'is-active' : '' }}">
-        All <span>({{ $roleCounts['all'] ?? 0 }})</span>
+        {{ __('admin.users.all') }} <span>({{ $roleCounts['all'] ?? 0 }})</span>
     </a>
     @foreach ($roles as $r)
         <a href="{{ route('admin.users.index', array_filter(['role' => $r->name, 'q' => $q ?: null])) }}" class="{{ $roleFilter === $r->name ? 'is-active' : '' }}">
@@ -29,10 +29,10 @@
         @if ($roleFilter !== '')
             <input type="hidden" name="role" value="{{ $roleFilter }}">
         @endif
-        <input type="search" name="q" value="{{ $q }}" class="form-control" style="max-width: 280px" placeholder="Search users">
-        <button class="btn btn-outline-secondary" type="submit">Search Users</button>
+        <input type="search" name="q" value="{{ $q }}" class="form-control" style="max-width: 280px" placeholder="{{ __('admin.users.search_placeholder') }}">
+        <button class="btn btn-outline-secondary" type="submit">{{ __('admin.users.search') }}</button>
         @if ($q !== '')
-            <a class="btn btn-outline-secondary" href="{{ route('admin.users.index', array_filter(['role' => $roleFilter ?: null])) }}">Clear</a>
+            <a class="btn btn-outline-secondary" href="{{ route('admin.users.index', array_filter(['role' => $roleFilter ?: null])) }}">{{ __('admin.users.clear') }}</a>
         @endif
     </form>
 </div>
@@ -42,32 +42,32 @@
     <div class="panel mb-3">
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             <select name="action" class="form-select" style="max-width: 200px" required>
-                <option value="">Bulk actions</option>
-                <option value="change_role">Change role to…</option>
-                <option value="delete">Delete</option>
+                <option value="">{{ __('admin.users.bulk_actions') }}</option>
+                <option value="change_role">{{ __('admin.users.change_role') }}</option>
+                <option value="delete">{{ __('admin.users.delete') }}</option>
             </select>
             <select name="role" class="form-select" style="max-width: 200px">
-                <option value="">— Role —</option>
+                <option value="">{{ __('admin.users.role_placeholder') }}</option>
                 @foreach ($roles as $r)
                     <option value="{{ $r->name }}">{{ $r->name }}</option>
                 @endforeach
             </select>
-            <button class="btn btn-outline-secondary" type="submit">Apply</button>
+            <button class="btn btn-outline-secondary" type="submit">{{ __('admin.users.apply') }}</button>
         </div>
 
         @if ($users->isEmpty())
-            <div class="empty-state">No users found.</div>
+            <div class="empty-state">{{ __('admin.users.no_users') }}</div>
         @else
             <div class="table-responsive">
                 <table class="table mb-0">
                     <thead>
                         <tr>
                             <th style="width:2rem"><input type="checkbox" onclick="document.querySelectorAll('.user-check').forEach(c => c.checked = this.checked)"></th>
-                            <th>Username</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Posts</th>
+                            <th>{{ __('admin.users.username') }}</th>
+                            <th>{{ __('admin.users.name') }}</th>
+                            <th>{{ __('admin.users.email') }}</th>
+                            <th>{{ __('admin.users.role') }}</th>
+                            <th>{{ __('admin.users.posts') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -81,10 +81,10 @@
                                 <td>
                                     <a href="{{ route('admin.users.edit', $user) }}" class="fw-semibold">{{ $user->username ?: $user->email }}</a>
                                     <div class="row-actions small mt-1">
-                                        <a href="{{ route('admin.users.edit', $user) }}">Edit</a>
+                                        <a href="{{ route('admin.users.edit', $user) }}">{{ __('admin.users.edit_action') }}</a>
                                         @if ($user->id !== auth()->id())
                                             ·
-                                            <button form="delete-user-{{ $user->id }}" class="link-danger" type="submit" onclick="return confirm('Delete this user?')">Delete</button>
+                                            <button form="delete-user-{{ $user->id }}" class="link-danger" type="submit" onclick="return confirm(@js(__('admin.users.delete_confirm')))">{{ __('admin.users.delete') }}</button>
                                         @endif
                                     </div>
                                 </td>
@@ -94,7 +94,7 @@
                                     @forelse ($user->roles as $role)
                                         <span class="badge text-bg-primary">{{ $role->name }}</span>
                                     @empty
-                                        <span class="badge text-bg-secondary">None</span>
+                                        <span class="badge text-bg-secondary">{{ __('admin.users.none') }}</span>
                                     @endforelse
                                 </td>
                                 <td>{{ $user->posts()->count() }}</td>

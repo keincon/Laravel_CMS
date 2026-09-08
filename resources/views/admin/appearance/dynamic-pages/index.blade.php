@@ -1,7 +1,7 @@
 @extends('layouts.admin')
-@section('title', 'Dynamic Pages')
+@section('title', __('admin.nav.dynamic_pages'))
 @section('content')
-<h1 class="h3 mb-2">Dynamic Pages</h1>
+<h1 class="h3 mb-2">{{ __('admin.nav.dynamic_pages') }}</h1>
 <p class="text-muted mb-4">
     These are <strong>system templates</strong>, not Static Pages. The CMS generates their content from data
     (posts, categories, search queries, etc.).

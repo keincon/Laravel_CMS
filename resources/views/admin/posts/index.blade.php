@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Posts')
+@section('title', __('admin.nav.posts'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-        <h1 class="h3 mb-1">Posts</h1>
-        <p class="page-intro mb-0">Create and manage blog posts.</p>
+        <h1 class="h3 mb-1">{{ __('admin.nav.posts') }}</h1>
+        <p class="page-intro mb-0">{{ __('admin.posts.intro') }}</p>
     </div>
     <a class="btn btn-primary" href="{{ route('admin.posts.create') }}">Add New</a>
 </div>
@@ -32,8 +32,8 @@
         @if ($status !== 'all')
             <input type="hidden" name="status" value="{{ $status }}">
         @endif
-        <input type="search" name="q" value="{{ $q }}" class="form-control" style="max-width:280px" placeholder="Search posts">
-        <button class="btn btn-outline-secondary" type="submit">Search Posts</button>
+        <input type="search" name="q" value="{{ $q }}" class="form-control" style="max-width:280px" placeholder="{{ __('admin.posts.search') }}">
+        <button class="btn btn-outline-secondary" type="submit">{{ __('common.search') }}</button>
     </form>
 </div>
 
@@ -45,11 +45,11 @@
                 <option value="">Bulk actions</option>
                 @if ($status === 'trash')
                     <option value="restore">Restore</option>
-                    <option value="delete">Delete permanently</option>
+                    <option value="delete">{{ __('admin.posts.delete_permanently') }}</option>
                 @else
                     <option value="publish">Publish</option>
                     <option value="draft">Move to Draft</option>
-                    <option value="trash">Move to Trash</option>
+                    <option value="trash">{{ __('admin.posts.trash') }}</option>
                 @endif
             </select>
             <button class="btn btn-outline-secondary" type="submit">Apply</button>
@@ -66,7 +66,7 @@
                             <th>Title</th>
                             <th>Author</th>
                             <th>Categories</th>
-                            <th>Status</th>
+                            <th>{{ __('admin.ui.status') }}</th>
                             <th>Date</th>
                         </tr>
                     </thead>
@@ -80,15 +80,15 @@
                                         <span class="badge text-bg-primary">Sticky</span>
                                     @endif
                                     <div class="row-actions small mt-1">
-                                        <a href="{{ route('admin.posts.edit', $post) }}">Edit</a>
+                                        <a href="{{ route('admin.posts.edit', $post) }}">{{ __('admin.ui.edit') }}</a>
                                         ·
                                         <a href="{{ route('admin.posts.preview', $post) }}" target="_blank">Preview</a>
                                         ·
                                         <button form="dup-post-{{ $post->id }}" type="submit">Duplicate</button>
                                         ·
                                         <button form="trash-post-{{ $post->id }}" class="link-danger" type="submit"
-                                            onclick="return confirm('{{ $post->status === 'trash' ? 'Delete permanently?' : 'Move to Trash?' }}')">
-                                            {{ $post->status === 'trash' ? 'Delete Permanently' : 'Trash' }}
+                                            onclick="return confirm(@js($post->status === 'trash' ? __('admin.posts.delete_permanently_q') : __('admin.posts.move_to_trash_q')))">
+                                            {{ $post->status === 'trash' ? __('admin.posts.delete_permanently') : __('admin.posts.trash') }}
                                         </button>
                                     </div>
                                 </td>

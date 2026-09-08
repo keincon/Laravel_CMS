@@ -1,11 +1,11 @@
 @extends('layouts.admin')
 
-@section('title', 'Audit Log')
+@section('title', __('admin.nav.audit_log'))
 
 @section('content')
     <div class="admin-page-header">
-        <h1>Audit Log</h1>
-        <p class="muted">Security and content change trail</p>
+        <h1>{{ __('admin.audit.title') }}</h1>
+        <p class="muted">{{ __('admin.audit.intro') }}</p>
     </div>
 
     <div class="admin-table-wrap">

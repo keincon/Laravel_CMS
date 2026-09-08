@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 
-@section('title', 'Add New User')
+@section('title', __('admin.users.add_title'))
 
 @section('content')
-<p class="page-intro mb-4">Create a user and assign a role.</p>
+<p class="page-intro mb-4">{{ __('admin.users.add_intro') }}</p>
 
 <form method="POST" action="{{ route('admin.users.store') }}" class="settings-form panel">
     @csrf

@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 
-@section('title', 'API')
+@section('title', __('admin.nav.api'))
 
 @section('content')
-<h1 class="h3 mb-2">API Documentation</h1>
+<h1 class="h3 mb-2">{{ __('admin.settings.api_title') }}</h1>
 <p class="text-muted mb-4">Versioned REST API for public content and authenticated administration.</p>
 
 <div class="mb-4 p-3 border rounded bg-white">
@@ -21,7 +21,7 @@
     <h2 class="h6">Authentication</h2>
     <p class="mb-2">Admin endpoints require a Bearer personal access token:</p>
     <pre class="bg-dark text-white p-3 rounded small mb-2">Authorization: Bearer YOUR_TOKEN</pre>
-    <p class="mb-0"><a href="{{ route('admin.users.tokens') }}">Create / revoke API tokens →</a></p>
+    <p class="mb-0"><a href="{{ route('admin.users.tokens') }}">{{ __('admin.api.tokens_link') }}</a></p>
 </div>
 
 <div class="table-responsive">

@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 
-@section('title', 'Discussion')
+@section('title', __('admin.nav.discussion'))
 
 @section('content')
-<p class="page-intro mb-4">Control how comments work across the site.</p>
+<p class="page-intro mb-4">{{ __('admin.settings.discussion_intro') }}</p>
 <form method="POST" action="{{ route('admin.settings.discussion.update') }}" class="settings-form panel">
     @csrf
     @method('PUT')

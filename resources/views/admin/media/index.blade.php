@@ -1,36 +1,36 @@
 @extends('layouts.admin')
-@section('title', 'Media')
+@section('title', __('admin.media.title'))
 @section('content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-    <p class="text-muted mb-0">Upload images and files for posts, pages, and SEO.</p>
+    <p class="text-muted mb-0">{{ __('admin.media.intro') }}</p>
     <form method="GET" class="d-flex gap-2">
-        <input type="search" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="Search…">
-        <button class="btn btn-sm btn-outline-secondary" type="submit">Search</button>
+        <input type="search" name="q" value="{{ $q }}" class="form-control form-control-sm" placeholder="{{ __('admin.media.search_placeholder') }}">
+        <button class="btn btn-sm btn-outline-secondary" type="submit">{{ __('admin.media.search') }}</button>
     </form>
 </div>
 
 <div class="panel mb-4">
-    <h2 class="h6 mb-3">Upload</h2>
+    <h2 class="h6 mb-3">{{ __('admin.media.upload') }}</h2>
     <form method="POST" action="{{ route('admin.media.store') }}" enctype="multipart/form-data" class="row g-2 align-items-end">
         @csrf
         <div class="col-md-5">
-            <label class="form-label">File</label>
+            <label class="form-label">{{ __('admin.media.file') }}</label>
             <input type="file" name="file" class="form-control" required>
         </div>
         <div class="col-md-5">
-            <label class="form-label">Alt text</label>
+            <label class="form-label">{{ __('admin.media.alt') }}</label>
             <input type="text" name="alt" class="form-control" value="{{ old('alt') }}">
         </div>
         <div class="col-md-2">
-            <button class="btn btn-primary w-100" type="submit">Upload</button>
+            <button class="btn btn-primary w-100" type="submit">{{ __('admin.media.upload') }}</button>
         </div>
     </form>
 </div>
 
 @if ($media->isEmpty())
     <div class="empty-state">
-        <h2 class="h5 text-dark">No media yet</h2>
-        <p class="mb-0">Upload an image to use as a featured image on posts.</p>
+        <h2 class="h5 text-dark">{{ __('admin.media.empty') }}</h2>
+        <p class="mb-0">{{ __('admin.media.empty_help') }}</p>
     </div>
 @else
     <div class="media-grid">
@@ -46,12 +46,12 @@
                     <div class="text-muted mb-2">{{ number_format($item->size / 1024, 1) }} KB</div>
                     <form method="POST" action="{{ route('admin.media.update', $item) }}" class="mb-2">
                         @csrf @method('PUT')
-                        <input type="text" name="alt" class="form-control form-control-sm mb-1" value="{{ $item->alt }}" placeholder="Alt text">
-                        <button class="btn btn-sm btn-outline-secondary w-100" type="submit">Save alt</button>
+                        <input type="text" name="alt" class="form-control form-control-sm mb-1" value="{{ $item->alt }}" placeholder="{{ __('admin.media.alt') }}">
+                        <button class="btn btn-sm btn-outline-secondary w-100" type="submit">{{ __('admin.media.save_alt') }}</button>
                     </form>
-                    <form method="POST" action="{{ route('admin.media.destroy', $item) }}" onsubmit="return confirm('Delete this file?')">
+                    <form method="POST" action="{{ route('admin.media.destroy', $item) }}" onsubmit="return confirm(@js(__('admin.media.delete_confirm')))">
                         @csrf @method('DELETE')
-                        <button class="btn btn-sm btn-outline-danger w-100" type="submit">Delete</button>
+                        <button class="btn btn-sm btn-outline-danger w-100" type="submit">{{ __('admin.media.delete') }}</button>
                     </form>
                 </div>
             </div>

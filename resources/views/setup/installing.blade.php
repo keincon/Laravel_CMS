@@ -2,31 +2,31 @@
     $ui = app(\App\Services\UIFrameworkService::class);
 @endphp
 
-<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" title="Install">
+<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" :title="__('setup.installing.title')">
     <div x-data="installer()" x-cloak>
         <template x-if="!running && !done && !failed">
             <div>
-                <h2 class="{{ $ui->class('heading') }}">Ready to Install</h2>
-                <p class="{{ $ui->class('subheading') }}">Review your choices, then install the CMS.</p>
+                <h2 class="{{ $ui->class('heading') }}">{{ __('setup.installing.heading') }}</h2>
+                <p class="{{ $ui->class('subheading') }}">{{ __('setup.installing.subheading') }}</p>
 
                 <ul class="check-list mb-4">
-                    <li><strong>Website:</strong>&nbsp; {{ $summary['website'] }}</li>
-                    <li><strong>URL:</strong>&nbsp; {{ $summary['url'] }}</li>
-                    <li><strong>Administrator:</strong>&nbsp; {{ $summary['admin'] }}</li>
-                    <li><strong>UI Framework:</strong>&nbsp; {{ ucfirst($summary['framework']) }}</li>
+                    <li><strong>{{ __('setup.installing.summary_site') }}:</strong>&nbsp; {{ $summary['website'] }}</li>
+                    <li><strong>{{ __('setup.installing.summary_url') }}:</strong>&nbsp; {{ $summary['url'] }}</li>
+                    <li><strong>{{ __('setup.installing.summary_admin') }}:</strong>&nbsp; {{ $summary['admin'] }}</li>
+                    <li><strong>{{ __('setup.installing.summary_ui') }}:</strong>&nbsp; {{ ucfirst($summary['framework']) }}</li>
                 </ul>
 
                 <div class="actions between">
-                    <x-ui.button href="{{ route('setup.appearance') }}" variant="secondary" type="button">← Back</x-ui.button>
-                    <x-ui.button type="button" variant="success" @click="start">Install CMS</x-ui.button>
+                    <x-ui.button href="{{ route('setup.appearance') }}" variant="secondary" type="button">{{ __('setup.installing.back') }}</x-ui.button>
+                    <x-ui.button type="button" variant="success" @click="start">{{ __('setup.installing.start') }}</x-ui.button>
                 </div>
             </div>
         </template>
 
         <template x-if="running || done">
             <div>
-                <h2 class="{{ $ui->class('heading') }}">Installing CMS...</h2>
-                <p class="{{ $ui->class('subheading') }}">Please wait. Do not close this window.</p>
+                <h2 class="{{ $ui->class('heading') }}">{{ __('setup.installing.installing') }}</h2>
+                <p class="{{ $ui->class('subheading') }}">{{ __('setup.installing.please_wait') }}</p>
 
                 <ul class="install-progress check-list">
                     <template x-for="step in steps" :key="step.key">
@@ -37,18 +37,18 @@
                     </template>
                 </ul>
 
-                <p class="mt-3 {{ $ui->class('text_muted') }}" x-show="running">Working…</p>
+                <p class="mt-3 {{ $ui->class('text_muted') }}" x-show="running">{{ __('setup.installing.working') }}</p>
             </div>
         </template>
 
         <template x-if="failed">
             <div>
-                <h2 class="{{ $ui->class('heading') }}">Installation could not be completed.</h2>
+                <h2 class="{{ $ui->class('heading') }}">{{ __('setup.installing.failed_heading') }}</h2>
                 <p class="{{ $ui->class('subheading') }}" x-text="errorMessage"></p>
                 <div class="actions between">
-                    <x-ui.button href="{{ route('setup.database') }}" variant="secondary" type="button">← Database</x-ui.button>
-                    <x-ui.button href="{{ route('setup.administrator') }}" variant="secondary" type="button">Administrator</x-ui.button>
-                    <x-ui.button type="button" variant="primary" @click="start">Try Again</x-ui.button>
+                    <x-ui.button href="{{ route('setup.database') }}" variant="secondary" type="button">← {{ __('setup.failed.database') }}</x-ui.button>
+                    <x-ui.button href="{{ route('setup.administrator') }}" variant="secondary" type="button">{{ __('setup.failed.administrator') }}</x-ui.button>
+                    <x-ui.button type="button" variant="primary" @click="start">{{ __('setup.failed.retry') }}</x-ui.button>
                 </div>
             </div>
         </template>
@@ -56,28 +56,53 @@
 
     <x-slot:scripts>
         <script>
+        window.setupI18n = {
+            errorDefault: @json(__('setup.installing.error_default')),
+            interruptError: @json(__('setup.installing.interrupt_error')),
+            steps: {
+                validate: @json(__('setup.installing.progress_validate')),
+                database_test: @json(__('setup.installing.progress_database_test')),
+                migrate: @json(__('setup.installing.progress_migrate')),
+                roles: @json(__('setup.installing.progress_roles')),
+                permissions: @json(__('setup.installing.progress_permissions')),
+                administrator: @json(__('setup.installing.progress_admin')),
+                pages: @json(__('setup.installing.progress_pages')),
+                menu: @json(__('setup.installing.progress_menu')),
+                categories: @json(__('setup.installing.progress_categories')),
+                settings: @json(__('setup.installing.progress_settings')),
+                theme: @json(__('setup.installing.progress_theme')),
+                finalize: @json(__('setup.installing.progress_done')),
+            },
+        };
         function installer() {
+            const i18n = window.setupI18n;
+            const stepDefs = [
+                'validate',
+                'database_test',
+                'migrate',
+                'roles',
+                'permissions',
+                'administrator',
+                'settings',
+                'theme',
+                'finalize',
+            ];
+            const makeSteps = () => stepDefs.map((key) => ({
+                key,
+                label: i18n.steps[key] || key,
+                status: 'pending',
+            }));
             return {
                 running: false,
                 done: false,
                 failed: false,
-                errorMessage: 'Please check your settings and try again.',
-                steps: [
-                    { key: 'validate', label: 'Validating configuration', status: 'pending' },
-                    { key: 'database_test', label: 'Testing database', status: 'pending' },
-                    { key: 'migrate', label: 'Creating database', status: 'pending' },
-                    { key: 'roles', label: 'Creating roles', status: 'pending' },
-                    { key: 'permissions', label: 'Creating permissions', status: 'pending' },
-                    { key: 'administrator', label: 'Creating administrator', status: 'pending' },
-                    { key: 'settings', label: 'Creating default settings', status: 'pending' },
-                    { key: 'theme', label: 'Creating theme', status: 'pending' },
-                    { key: 'finalize', label: 'Finalizing installation', status: 'pending' },
-                ],
+                errorMessage: i18n.errorDefault,
+                steps: makeSteps(),
                 async start() {
                     this.running = true;
                     this.failed = false;
                     this.done = false;
-                    this.steps = this.steps.map(s => ({ ...s, status: 'pending' }));
+                    this.steps = makeSteps();
 
                     let i = 0;
                     const tick = setInterval(() => {
@@ -105,7 +130,7 @@
                         if (json.steps) {
                             this.steps = json.steps.map(s => ({
                                 key: s.key,
-                                label: s.label,
+                                label: i18n.steps[s.key] || s.label,
                                 status: s.status === 'done' ? 'done' : 'pending',
                             }));
                         } else {
@@ -125,7 +150,7 @@
                         clearInterval(tick);
                         this.failed = true;
                         this.running = false;
-                        this.errorMessage = 'The install request was interrupted (often the PHP server restarting after writing .env). Rebuild/restart Docker so it uses the built-in server, then click Try Again. If it still fails, check storage/logs/laravel.log.';
+                        this.errorMessage = i18n.interruptError;
                     }
                 }
             }

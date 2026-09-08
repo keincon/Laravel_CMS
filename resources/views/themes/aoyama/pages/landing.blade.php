@@ -44,7 +44,7 @@
                         <div>
                             <h3>AOYAMAライフマスターカード</h3>
                             <p>Wポイント：AOYAMAポイント + サンクスポイント</p>
-                            <a class="ao-product-link" href="{{ url('/card-aoyama-life') }}">カードを申し込む</a>
+                            <a class="ao-product-link" href="{{ url('/card-aoyama-life') }}">詳細を見る</a>
                         </div>
                     </div>
                     <div class="ao-product">
@@ -52,7 +52,7 @@
                         <div>
                             <h3>BLUE ROSE CARD</h3>
                             <p>Wポイント：ROSEポイント + サンクスポイント</p>
-                            <a class="ao-product-link" href="{{ url('/card-bluerose-life') }}">カードを申し込む</a>
+                            <a class="ao-product-link" href="{{ url('/card-bluerose-life') }}">詳細を見る</a>
                         </div>
                     </div>
                 </div>
@@ -62,17 +62,25 @@
                     <div class="ao-product">
                         <img src="{{ aoyama_theme_image('card-visa.png') }}" alt="AOYAMA VISAカード" width="88" height="56" loading="lazy">
                         <div>
-                            <h3>AOYAMA VISAカード</h3>
+                            <h3>AOYAMA VISAカード（IC）</h3>
                             <p>Wポイント：AOYAMAポイント + Vポイント</p>
-                            <a class="ao-product-link" href="{{ url('/card-aoyama-visa') }}">カードを申し込む</a>
+                            <a class="ao-product-link" href="{{ url('/card-aoyama-visa') }}">詳細を見る</a>
                         </div>
                     </div>
                     <div class="ao-product">
-                        <img src="{{ aoyama_theme_image('card-bluerose-life.png') }}" alt="BLUE ROSE CARD" width="88" height="56" loading="lazy">
+                        <img src="{{ aoyama_theme_image('card-pitapa.png') }}" alt="AOYAMA PiTaPaカード" width="88" height="56" loading="lazy">
+                        <div>
+                            <h3>AOYAMA PiTaPaカード</h3>
+                            <p>電車・バスもお買物もこれ1枚</p>
+                            <a class="ao-product-link" href="{{ url('/card-aoyama-visa') }}">詳細を見る</a>
+                        </div>
+                    </div>
+                    <div class="ao-product">
+                        <img src="{{ aoyama_theme_image('card-visa-bluerose.png') }}" alt="BLUE ROSE CARD" width="88" height="56" loading="lazy">
                         <div>
                             <h3>BLUE ROSE CARD</h3>
                             <p>Wポイント：ROSEポイント + Vポイント</p>
-                            <a class="ao-product-link" href="{{ url('/card-bluerose-visa') }}">カードを申し込む</a>
+                            <a class="ao-product-link" href="{{ url('/card-bluerose-visa') }}">詳細を見る</a>
                         </div>
                     </div>
                 </div>
@@ -84,19 +92,29 @@
                         <div>
                             <h3>AOYAMAカード</h3>
                             <p>Wポイント：AOYAMAポイント + UCポイント</p>
-                            <a class="ao-product-link" href="{{ url('/card-capital') }}">カードを申し込む</a>
+                            <a class="ao-product-link" href="{{ url('/card-capital') }}">詳細を見る</a>
                         </div>
                     </div>
                     <div class="ao-product">
-                        <img src="{{ aoyama_theme_image('hero-card-bluerose.png') }}" alt="BLUE ROSE CARD" width="88" height="56" loading="lazy">
+                        <img src="{{ aoyama_theme_image('card-sugoca.png') }}" alt="AOYAMAマスターカードSUGOCA" width="88" height="56" loading="lazy">
+                        <div>
+                            <h3>AOYAMAマスターカードSUGOCA</h3>
+                            <p>SUGOCA一体の多機能カード</p>
+                            <a class="ao-product-link" href="{{ url('/card-capital') }}">詳細を見る</a>
+                        </div>
+                    </div>
+                    <div class="ao-product">
+                        <img src="{{ aoyama_theme_image('card-bluerose-capital.png') }}" alt="BLUE ROSE CARD" width="88" height="56" loading="lazy">
                         <div>
                             <h3>BLUE ROSE CARD</h3>
                             <p>Wポイント：ROSEポイント + UCポイント</p>
-                            <a class="ao-product-link" href="{{ url('/card-bluerose') }}">カードを申し込む</a>
+                            <a class="ao-product-link" href="{{ url('/card-bluerose') }}">詳細を見る</a>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <p class="ao-btn-row" style="margin-top:0.5rem;color:var(--ao-muted);font-size:0.9rem">PiTaPa機能付・SUGOCA機能付きカード、Papas／Mamasカードもご案内しています。</p>
 
             <div class="ao-btn-row">
                 <a class="ao-btn" href="{{ url('/card') }}">カード一覧を見る</a>

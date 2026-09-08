@@ -1,16 +1,16 @@
 @props([
     'cmsName' => null,
     'currentStep' => 1,
-    'title' => 'Setup',
+    'title' => null,
 ])
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title }} — {{ $cmsName ?? config('cms.name') }}</title>
+    <title>{{ $title ?? __('setup.steps.1') }} — {{ $cmsName ?? config('cms.name') }}</title>
     @php
         $ui = app(\App\Services\UIFrameworkService::class);
         $framework = $ui->current();
@@ -67,6 +67,42 @@
             margin: .35rem 0 0;
             color: #94a3b8;
             font-size: .95rem;
+        }
+        .visually-hidden {
+            position: absolute !important;
+            width: 1px; height: 1px;
+            padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0);
+            white-space: nowrap; border: 0;
+        }
+        .locale-switcher {
+            display: inline-flex;
+            justify-content: center;
+            margin: .75rem auto 0;
+        }
+        .locale-switcher-select {
+            appearance: none;
+            background: rgba(15, 23, 42, 0.55);
+            color: #e2e8f0;
+            border: 1px solid rgba(148, 163, 184, 0.45);
+            border-radius: .5rem;
+            padding: .35rem 1.75rem .35rem .7rem;
+            font-size: .85rem;
+            line-height: 1.3;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%94a3b8' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right .55rem center;
+        }
+        .locale-switcher-select:hover,
+        .locale-switcher-select:focus {
+            border-color: #38bdf8;
+            outline: none;
+            color: #fff;
+        }
+        .locale-switcher-select option {
+            background: #0f172a;
+            color: #e2e8f0;
         }
         .setup-steps {
             display: flex;
@@ -200,24 +236,25 @@
         <div class="setup-brand">
             <div class="setup-logo" aria-hidden="true">CMS</div>
             <h1>{{ $cmsName ?? config('cms.name') }}</h1>
-            <p>Let's get your website ready.</p>
+            <p>{{ __('setup.tagline') }}</p>
+            <x-locale-switcher />
         </div>
 
         @php
             $steps = [
-                1 => 'Welcome',
-                2 => 'Requirements',
-                3 => 'Database',
-                4 => 'Website',
-                5 => 'Administrator',
-                6 => 'Appearance',
-                7 => 'Install',
-                8 => 'Complete',
+                1 => __('setup.steps.1'),
+                2 => __('setup.steps.2'),
+                3 => __('setup.steps.3'),
+                4 => __('setup.steps.4'),
+                5 => __('setup.steps.5'),
+                6 => __('setup.steps.6'),
+                7 => __('setup.steps.7'),
+                8 => __('setup.steps.8'),
             ];
             $current = $currentStep ?? 1;
         @endphp
 
-        <nav class="setup-steps" aria-label="Setup progress">
+        <nav class="setup-steps" aria-label="{{ __('setup.progress') }}">
             @foreach ($steps as $num => $label)
                 @php
                     $state = $num < $current ? 'done' : ($num === $current ? 'active' : 'pending');

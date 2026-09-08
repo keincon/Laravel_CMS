@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Pages')
+@section('title', __('admin.nav.pages'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-        <h1 class="h3 mb-1">Pages</h1>
-        <p class="page-intro mb-0">Static pages you author. Dynamic systems stay under Appearance → Dynamic Pages.</p>
+        <h1 class="h3 mb-1">{{ __('admin.nav.pages') }}</h1>
+        <p class="page-intro mb-0">{{ __('admin.pages.intro') }}</p>
     </div>
     <a class="btn btn-primary" href="{{ route('admin.pages.create') }}">Add New</a>
 </div>
@@ -25,8 +25,8 @@
         <div class="panel mb-3">
             <form method="GET" class="d-flex gap-2 flex-wrap">
                 @if ($status !== 'all')<input type="hidden" name="status" value="{{ $status }}">@endif
-                <input type="search" name="q" value="{{ $q }}" class="form-control" style="max-width:280px" placeholder="Search pages">
-                <button class="btn btn-outline-secondary" type="submit">Search Pages</button>
+                <input type="search" name="q" value="{{ $q }}" class="form-control" style="max-width:280px" placeholder="{{ __('admin.pages.search') }}">
+                <button class="btn btn-outline-secondary" type="submit">{{ __('common.search') }}</button>
             </form>
         </div>
 
@@ -38,7 +38,7 @@
                         <option value="">Bulk actions</option>
                         @if ($status === 'trash')
                             <option value="restore">Restore</option>
-                            <option value="delete">Delete permanently</option>
+                            <option value="delete">{{ __('admin.pages.delete_permanently') }}</option>
                         @else
                             <option value="publish">Publish</option>
                             <option value="draft">Move to Draft</option>
@@ -58,7 +58,7 @@
                                     <th style="width:2rem"><input type="checkbox" onclick="document.querySelectorAll('.page-check').forEach(c=>c.checked=this.checked)"></th>
                                     <th>Title</th>
                                     <th>Author</th>
-                                    <th>Status</th>
+                                    <th>{{ __('admin.ui.status') }}</th>
                                     <th>Date</th>
                                 </tr>
                             </thead>
@@ -74,9 +74,9 @@
                                             <div class="row-actions small mt-1">
                                                 @if ($page->trashed())
                                                     <button form="restore-page-{{ $page->id }}" type="submit">Restore</button> ·
-                                                    <button form="delete-page-{{ $page->id }}" class="link-danger" type="submit" onclick="return confirm('Delete permanently?')">Delete Permanently</button>
+                                                    <button form="delete-page-{{ $page->id }}" class="link-danger" type="submit" onclick="return confirm(@js(__('admin.pages.delete_permanently_q')))">{{ __('admin.pages.delete_permanently') }}</button>
                                                 @else
-                                                    <a href="{{ route('admin.pages.edit', $page) }}">Edit</a> ·
+                                                    <a href="{{ route('admin.pages.edit', $page) }}">{{ __('admin.ui.edit') }}</a> ·
                                                     <a href="{{ route('admin.pages.preview', $page) }}" target="_blank">Preview</a> ·
                                                     <button form="delete-page-{{ $page->id }}" class="link-danger" type="submit">Trash</button>
                                                 @endif

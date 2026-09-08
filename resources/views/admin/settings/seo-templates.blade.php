@@ -1,7 +1,7 @@
 @extends('layouts.admin')
-@section('title', 'SEO Templates')
+@section('title', __('admin.nav.seo_templates'))
 @section('content')
-<h1 class="h3 mb-2">SEO Templates</h1>
+<h1 class="h3 mb-2">{{ __('admin.nav.seo_templates') }}</h1>
 <p class="text-muted mb-4">
     These templates generate titles and descriptions for dynamic pages (and fill in when Static Pages / Posts have no manual SEO).
 </p>

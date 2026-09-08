@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CheckInstallation;
 use App\Http\Middleware\MaintenanceMode;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         );
 
         $middleware->appendToGroup('web', [
+            SetLocale::class,
             CheckInstallation::class,
             MaintenanceMode::class,
             \App\Http\Middleware\HandleCmsRedirects::class,

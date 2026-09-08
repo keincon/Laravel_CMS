@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Theme Colors')
+@section('title', __('admin.nav.theme_colors'))
 
 @section('content')
 <div x-data="themeCustomizer(@js($colors))" x-cloak>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h1 class="h3 mb-1">Theme Colors</h1>
+            <h1 class="h3 mb-1">{{ __('admin.nav.theme_colors') }}</h1>
             <p class="text-muted mb-0">Runtime CSS variables — no NPM rebuild required.</p>
         </div>
         <form method="POST" action="{{ route('admin.appearance.colors.reset') }}">@csrf

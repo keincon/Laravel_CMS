@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', $post->exists ? 'Edit Post' : 'Add New Post')
+@section('title', $post->exists ? __('admin.posts.edit') : __('admin.posts.add'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <h1 class="h3 mb-0">{{ $post->exists ? 'Edit Post' : 'Add New Post' }}</h1>
+    <h1 class="h3 mb-0">{{ $post->exists ? __('admin.posts.edit') : __('admin.posts.add') }}</h1>
     @if ($post->exists)
         <div class="d-flex gap-2">
             <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.posts.preview', $post) }}" target="_blank">Preview</a>

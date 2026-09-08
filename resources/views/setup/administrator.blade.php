@@ -2,19 +2,19 @@
     $ui = app(\App\Services\UIFrameworkService::class);
 @endphp
 
-<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" title="Administrator">
-    <h2 class="{{ $ui->class('heading') }}">Administrator Account</h2>
-    <p class="{{ $ui->class('subheading') }}">Create the first administrator. This account receives the Administrator role.</p>
+<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" :title="__('setup.administrator.title')">
+    <h2 class="{{ $ui->class('heading') }}">{{ __('setup.administrator.heading') }}</h2>
+    <p class="{{ $ui->class('subheading') }}">{{ __('setup.administrator.subheading') }}</p>
 
     <form method="POST" action="{{ route('setup.administrator.store') }}" x-data="passwordStrength()">
         @csrf
 
-        <x-ui.input name="name" label="Administrator Name" :value="$administrator['name']" required autocomplete="name" />
-        <x-ui.input name="username" label="Username" :value="$administrator['username']" required autocomplete="username" />
-        <x-ui.input name="email" label="Email Address" type="email" :value="$administrator['email']" required autocomplete="email" />
+        <x-ui.input name="name" :label="__('setup.administrator.name')" :value="$administrator['name']" required autocomplete="name" />
+        <x-ui.input name="username" :label="__('setup.administrator.username')" :value="$administrator['username']" required autocomplete="username" />
+        <x-ui.input name="email" :label="__('setup.administrator.email')" type="email" :value="$administrator['email']" required autocomplete="email" />
 
         <div class="mb-4">
-            <label for="password" class="{{ $ui->class('label') }}">Password <span class="text-danger">*</span></label>
+            <label for="password" class="{{ $ui->class('label') }}">{{ __('setup.administrator.password') }} <span class="text-danger">*</span></label>
             <input
                 type="password"
                 name="password"
@@ -31,33 +31,41 @@
             </div>
             <p class="mt-1 text-sm" :class="labelClass" x-text="label"></p>
             <p class="mt-1 text-sm {{ $ui->class('text_muted') }}">
-                Minimum 12 characters with uppercase, lowercase, number, and symbol.
-                Example: <code>MySite2026!</code>
+                {!! __('setup.administrator.password_hint') !!}
             </p>
             <p class="mt-1 text-sm {{ $ui->class('check_fail') }}" x-show="password.length > 0 && !meetsPolicy" x-cloak>
-                Password does not meet all requirements yet — Install will fail if you continue with a weak password.
+                {{ __('setup.administrator.password_policy_fail') }}
             </p>
             @error('password')
                 <p class="mt-1 text-sm {{ $ui->class('check_fail') }}">{{ $message }}</p>
             @enderror
         </div>
 
-        <x-ui.input name="password_confirmation" label="Confirm Password" type="password" required autocomplete="new-password" />
+        <x-ui.input name="password_confirmation" :label="__('setup.administrator.password_confirmation')" type="password" required autocomplete="new-password" />
 
         <div class="actions between">
-            <x-ui.button href="{{ route('setup.website') }}" variant="secondary" type="button">← Back</x-ui.button>
-            <x-ui.button type="submit" variant="primary">Continue</x-ui.button>
+            <x-ui.button href="{{ route('setup.website') }}" variant="secondary" type="button">{{ __('setup.administrator.back') }}</x-ui.button>
+            <x-ui.button type="submit" variant="primary">{{ __('setup.administrator.continue') }}</x-ui.button>
         </div>
     </form>
 
     <x-slot:scripts>
         <script>
+        window.setupI18n = {
+            strengthEnter: @json(__('setup.administrator.strength_enter')),
+            strengthTooWeak: @json(__('setup.administrator.strength_too_weak')),
+            strengthWeak: @json(__('setup.administrator.strength_weak')),
+            strengthFair: @json(__('setup.administrator.strength_fair')),
+            strengthGood: @json(__('setup.administrator.strength_good')),
+            strengthStrong: @json(__('setup.administrator.strength_strong')),
+        };
         function passwordStrength() {
+            const i18n = window.setupI18n;
             return {
                 password: '',
                 percent: 0,
                 color: '#e2e8f0',
-                label: 'Enter a password',
+                label: i18n.strengthEnter,
                 labelClass: '{{ $ui->class('text_muted') }}',
                 meetsPolicy: false,
                 evaluate() {
@@ -75,16 +83,16 @@
                         && /[^A-Za-z0-9]/.test(p);
 
                     const map = [
-                        { percent: 10, color: '#ef4444', label: 'Too weak', cls: '{{ $ui->class('check_fail') }}' },
-                        { percent: 30, color: '#f97316', label: 'Weak', cls: '{{ $ui->class('check_fail') }}' },
-                        { percent: 55, color: '#eab308', label: 'Fair', cls: '{{ $ui->class('text_muted') }}' },
-                        { percent: 75, color: '#84cc16', label: 'Good', cls: '{{ $ui->class('check_ok') }}' },
-                        { percent: 100, color: '#10b981', label: 'Strong', cls: '{{ $ui->class('check_ok') }}' },
+                        { percent: 10, color: '#ef4444', label: i18n.strengthTooWeak, cls: '{{ $ui->class('check_fail') }}' },
+                        { percent: 30, color: '#f97316', label: i18n.strengthWeak, cls: '{{ $ui->class('check_fail') }}' },
+                        { percent: 55, color: '#eab308', label: i18n.strengthFair, cls: '{{ $ui->class('text_muted') }}' },
+                        { percent: 75, color: '#84cc16', label: i18n.strengthGood, cls: '{{ $ui->class('check_ok') }}' },
+                        { percent: 100, color: '#10b981', label: i18n.strengthStrong, cls: '{{ $ui->class('check_ok') }}' },
                     ];
                     const level = map[Math.max(0, Math.min(score - 1, map.length - 1))];
                     if (!p) {
                         this.percent = 0;
-                        this.label = 'Enter a password';
+                        this.label = i18n.strengthEnter;
                         this.labelClass = '{{ $ui->class('text_muted') }}';
                         return;
                     }

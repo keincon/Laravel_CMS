@@ -131,7 +131,7 @@ class SetupController extends Controller
     public function storeDatabase(StoreDatabaseRequest $request): RedirectResponse
     {
         if (! Session::get('setup.database_tested')) {
-            return back()->withInput()->with('error', 'Please test the database connection before continuing.');
+            return back()->withInput()->with('error', __('setup.flash.test_required'));
         }
 
         $data = $request->validated();
@@ -147,7 +147,7 @@ class SetupController extends Controller
         ) {
             Session::forget('setup.database_tested');
 
-            return back()->withInput()->with('error', 'Database settings changed. Please test the connection again.');
+            return back()->withInput()->with('error', __('setup.flash.retest_required'));
         }
 
         Session::put('setup.database', [
@@ -266,7 +266,7 @@ class SetupController extends Controller
     {
         if (! $this->readyToInstall()) {
             return redirect()->route('setup.welcome')
-                ->with('error', 'Please complete all setup steps before installing.');
+                ->with('error', __('setup.flash.incomplete'));
         }
 
         try {
@@ -274,8 +274,8 @@ class SetupController extends Controller
         } catch (Throwable $e) {
             report($e);
             $hint = str_contains(strtolower($e->getMessage()), 'decrypt') || str_contains($e::class, 'Decrypt')
-                ? 'Saved passwords could not be read. Go back to Database and Administrator, re-enter passwords, then install again.'
-                : 'Setup data is incomplete or invalid. Please restart the wizard.';
+                ? __('setup.flash.decrypt_failed')
+                : __('setup.flash.setup_invalid');
 
             return $this->installFailedResponse($request, [], $hint);
         }
@@ -343,7 +343,7 @@ class SetupController extends Controller
 
     protected function installFailedResponse(Request $request, array $steps = [], ?string $message = null): JsonResponse|RedirectResponse
     {
-        $message ??= 'Installation could not be completed. Please check your settings and try again.';
+        $message ??= __('setup.flash.install_failed');
 
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([

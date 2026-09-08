@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit User')
+@section('title', __('admin.users.edit'))
 
 @section('content')
-<p class="page-intro mb-4">Update profile, password, and role for <strong>{{ $user->username ?: $user->email }}</strong>.</p>
+<p class="page-intro mb-4">{{ __('admin.users.edit_intro') }} <strong>{{ $user->username ?: $user->email }}</strong>.</p>
 
 <form method="POST" action="{{ route('admin.users.update', $user) }}" class="settings-form panel">
     @csrf
@@ -34,7 +34,7 @@
     </div>
     <div class="mb-3">
         <label class="form-label" for="password">New password</label>
-        <input id="password" type="password" class="form-control" name="password" autocomplete="new-password" placeholder="Leave blank to keep current">
+        <input id="password" type="password" class="form-control" name="password" autocomplete="new-password" placeholder="{{ __('common.leave_blank') }}">
         @error('password')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
     </div>
     <div class="mb-3">

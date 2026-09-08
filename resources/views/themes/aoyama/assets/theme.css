@@ -1,5 +1,27 @@
 /* Aoyama Card — navy corporate theme (demo recreation of aoyama-card.co.jp) */
 
+/* Minimal reset (theme no longer loads Tailwind/Bootstrap on public pages) */
+body.theme-aoyama.ao-site html,
+body.theme-aoyama.ao-site {
+  margin: 0;
+  padding: 0;
+}
+body.theme-aoyama.ao-site h1,
+body.theme-aoyama.ao-site h2,
+body.theme-aoyama.ao-site h3,
+body.theme-aoyama.ao-site h4,
+body.theme-aoyama.ao-site p,
+body.theme-aoyama.ao-site ul,
+body.theme-aoyama.ao-site ol,
+body.theme-aoyama.ao-site figure {
+  margin: 0;
+}
+body.theme-aoyama.ao-site button,
+body.theme-aoyama.ao-site input,
+body.theme-aoyama.ao-site select {
+  font: inherit;
+}
+
 body.theme-aoyama.ao-site {
   --ao-navy: #003366;
   --ao-navy-deep: #002347;
@@ -47,6 +69,7 @@ body.theme-aoyama.ao-site img {
 
 body.theme-aoyama.ao-site .ao-container {
   width: min(100% - 2rem, var(--ao-max));
+  max-width: var(--ao-max);
   margin-inline: auto;
 }
 
@@ -544,6 +567,221 @@ body.theme-aoyama.ao-site .ao-product-link {
   color: var(--ao-navy-mid);
 }
 
+/* —— /card/ catalog (issuer sections) —— */
+body.theme-aoyama.ao-site .ao-issuer-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1rem;
+  background: var(--ao-surface);
+  border: 1px solid var(--ao-border);
+}
+
+body.theme-aoyama.ao-site .ao-issuer-jump a {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ao-navy-mid);
+  text-decoration: none;
+  padding: 0.35rem 0.15rem;
+  border-bottom: 2px solid transparent;
+}
+
+body.theme-aoyama.ao-site .ao-issuer-jump a:hover {
+  border-bottom-color: var(--ao-navy-mid);
+  text-decoration: none;
+}
+
+body.theme-aoyama.ao-site .ao-lead {
+  margin: 0 0 1.25rem;
+  color: var(--ao-muted);
+  font-size: 0.95rem;
+}
+
+body.theme-aoyama.ao-site .ao-movie {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 1.25rem;
+  align-items: center;
+  margin: 0 0 2rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--ao-border);
+  background: linear-gradient(135deg, #f7faff 0%, #eef3f9 100%);
+}
+
+body.theme-aoyama.ao-site .ao-movie h2 {
+  margin: 0 0 0.45rem;
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  color: var(--ao-navy);
+  line-height: 1.45;
+}
+
+body.theme-aoyama.ao-site .ao-movie p {
+  margin: 0 0 0.9rem;
+  color: var(--ao-muted);
+  font-size: 0.85rem;
+}
+
+body.theme-aoyama.ao-site .ao-movie-thumb {
+  display: block;
+  line-height: 0;
+}
+
+body.theme-aoyama.ao-site .ao-movie-thumb img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 8px 24px rgba(0, 35, 71, 0.12);
+}
+
+body.theme-aoyama.ao-site .ao-issuer-block {
+  margin: 0 0 2.25rem;
+  scroll-margin-top: 6rem;
+}
+
+body.theme-aoyama.ao-site .ao-issuer-block > h2 {
+  margin: 0 0 1rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 3px solid var(--ao-navy);
+  font-size: 1.15rem;
+  color: var(--ao-navy);
+}
+
+body.theme-aoyama.ao-site .ao-catalog-card {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) minmax(0, 1fr);
+  gap: 1.15rem 1.35rem;
+  align-items: center;
+  margin: 0 0 1rem;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid var(--ao-border);
+  background: var(--ao-white);
+  transition: box-shadow .15s ease, border-color .15s ease;
+}
+
+body.theme-aoyama.ao-site .ao-catalog-card:hover {
+  border-color: color-mix(in srgb, var(--ao-navy-mid) 35%, var(--ao-border));
+  box-shadow: 0 8px 22px rgba(0, 35, 71, 0.08);
+}
+
+body.theme-aoyama.ao-site .ao-catalog-card img {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 4px 14px rgba(0, 35, 71, 0.12);
+  background: #f3f6fa;
+}
+
+body.theme-aoyama.ao-site .ao-catalog-card h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.08rem;
+  color: var(--ao-navy);
+  line-height: 1.35;
+}
+
+body.theme-aoyama.ao-site .ao-catalog-card p {
+  margin: 0 0 0.55rem;
+  font-size: 0.9rem;
+  color: var(--ao-muted);
+}
+
+body.theme-aoyama.ao-site .ao-wpoint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 700;
+  color: var(--ao-navy) !important;
+}
+
+body.theme-aoyama.ao-site .ao-wpoint span {
+  display: inline-flex;
+  padding: 0.15rem 0.45rem;
+  background: var(--ao-navy);
+  color: #fff;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+body.theme-aoyama.ao-site .ao-catalog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+body.theme-aoyama.ao-site .ao-catalog-note {
+  margin-top: 0.35rem !important;
+  font-size: 0.85rem !important;
+}
+
+body.theme-aoyama.ao-site .ao-legal-note {
+  margin: 0.5rem 0 1.5rem;
+  font-size: 0.78rem;
+  color: var(--ao-muted);
+  line-height: 1.6;
+}
+
+body.theme-aoyama.ao-site .ao-hurry {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin: 1.5rem 0 0;
+  padding: 1.15rem 1.25rem;
+  background: var(--ao-navy);
+  color: #fff;
+}
+
+body.theme-aoyama.ao-site .ao-hurry h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  color: #fff;
+}
+
+body.theme-aoyama.ao-site .ao-hurry p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.9rem;
+}
+
+body.theme-aoyama.ao-site .ao-hurry .ao-btn {
+  background: #fff;
+  color: var(--ao-navy) !important;
+  white-space: nowrap;
+}
+
+body.theme-aoyama.ao-site .ao-hurry .ao-btn:hover {
+  background: #e8eef5;
+}
+
+body.theme-aoyama.ao-site .ao-detail-card {
+  display: block;
+  width: min(220px, 55%);
+  margin: 0 0 1.1rem;
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 35, 71, 0.14);
+}
+
+body.theme-aoyama.ao-site .ao-page-header {
+  margin: 0 0 1.25rem;
+}
+
+body.theme-aoyama.ao-site .ao-page-header h1 {
+  margin: 0 0 0.45rem;
+  font-size: clamp(1.45rem, 3vw, 1.85rem);
+  color: var(--ao-navy);
+  font-weight: 800;
+}
+
+body.theme-aoyama.ao-site .ao-page-header .ao-excerpt {
+  margin: 0;
+  color: var(--ao-muted);
+  font-size: 0.95rem;
+}
+
 body.theme-aoyama.ao-site .ao-btn-row {
   margin-top: 1.5rem;
   text-align: center;
@@ -835,6 +1073,23 @@ body.theme-aoyama.ao-site .post-card h2 {
 @media (max-width: 960px) {
   body.theme-aoyama.ao-site .ao-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  body.theme-aoyama.ao-site .ao-movie {
+    grid-template-columns: 1fr;
+  }
+
+  body.theme-aoyama.ao-site .ao-catalog-card {
+    grid-template-columns: 1fr;
+  }
+
+  body.theme-aoyama.ao-site .ao-catalog-card img {
+    width: min(180px, 55%);
+  }
+
+  body.theme-aoyama.ao-site .ao-hurry {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   body.theme-aoyama.ao-site .ao-footer-grid {

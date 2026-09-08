@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Social / OGP')
+@section('title', __('admin.nav.social_ogp'))
 
 @section('content')
 @php $ogImage = old('og_image_url', \App\Models\CmsSetting::getValue('og_image_url')); @endphp
@@ -10,7 +10,7 @@
     url: @js($siteUrl),
     image: @js($ogImage)
 }">
-    <h1 class="h3 mb-2">Social / OGP</h1>
+    <h1 class="h3 mb-2">{{ __('admin.nav.social_ogp') }}</h1>
     <p class="text-muted mb-4">Open Graph and X/Twitter card defaults.</p>
 
     <form method="POST" action="{{ route('admin.settings.ogp.update') }}" class="row g-4">

@@ -1,32 +1,32 @@
 @extends('layouts.admin')
-@section('title', 'General / UI')
+@section('title', __('admin.settings.general'))
 @section('content')
-<p class="page-intro mb-4">Update your site name, favicon, and admin UI styling. Changes apply immediately after save.</p>
+<p class="page-intro mb-4">{{ __('admin.settings.general_intro') }}</p>
 
 <form method="POST" action="{{ route('admin.settings.general.update') }}" class="settings-form" x-data="{ framework: @js(old('ui_framework', $current)) }">
     @csrf @method('PUT')
 
     <section class="panel mb-3">
         <header class="panel-head">
-            <h2 class="h6 mb-0">Site identity</h2>
-            <p class="panel-desc mb-0">Shown in the admin brand, login screen, and public site.</p>
+            <h2 class="h6 mb-0">{{ __('admin.settings.site_identity') }}</h2>
+            <p class="panel-desc mb-0">{{ __('admin.settings.site_identity_desc') }}</p>
         </header>
         <div class="panel-body">
             <div class="mb-3">
-                <label class="form-label" for="site_name">Site name</label>
+                <label class="form-label" for="site_name">{{ __('admin.settings.site_name') }}</label>
                 <input id="site_name" name="site_name" class="form-control" value="{{ old('site_name', $siteName) }}" required maxlength="255">
             </div>
             <div class="mb-3">
-                <label class="form-label" for="site_description">Site description</label>
+                <label class="form-label" for="site_description">{{ __('admin.settings.site_description') }}</label>
                 <textarea id="site_description" name="site_description" class="form-control" rows="3" maxlength="500">{{ old('site_description', $siteDescription) }}</textarea>
             </div>
             <div>
-                <label class="form-label">Favicon</label>
-                <p class="form-text mb-2">PNG, WebP, JPEG, GIF, or ICO. Used in browser tabs on admin, login, and public pages.</p>
+                <label class="form-label">{{ __('admin.settings.favicon') }}</label>
+                <p class="form-text mb-2">{{ __('admin.settings.favicon_help') }}</p>
                 <x-admin.media-picker
                     name="site_favicon_media_id"
                     :value="old('site_favicon_media_id', $faviconMediaId)"
-                    label="Choose favicon"
+                    :label="__('admin.settings.choose_favicon')"
                 />
             </div>
         </div>
@@ -34,8 +34,8 @@
 
     <section class="panel mb-3">
         <header class="panel-head">
-            <h2 class="h6 mb-0">UI framework</h2>
-            <p class="panel-desc mb-0">CDN stylesheet for admin and setup screens. Pick one — both keep the same blue/slate theme.</p>
+            <h2 class="h6 mb-0">{{ __('admin.settings.ui_framework') }}</h2>
+            <p class="panel-desc mb-0">{{ __('admin.settings.ui_framework_desc') }}</p>
         </header>
         <div class="panel-body">
             <div class="framework-grid">
@@ -51,9 +51,9 @@
                                 </div>
                             </div>
                             <div class="framework-preview" data-framework="{{ $key }}">
-                                <span class="fp-btn fp-primary">Save</span>
-                                <span class="fp-btn fp-ghost">Cancel</span>
-                                <span class="fp-input">Input</span>
+                                <span class="fp-btn fp-primary">{{ __('admin.settings.preview_save') }}</span>
+                                <span class="fp-btn fp-ghost">{{ __('admin.settings.preview_cancel') }}</span>
+                                <span class="fp-input">{{ __('admin.settings.preview_input') }}</span>
                             </div>
                         </div>
                     </label>
@@ -63,55 +63,55 @@
     </section>
 
     <div class="panel mb-4">
-        <h2 class="h6 mb-2">Maintenance mode</h2>
-        <p class="page-intro mb-3">When enabled, visitors see a maintenance page. Admins can still browse the site.</p>
+        <h2 class="h6 mb-2">{{ __('admin.settings.maintenance_mode') }}</h2>
+        <p class="page-intro mb-3">{{ __('admin.settings.maintenance_intro') }}</p>
         <label class="capability-item mb-3">
             <input type="checkbox" name="maintenance_mode" value="1" @checked($maintenanceMode ?? false)>
-            <span><strong>Enable maintenance mode</strong><small>Like WordPress maintenance mode</small></span>
+            <span><strong>{{ __('admin.settings.enable_maintenance') }}</strong><small>{{ __('admin.settings.enable_maintenance_hint') }}</small></span>
         </label>
         <div class="mb-0">
-            <label class="form-label">Message</label>
+            <label class="form-label">{{ __('admin.settings.message') }}</label>
             <textarea name="maintenance_message" class="form-control" rows="3">{{ old('maintenance_message', $maintenanceMessage ?? '') }}</textarea>
         </div>
     </div>
 
     <div class="form-actions">
-        <button class="btn btn-primary" type="submit">Save settings</button>
+        <button class="btn btn-primary" type="submit">{{ __('admin.settings.save') }}</button>
     </div>
 </form>
 
 <section class="panel mt-4">
     <header class="panel-head">
-        <h2 class="h6 mb-0">Dummy data</h2>
-        <p class="panel-desc mb-0">Seed sample posts, pages, categories, tags, comments, and a placeholder image so you can preview themes and layouts.</p>
+        <h2 class="h6 mb-0">{{ __('admin.settings.demo_data') }}</h2>
+        <p class="panel-desc mb-0">{{ __('admin.settings.demo_data_desc') }}</p>
     </header>
     <div class="panel-body">
         <form method="POST" action="{{ route('admin.settings.demo-data') }}" class="d-flex flex-wrap align-items-center gap-3"
-              onsubmit="return confirm('Install sample posts, pages, terms, and comments? Existing demo slugs are skipped unless you choose replace.');">
+              onsubmit="return confirm(@js(__('admin.settings.demo_confirm')));">
             @csrf
             <label class="capability-item mb-0">
                 <input type="checkbox" name="fresh" value="1">
-                <span><strong>Replace previous demo content</strong><small>Soft-deletes known demo slugs, then reseeds</small></span>
+                <span><strong>{{ __('admin.settings.replace_demo') }}</strong><small>{{ __('admin.settings.replace_demo_hint') }}</small></span>
             </label>
-            <button type="submit" class="btn btn-outline-primary">Install Dummy Data</button>
+            <button type="submit" class="btn btn-outline-primary">{{ __('admin.settings.install_demo') }}</button>
         </form>
     </div>
 </section>
 
 <section class="panel mt-4">
     <header class="panel-head">
-        <h2 class="h6 mb-0">Aoyama Card site (JP)</h2>
-        <p class="panel-desc mb-0">Seed pages, news posts, categories, and the primary menu modeled after <a href="https://www.aoyama-card.co.jp/" target="_blank" rel="noopener">aoyama-card.co.jp</a>（青山キャピタル / AOYAMAカード）.</p>
+        <h2 class="h6 mb-0">{{ __('admin.settings.aoyama_title') }}</h2>
+        <p class="panel-desc mb-0">{!! __('admin.settings.aoyama_desc') !!}</p>
     </header>
     <div class="panel-body">
         <form method="POST" action="{{ route('admin.settings.aoyama-data') }}" class="d-flex flex-wrap align-items-center gap-3"
-              onsubmit="return confirm('Install Aoyama Card site content? Site name will become 青山キャピタル. Existing Aoyama slugs are skipped unless you choose replace.');">
+              onsubmit="return confirm(@js(__('admin.settings.aoyama_confirm')));">
             @csrf
             <label class="capability-item mb-0">
                 <input type="checkbox" name="fresh" value="1">
-                <span><strong>Replace previous Aoyama content</strong><small>Soft-deletes known Aoyama slugs, then reseeds</small></span>
+                <span><strong>{{ __('admin.settings.replace_aoyama') }}</strong><small>{{ __('admin.settings.replace_aoyama_hint') }}</small></span>
             </label>
-            <button type="submit" class="btn btn-outline-primary">Install Aoyama Card Site</button>
+            <button type="submit" class="btn btn-outline-primary">{{ __('admin.settings.install_aoyama') }}</button>
         </form>
     </div>
 </section>

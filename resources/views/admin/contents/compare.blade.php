@@ -1,9 +1,9 @@
 @extends('layouts.admin')
-@section('title', 'Compare Revisions')
+@section('title', __('admin.contents.compare_revisions'))
 @section('content')
 <div class="mb-3">
-    <h1 class="h3">Compare revisions</h1>
-    <p class="page-intro"><a href="{{ route('admin.contents.edit', $content) }}">Back to editor</a></p>
+    <h1 class="h3">{{ __('admin.contents.compare_heading') }}</h1>
+    <p class="page-intro"><a href="{{ route('admin.contents.edit', $content) }}">{{ __('admin.contents.back_to_editor') }}</a></p>
 </div>
 <div class="row g-3">
     <div class="col-md-6">

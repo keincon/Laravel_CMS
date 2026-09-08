@@ -1,10 +1,10 @@
 @extends('layouts.admin')
-@section('title', 'Taxonomies')
+@section('title', __('admin.nav.taxonomies'))
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h1 class="h3 mb-1">Taxonomies</h1>
-        <p class="page-intro mb-0">Generic LaravelPress taxonomies (category, tag, custom).</p>
+        <h1 class="h3 mb-1">{{ __('admin.nav.taxonomies') }}</h1>
+        <p class="page-intro mb-0">{{ __('admin.taxonomies.intro') }}</p>
     </div>
 </div>
 <div class="panel">

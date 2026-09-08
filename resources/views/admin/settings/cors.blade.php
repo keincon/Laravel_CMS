@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'CORS')
+@section('title', __('admin.nav.cors'))
 
 @section('content')
 <div class="admin-page-header">
-    <h1>CORS</h1>
+    <h1>{{ __('admin.nav.cors') }}</h1>
     <p class="muted mb-0">
         Cross-Origin Resource Sharing for the REST API (<code>/api/*</code>).
         Browsers need these headers when a front-end on another origin calls your API.

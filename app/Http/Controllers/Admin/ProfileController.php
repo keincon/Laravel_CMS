@@ -24,11 +24,13 @@ class ProfileController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $locales = array_keys(config('cms.ui_locales', ['en' => 'English', 'ja' => '日本語']));
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:60', 'alpha_dash', Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'locale' => ['required', 'string', Rule::in($locales)],
             'password' => ['nullable', 'confirmed', Password::defaults()],
         ]);
 
@@ -36,6 +38,7 @@ class ProfileController extends Controller
             'name' => $data['name'],
             'username' => $data['username'],
             'email' => $data['email'],
+            'locale' => $data['locale'],
         ]);
 
         if (! empty($data['password'])) {
@@ -44,14 +47,14 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return back()->with('success', 'Profile updated.');
+        return back()->with('success', __('admin.profile.updated'));
     }
 
     public function enableTwoFactor(Request $request, TwoFactorService $twoFactor): RedirectResponse
     {
         $setup = $twoFactor->enable($request->user());
 
-        return back()->with('two_factor_setup', $setup)->with('success', 'Scan the secret in your authenticator, then confirm with a code.');
+        return back()->with('two_factor_setup', $setup)->with('success', __('admin.profile.scan_then_confirm'));
     }
 
     public function confirmTwoFactor(Request $request, TwoFactorService $twoFactor): RedirectResponse
@@ -61,10 +64,10 @@ class ProfileController extends Controller
         ]);
 
         if (! $twoFactor->confirm($request->user(), $data['code'])) {
-            return back()->withErrors(['code' => 'Invalid authentication code.']);
+            return back()->withErrors(['code' => __('admin.profile.invalid_code')]);
         }
 
-        return back()->with('success', 'Two-factor authentication enabled.');
+        return back()->with('success', __('admin.profile.two_factor_now_enabled'));
     }
 
     public function disableTwoFactor(Request $request, TwoFactorService $twoFactor): RedirectResponse
@@ -76,6 +79,6 @@ class ProfileController extends Controller
         unset($data);
         $twoFactor->disable($request->user());
 
-        return back()->with('success', 'Two-factor authentication disabled.');
+        return back()->with('success', __('admin.profile.two_factor_now_disabled'));
     }
 }

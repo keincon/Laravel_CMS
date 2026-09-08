@@ -4,7 +4,7 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h1 class="h3 mb-1">{{ $taxonomy->plural_label }}</h1>
-        <p class="page-intro mb-0"><a href="{{ route('admin.taxonomies.index') }}">All taxonomies</a></p>
+        <p class="page-intro mb-0"><a href="{{ route('admin.taxonomies.index') }}">{{ __('admin.taxonomies.all') }}</a></p>
     </div>
 </div>
 
@@ -18,9 +18,9 @@
             <h2 class="h6">Add term</h2>
             <form method="POST" action="{{ route('admin.taxonomies.terms.store', $taxonomy) }}">
                 @csrf
-                <label class="form-label">Name</label>
+                <label class="form-label">{{ __('admin.ui.name') }}</label>
                 <input class="form-control" name="name" required>
-                <label class="form-label mt-2">Slug</label>
+                <label class="form-label mt-2">{{ __('admin.ui.slug') }}</label>
                 <input class="form-control" name="slug">
                 <label class="form-label mt-2">Description</label>
                 <textarea class="form-control" name="description" rows="3"></textarea>
@@ -40,7 +40,7 @@
     <div class="col-lg-8">
         <div class="panel">
             <table class="table mb-0">
-                <thead><tr><th>Name</th><th>Slug</th><th></th></tr></thead>
+                <thead><tr><th>{{ __('admin.ui.name') }}</th><th>{{ __('admin.ui.slug') }}</th><th></th></tr></thead>
                 <tbody>
                     @forelse ($terms as $term)
                         <tr>
@@ -50,10 +50,10 @@
                             </td>
                             <td><code>{{ $term->slug }}</code></td>
                             <td class="text-end">
-                                <form method="POST" action="{{ route('admin.taxonomies.terms.destroy', [$taxonomy, $term]) }}" onsubmit="return confirm('Delete term?')">
+                                <form method="POST" action="{{ route('admin.taxonomies.terms.destroy', [$taxonomy, $term]) }}" onsubmit="return confirm(@js(__('admin.taxonomies.confirm_delete_term')))">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">{{ __('admin.ui.delete') }}</button>
                                 </form>
                             </td>
                         </tr>

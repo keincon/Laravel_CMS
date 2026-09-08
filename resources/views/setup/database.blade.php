@@ -3,18 +3,12 @@
     $continueDisabled = empty($database['tested']);
 @endphp
 
-<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" title="Database">
-    <h2 class="{{ $ui->class('heading') }}">Database Configuration</h2>
-    <p class="{{ $ui->class('subheading') }}">Choose PostgreSQL or MySQL, then test the connection before continuing.</p>
+<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" :title="__('setup.database.title')">
+    <h2 class="{{ $ui->class('heading') }}">{{ __('setup.database.heading') }}</h2>
+    <p class="{{ $ui->class('subheading') }}">{{ __('setup.database.subheading') }}</p>
 
     <div class="mb-3 p-3 rounded" style="background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.25);font-size:.9rem">
-        <strong>Docker defaults:</strong>
-        host <code>postgres</code>,
-        port <code>5432</code>,
-        database <code>cms</code>,
-        username <code>cms</code>,
-        password <code>cms_secret</code>.
-        Do not use <code>127.0.0.1</code> inside the app container.
+        {!! __('setup.database.docker_hint') !!}
     </div>
 
     <div id="db-status"></div>
@@ -25,30 +19,30 @@
         <x-ui.select
             name="type"
             id="db-type"
-            label="Database Type"
+            :label="__('setup.database.driver')"
             :value="$database['type']"
             :options="$driverOptions"
             required
         />
 
-        <x-ui.input name="host" id="db-host" label="Database Host" :value="$database['host']" required />
-        <x-ui.input name="port" id="db-port" label="Database Port" :value="$database['port']" required />
-        <x-ui.input name="database" label="Database Name" :value="$database['database']" required />
-        <x-ui.input name="username" label="Database Username" :value="$database['username']" required autocomplete="username" />
-        <x-ui.input name="password" label="Database Password" type="password" value="{{ old('password', $database['password_plain'] ?? '') }}" autocomplete="new-password" />
-        <p class="mb-3 text-sm {{ $ui->class('text_muted') }}">Required for Docker (<code>cms_secret</code>). Leaving this blank causes “no password supplied”.</p>
+        <x-ui.input name="host" id="db-host" :label="__('setup.database.host')" :value="$database['host']" required />
+        <x-ui.input name="port" id="db-port" :label="__('setup.database.port')" :value="$database['port']" required />
+        <x-ui.input name="database" :label="__('setup.database.database')" :value="$database['database']" required />
+        <x-ui.input name="username" :label="__('setup.database.username')" :value="$database['username']" required autocomplete="username" />
+        <x-ui.input name="password" :label="__('setup.database.password')" type="password" value="{{ old('password', $database['password_plain'] ?? '') }}" autocomplete="new-password" />
+        <p class="mb-3 text-sm {{ $ui->class('text_muted') }}">{!! __('setup.database.password_hint') !!}</p>
 
         <div class="actions between">
-            <x-ui.button href="{{ route('setup.requirements') }}" variant="secondary" type="button">← Back</x-ui.button>
+            <x-ui.button href="{{ route('setup.requirements') }}" variant="secondary" type="button">{{ __('setup.database.back') }}</x-ui.button>
             <div class="actions" style="margin:0">
-                <x-ui.button type="button" variant="secondary" id="test-connection-btn">Test Connection</x-ui.button>
+                <x-ui.button type="button" variant="secondary" id="test-connection-btn">{{ __('setup.database.test') }}</x-ui.button>
                 @if ($continueDisabled)
                     <x-ui.button type="submit" variant="primary" id="continue-btn" disabled>
-                        Continue
+                        {{ __('setup.database.continue') }}
                     </x-ui.button>
                 @else
                     <x-ui.button type="submit" variant="primary" id="continue-btn">
-                        Continue
+                        {{ __('setup.database.continue') }}
                     </x-ui.button>
                 @endif
             </div>
@@ -57,6 +51,11 @@
 
     <x-slot:scripts>
         <script>
+        window.setupI18n = {
+            testing: @json(__('setup.database.testing')),
+            test: @json(__('setup.database.test')),
+            testError: @json(__('setup.database.test_error')),
+        };
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('database-form');
             const status = document.getElementById('db-status');
@@ -70,6 +69,7 @@
             const alertSuccess = @json($ui->class('alert_success'));
             const alertDanger = @json($ui->class('alert_danger'));
             const driverMeta = @json($driverMeta);
+            const i18n = window.setupI18n;
 
             const markUntested = () => {
                 continueBtn.disabled = true;
@@ -94,6 +94,7 @@
 
             testBtn.addEventListener('click', async () => {
                 testBtn.disabled = true;
+                testBtn.textContent = i18n.testing;
                 status.innerHTML = '';
 
                 const data = new FormData(form);
@@ -114,10 +115,11 @@
                     status.innerHTML = '<div class="' + alertClass + ' mb-4">' + (json.message || '') + '</div>';
                     continueBtn.disabled = !ok;
                 } catch (e) {
-                    status.innerHTML = '<div class="' + alertDanger + ' mb-4">Could not test the connection. Please try again.</div>';
+                    status.innerHTML = '<div class="' + alertDanger + ' mb-4">' + i18n.testError + '</div>';
                     continueBtn.disabled = true;
                 } finally {
                     testBtn.disabled = false;
+                    testBtn.textContent = i18n.test;
                 }
             });
         });

@@ -2,17 +2,16 @@
     $ui = app(\App\Services\UIFrameworkService::class);
 @endphp
 
-<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" title="Welcome">
+<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" :title="__('setup.welcome.title')">
     <div class="text-center">
-        <h2 class="{{ $ui->class('heading') }}">Welcome to {{ $cmsName }}</h2>
+        <h2 class="{{ $ui->class('heading') }}">{{ __('setup.welcome.heading', ['name' => $cmsName]) }}</h2>
         <p class="{{ $ui->class('subheading') }}">
-            Let's set up your website.<br>
-            This will only take a few minutes.
+            {!! __('setup.welcome.body') !!}
         </p>
 
         <div class="actions end" style="justify-content:center">
             <x-ui.button href="{{ route('setup.requirements') }}" variant="primary">
-                Start Installation
+                {{ __('setup.welcome.start') }}
             </x-ui.button>
         </div>
     </div>

@@ -1,8 +1,8 @@
 @extends('layouts.admin')
-@section('title', 'Dynamic: '.$setting->label)
+@section('title', __('admin.nav.dynamic_pages').': '.$setting->label)
 @section('content')
 <div class="mb-3">
-    <a href="{{ route('admin.appearance.dynamic-pages.index') }}">← Dynamic Pages</a>
+    <a href="{{ route('admin.appearance.dynamic-pages.index') }}">← {{ __('admin.nav.dynamic_pages') }}</a>
 </div>
 <h1 class="h3 mb-1">{{ $setting->label }}</h1>
 <p class="text-muted mb-4">

@@ -13,9 +13,9 @@
     {{ $attributes->merge(['class' => $class]) }}
     data-theme-toggle
     onclick="window.cmsTheme && window.cmsTheme.toggle()"
-    aria-label="Toggle color mode"
+    aria-label="{{ __('common.theme') }}"
 >
     <span class="theme-toggle-sun" aria-hidden="true">☀</span>
     <span class="theme-toggle-moon" aria-hidden="true">☾</span>
-    <span data-theme-label>Theme</span>
+    <span data-theme-label>{{ __('common.theme') }}</span>
 </button>

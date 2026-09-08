@@ -1,7 +1,7 @@
 @extends('layouts.admin')
-@section('title', 'Reading')
+@section('title', __('admin.nav.reading'))
 @section('content')
-<h1 class="h3 mb-2">Reading Settings</h1>
+<h1 class="h3 mb-2">{{ __('admin.settings.reading_title') }}</h1>
 <p class="text-muted mb-4">Choose whether the homepage is a Static Page or the Dynamic latest-posts feed.</p>
 <form method="POST" action="{{ route('admin.settings.reading.update') }}">
     @csrf @method('PUT')

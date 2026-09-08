@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'SEO Settings')
+@section('title', __('admin.nav.seo'))
 
 @section('content')
 <div x-data="{
@@ -8,7 +8,7 @@
     description: @js(old('meta_description', $settings->meta_description)),
     url: @js(old('canonical_url', $settings->canonical_url ?: $siteUrl))
 }">
-    <h1 class="h3 mb-2">SEO</h1>
+    <h1 class="h3 mb-2">{{ __('admin.nav.seo') }}</h1>
     <p class="text-muted mb-4">Global defaults used when per-page / per-post SEO fields are empty.</p>
 
     <form method="POST" action="{{ route('admin.settings.seo.update') }}" class="row g-4">

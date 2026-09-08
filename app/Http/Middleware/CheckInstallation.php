@@ -51,6 +51,7 @@ class CheckInstallation
         return $request->is([
             'up',
             'health',
+            'locale',
             'storage/*',
             'build/*',
             'css/*',

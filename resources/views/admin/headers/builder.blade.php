@@ -1,10 +1,10 @@
 @extends('layouts.admin')
-@section('title', 'Header Builder')
+@section('title', __('admin.appearance.header_builder'))
 @section('content')
 <div x-data="headerBuilder(@js($structure), @js($available))" x-cloak>
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h1 class="h3 mb-1">Header Builder</h1>
+            <h1 class="h3 mb-1">{{ __('admin.appearance.header_builder') }}</h1>
             <p class="text-muted mb-0">{{ $header->name }} · status: <strong>{{ $header->status }}</strong></p>
         </div>
         <a href="{{ route('admin.headers.index') }}" class="btn btn-outline-secondary">← Back</a>

@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Widgets')
+@section('title', __('admin.nav.widgets'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-        <h1 class="h3 mb-1">Widgets</h1>
-        <p class="page-intro mb-0">Manage blocks shown in the Main Sidebar (WordPress-style).</p>
+        <h1 class="h3 mb-1">{{ __('admin.nav.widgets') }}</h1>
+        <p class="page-intro mb-0">{{ __('admin.appearance.widgets_intro') }}</p>
     </div>
 </div>
 
@@ -17,7 +17,7 @@
             <form method="POST" action="{{ route('admin.appearance.widgets.store') }}">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label">Type</label>
+                    <label class="form-label">{{ __('admin.ui.type') }}</label>
                     <select name="type" class="form-select" required>
                         @foreach ($types as $value => $label)
                             <option value="{{ $value }}">{{ $label }}</option>
@@ -26,7 +26,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Title</label>
-                    <input name="title" class="form-control" placeholder="Optional title">
+                    <input name="title" class="form-control" placeholder="{{ __('admin.appearance.optional_title') }}">
                 </div>
                 <button class="btn btn-primary" type="submit">Add to Main Sidebar</button>
             </form>
@@ -77,7 +77,7 @@
                         @endif
                         <label class="capability-item mb-3">
                             <input type="checkbox" name="is_active" value="1" @checked(old('is_active', $widget->is_active))>
-                            <span><strong>Active</strong><small>Show this widget on the site</small></span>
+                            <span><strong>{{ __('admin.ui.active') }}</strong><small>Show this widget on the site</small></span>
                         </label>
                         <div class="d-flex gap-2 flex-wrap">
                             <button class="btn btn-primary btn-sm" type="submit">Save</button>

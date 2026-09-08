@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Categories')
+@section('title', __('admin.nav.categories'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-        <h1 class="h3 mb-1">Categories</h1>
-        <p class="page-intro mb-0">Organize posts. Archive URLs: <code>/category/{slug}</code></p>
+        <h1 class="h3 mb-1">{{ __('admin.nav.categories') }}</h1>
+        <p class="page-intro mb-0">{!! __('admin.categories.intro') !!}</p>
     </div>
 </div>
 
@@ -17,13 +17,13 @@
             <form method="POST" action="{{ route('admin.categories.store') }}">
                 @csrf
                 <div class="mb-2">
-                    <label class="form-label">Name</label>
+                    <label class="form-label">{{ __('admin.ui.name') }}</label>
                     <input name="name" class="form-control" value="{{ old('name') }}" required>
                     @error('name')<div class="text-danger small">{{ $message }}</div>@enderror
                 </div>
                 <div class="mb-2">
-                    <label class="form-label">Slug</label>
-                    <input name="slug" class="form-control" value="{{ old('slug') }}" placeholder="optional">
+                    <label class="form-label">{{ __('admin.ui.slug') }}</label>
+                    <input name="slug" class="form-control" value="{{ old('slug') }}" placeholder="{{ __('admin.ui.optional') }}">
                 </div>
                 <div class="mb-2">
                     <label class="form-label">Parent</label>
@@ -47,9 +47,9 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
-                        <th>Name</th>
+                        <th>{{ __('admin.ui.name') }}</th>
                         <th>Description</th>
-                        <th>Slug</th>
+                        <th>{{ __('admin.ui.slug') }}</th>
                         <th>Count</th>
                     </tr>
                 </thead>
@@ -60,9 +60,9 @@
                                 @if ($category->parent_id)<span class="page-intro">↳ </span>@endif
                                 <a class="fw-semibold" href="{{ route('admin.categories.edit', $category) }}">{{ $category->name }}</a>
                                 <div class="row-actions small mt-1">
-                                    <a href="{{ route('admin.categories.edit', $category) }}">Edit</a>
+                                    <a href="{{ route('admin.categories.edit', $category) }}">{{ __('admin.ui.edit') }}</a>
                                     @if ($category->slug !== 'uncategorized')
-                                        · <button form="del-cat-{{ $category->id }}" class="link-danger" type="submit" onclick="return confirm('Delete category?')">Delete</button>
+                                        · <button form="del-cat-{{ $category->id }}" class="link-danger" type="submit" onclick="return confirm(@js(__('admin.categories.confirm_delete')))">{{ __('admin.ui.delete') }}</button>
                                     @endif
                                     · <a href="{{ url('/category/'.$category->slug) }}" target="_blank">View</a>
                                 </div>

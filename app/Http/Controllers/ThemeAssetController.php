@@ -58,7 +58,9 @@ final class ThemeAssetController extends Controller
 
         return response()->file($full, [
             'Content-Type' => $mime,
-            'Cache-Control' => 'public, max-age=86400',
+            'Cache-Control' => $ext === 'css' || $ext === 'js'
+                ? 'public, max-age=300, must-revalidate'
+                : 'public, max-age=86400',
         ]);
     }
 }

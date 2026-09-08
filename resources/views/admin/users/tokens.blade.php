@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'API Tokens')
+@section('title', __('admin.nav.api_tokens'))
 
 @section('content')
-<h1 class="h3 mb-2">API Tokens</h1>
-<p class="text-muted mb-4">Personal access tokens for external applications. Secrets are shown once at creation.</p>
+<h1 class="h3 mb-2">{{ __('admin.users.tokens_title') }}</h1>
+<p class="text-muted mb-4">{{ __('admin.users.tokens_intro') }}</p>
 
 @if ($plainTextToken)
     <x-ui.alert type="success">
@@ -17,10 +17,10 @@
     @csrf
     <div class="col-md-6">
         <label class="form-label">Token Name</label>
-        <input type="text" name="name" class="form-control" required placeholder="Mobile app, CI, etc.">
+        <input type="text" name="name" class="form-control" required placeholder="{{ __('admin.tokens.name_placeholder') }}">
     </div>
     <div class="col-md-3">
-        <button class="btn btn-primary" type="submit">Create Token</button>
+        <button class="btn btn-primary" type="submit">{{ __('admin.tokens.create') }}</button>
     </div>
 </form>
 
@@ -29,7 +29,7 @@
         <thead>
             <tr>
                 <th>Token Name</th>
-                <th>Created</th>
+                <th>{{ __('admin.tokens.created') }}</th>
                 <th>Last Used</th>
                 <th>Expires</th>
                 <th></th>

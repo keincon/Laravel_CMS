@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 
-@section('title', 'Color Mode')
+@section('title', __('admin.nav.color_mode'))
 
 @section('content')
 <p class="page-intro mb-4">
-    Site default is <strong>Light</strong>. Visitors can still switch with the theme toggle (saved in their browser). Choose System only if you want to follow each visitor’s device setting.
+    {{ __('admin.appearance.mode_intro') }}
 </p>
 
 <form method="POST" action="{{ route('admin.appearance.mode.update') }}" class="settings-form" x-data="{ mode: @js($mode) }">

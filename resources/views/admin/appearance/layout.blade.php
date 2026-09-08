@@ -1,7 +1,7 @@
 @extends('layouts.admin')
-@section('title', 'Master Layout')
+@section('title', __('admin.nav.master_layout'))
 @section('content')
-<h1 class="h3 mb-2">Master Layout</h1>
+<h1 class="h3 mb-2">{{ __('admin.nav.master_layout') }}</h1>
 <p class="text-muted mb-4">Global header/footer assignment and content widths.</p>
 <form method="POST" action="{{ route('admin.appearance.layout.update') }}">
     @csrf @method('PUT')

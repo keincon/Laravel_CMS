@@ -102,67 +102,67 @@ class InstallationService
         try {
             $this->assertNotInstalled();
             $this->validateConfig($config);
-            $steps[] = $this->step('validate', 'Validating configuration', 'done');
+            $steps[] = $this->step('validate', __('setup.installing.progress_validate'), 'done');
 
             $db = $config['database'];
             $test = $this->requirements->testDatabaseConnection($db);
             if (! $test['success']) {
                 throw new \RuntimeException('database_connection_failed');
             }
-            $steps[] = $this->step('database_test', 'Testing database', 'done');
+            $steps[] = $this->step('database_test', __('setup.installing.progress_database_test'), 'done');
 
             $this->writeEnvironment($config);
             $this->requirements->configureRuntimeConnection($db);
-            $steps[] = $this->step('env', 'Saving configuration', 'done');
+            $steps[] = $this->step('env', __('setup.installing.progress_env'), 'done');
 
             Artisan::call('migrate', ['--force' => true]);
-            $steps[] = $this->step('migrate', 'Creating database tables', 'done');
+            $steps[] = $this->step('migrate', __('setup.installing.progress_migrate'), 'done');
 
             DB::transaction(function () use ($config, &$steps) {
                 $roles = app(RolePermissionService::class)->syncDefaults();
-                $steps[] = $this->step('roles', 'Creating roles', 'done');
-                $steps[] = $this->step('permissions', 'Creating permissions', 'done');
+                $steps[] = $this->step('roles', __('setup.installing.progress_roles'), 'done');
+                $steps[] = $this->step('permissions', __('setup.installing.progress_permissions'), 'done');
 
                 app(LaravelPressBootstrapService::class)->seedBuiltins();
-                $steps[] = $this->step('content_types', 'Seeding content types & taxonomies', 'done');
+                $steps[] = $this->step('content_types', __('setup.installing.progress_content_types'), 'done');
 
-                $admin = $this->createAdministrator($config['administrator'], $roles['Administrator']);
-                $steps[] = $this->step('administrator', 'Creating administrator', 'done');
+                $admin = $this->createAdministrator($config['administrator'], $roles['Administrator'], $config['website']['language'] ?? 'en');
+                $steps[] = $this->step('administrator', __('setup.installing.progress_admin'), 'done');
 
                 $pages = $this->createDefaultPages($admin);
-                $steps[] = $this->step('pages', 'Creating default pages', 'done');
+                $steps[] = $this->step('pages', __('setup.installing.progress_pages'), 'done');
 
                 $this->createDefaultMenu($pages);
-                $steps[] = $this->step('menu', 'Creating default menu', 'done');
+                $steps[] = $this->step('menu', __('setup.installing.progress_menu'), 'done');
 
                 $this->createDefaultCategories();
-                $steps[] = $this->step('categories', 'Creating default categories', 'done');
+                $steps[] = $this->step('categories', __('setup.installing.progress_categories'), 'done');
 
                 $this->createDefaultTheme();
-                $steps[] = $this->step('theme', 'Creating theme', 'done');
+                $steps[] = $this->step('theme', __('setup.installing.progress_theme'), 'done');
 
                 $this->createDefaultSettings($config, $pages);
                 $this->createSeoAndThemeSettings($config);
                 app(LayoutBootstrapService::class)->ensureDefaults($pages['home'] ?? null, null);
                 app(DynamicPageService::class)->ensureDefaults();
-                $steps[] = $this->step('settings', 'Creating default settings', 'done');
+                $steps[] = $this->step('settings', __('setup.installing.progress_settings'), 'done');
 
                 $this->uiFramework->set($config['appearance']['ui_framework'] ?? 'tailwind');
-                $steps[] = $this->step('ui', 'Configuring UI framework', 'done');
+                $steps[] = $this->step('ui', __('setup.installing.progress_ui'), 'done');
 
                 $this->markInstalled($admin->email, [
                     'site_name' => $config['website']['name'],
                     'ui_framework' => $config['appearance']['ui_framework'] ?? 'tailwind',
                 ]);
-                $steps[] = $this->step('finalize', 'Finalizing installation', 'done');
+                $steps[] = $this->step('finalize', __('setup.installing.progress_finalize'), 'done');
             });
 
             $this->clearCaches();
-            $steps[] = $this->step('cache', 'Clearing caches', 'done');
+            $steps[] = $this->step('cache', __('setup.installing.progress_cache'), 'done');
 
             return [
                 'success' => true,
-                'message' => 'Installation completed successfully.',
+                'message' => __('setup.installing.success_message'),
                 'steps' => $steps,
             ];
         } catch (Throwable $e) {
@@ -355,13 +355,19 @@ class InstallationService
     /**
      * @param  array{name: string, username: string, email: string, password: string}  $admin
      */
-    protected function createAdministrator(array $admin, Role $role): User
+    protected function createAdministrator(array $admin, Role $role, string $locale = 'en'): User
     {
+        $uiLocales = array_keys(config('cms.ui_locales', ['en' => 'English', 'ja' => '日本語']));
+        if (! in_array($locale, $uiLocales, true)) {
+            $locale = 'en';
+        }
+
         $user = User::query()->create([
             'name' => $admin['name'],
             'username' => $admin['username'],
             'email' => $admin['email'],
             'password' => Hash::make($admin['password']),
+            'locale' => $locale,
             'email_verified_at' => now(),
         ]);
 

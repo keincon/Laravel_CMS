@@ -1,11 +1,11 @@
 @extends('layouts.admin')
-@section('title', 'Edit Menu')
+@section('title', __('admin.appearance.edit_menu'))
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <a href="{{ route('admin.menus.index') }}" class="text-muted">← Menus</a>
-    <form method="POST" action="{{ route('admin.menus.destroy', $menu) }}" onsubmit="return confirm('Delete this menu?')">
+    <form method="POST" action="{{ route('admin.menus.destroy', $menu) }}" onsubmit="return confirm(@js(__('admin.menus.confirm_delete_menu')))">
         @csrf @method('DELETE')
-        <button class="btn btn-sm btn-outline-danger" type="submit">Delete menu</button>
+        <button class="btn btn-sm btn-outline-danger" type="submit">{{ __('admin.menus.delete_menu') }}</button>
     </form>
 </div>
 
@@ -15,12 +15,12 @@
             <h2 class="h6 mb-3">Menu settings</h2>
             <form method="POST" action="{{ route('admin.menus.update', $menu) }}">
                 @csrf @method('PUT')
-                <div class="mb-3"><label class="form-label">Name</label><input name="name" class="form-control" value="{{ old('name', $menu->name) }}" required></div>
-                <div class="mb-3"><label class="form-label">Slug</label><input name="slug" class="form-control" value="{{ old('slug', $menu->slug) }}" required></div>
+                <div class="mb-3"><label class="form-label">{{ __('admin.ui.name') }}</label><input name="name" class="form-control" value="{{ old('name', $menu->name) }}" required></div>
+                <div class="mb-3"><label class="form-label">{{ __('admin.ui.slug') }}</label><input name="slug" class="form-control" value="{{ old('slug', $menu->slug) }}" required></div>
                 <div class="mb-3">
-                    <label class="form-label">Location</label>
+                    <label class="form-label">{{ __('admin.ui.location') }}</label>
                     <select name="location" class="form-select">
-                        @foreach (['' => '—', 'primary' => 'Primary', 'footer' => 'Footer', 'secondary' => 'Secondary'] as $value => $label)
+                        @foreach (['' => '—', 'primary' => __('admin.menus.primary'), 'footer' => __('admin.menus.footer'), 'secondary' => __('admin.menus.secondary')] as $value => $label)
                             <option value="{{ $value }}" @selected(old('location', $menu->location) === $value)>{{ $label }}</option>
                         @endforeach
                     </select>
@@ -33,7 +33,7 @@
             <form method="POST" action="{{ route('admin.menus.items.store', $menu) }}">
                 @csrf
                 <div class="mb-3"><label class="form-label">Title</label><input name="title" class="form-control" required></div>
-                <div class="mb-3"><label class="form-label">Custom URL</label><input name="url" class="form-control" placeholder="/about or https://…"></div>
+                <div class="mb-3"><label class="form-label">{{ __('admin.menus.custom_url') }}</label><input name="url" class="form-control" placeholder="/about or https://…"></div>
                 <div class="mb-3">
                     <label class="form-label">Or page</label>
                     <select name="page_id" class="form-select">
@@ -70,9 +70,9 @@
                             <div class="col-md-2"><button class="btn btn-sm btn-primary w-100" type="submit">Save</button></div>
                         </div>
                     </form>
-                    <form method="POST" action="{{ route('admin.menus.items.destroy', [$menu, $item]) }}" class="mt-2" onsubmit="return confirm('Delete item?')">
+                    <form method="POST" action="{{ route('admin.menus.items.destroy', [$menu, $item]) }}" class="mt-2" onsubmit="return confirm(@js(__('admin.menus.confirm_delete_item')))">
                         @csrf @method('DELETE')
-                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete item</button>
+                        <button class="btn btn-sm btn-outline-danger" type="submit">{{ __('admin.menus.delete_item') }}</button>
                     </form>
                     @foreach ($item->children as $child)
                         <div class="small text-muted mt-2 ms-3">↳ {{ $child->title }}</div>

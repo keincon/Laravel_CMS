@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 
-@section('title', 'Permalinks')
+@section('title', __('admin.nav.permalinks'))
 
 @section('content')
-<h1 class="h3 mb-2">Permalinks</h1>
+<h1 class="h3 mb-2">{{ __('admin.nav.permalinks') }}</h1>
 <p class="text-muted mb-4">Choose how post URLs are generated. Page and taxonomy URLs stay conflict-free.</p>
 
 <form method="POST" action="{{ route('admin.settings.permalinks.update') }}">

@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Comments')
+@section('title', __('admin.nav.comments'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-        <h1 class="h3 mb-1">Comments</h1>
-        <p class="page-intro mb-0">Moderate comments awaiting review, spam, and trash.</p>
+        <h1 class="h3 mb-1">{{ __('admin.nav.comments') }}</h1>
+        <p class="page-intro mb-0">{{ __('admin.comments.intro') }}</p>
     </div>
     <a class="btn btn-outline-secondary" href="{{ route('admin.settings.discussion') }}">Discussion settings</a>
 </div>
@@ -23,8 +23,8 @@
 <div class="panel mb-3">
     <form method="GET" class="d-flex gap-2 flex-wrap">
         @if ($status !== 'all')<input type="hidden" name="status" value="{{ $status }}">@endif
-        <input type="search" name="q" value="{{ $q }}" class="form-control" style="max-width:280px" placeholder="Search comments">
-        <button class="btn btn-outline-secondary" type="submit">Search</button>
+        <input type="search" name="q" value="{{ $q }}" class="form-control" style="max-width:280px" placeholder="{{ __('admin.comments.search') }}">
+        <button class="btn btn-outline-secondary" type="submit">{{ __('common.search') }}</button>
     </form>
 </div>
 
@@ -39,7 +39,7 @@
                 <option value="spam">Mark as spam</option>
                 <option value="trash">Move to Trash</option>
                 <option value="restore">Restore</option>
-                <option value="delete">Delete permanently</option>
+                <option value="delete">{{ __('admin.comments.delete_permanently') }}</option>
             </select>
             <button class="btn btn-outline-secondary" type="submit">Apply</button>
         </div>
@@ -74,7 +74,7 @@
                             @endif
                             <button form="c-spam-{{ $comment->id }}" type="submit">Spam</button> ·
                             <button form="c-trash-{{ $comment->id }}" class="link-danger" type="submit">
-                                {{ $comment->status === 'trash' ? 'Delete Permanently' : 'Trash' }}
+                                {{ $comment->status === 'trash' ? __('admin.comments.delete_permanently') : __('admin.comments.trash') }}
                             </button>
                         </div>
                     </div>

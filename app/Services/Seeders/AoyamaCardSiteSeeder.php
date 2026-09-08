@@ -173,44 +173,278 @@ final class AoyamaCardSiteSeeder
 
         return [
             $p('/', 'トップ', 'ライフスタイルに合わせたピッタリの1枚を。', ''),
-            $p('/card/', 'カードをつくる', '発行会社別のAOYAMAカード・BLUE ROSE CARD一覧。', <<<'HTML'
-<h1>カードをつくる</h1>
-<p>ライフカード／三井住友カード／青山キャピタル発行のカードをご案内します。PiTaPa・SUGOCA一体型もあります。</p>
-<ul>
-<li><a href="/card-aoyama-life">AOYAMAライフマスターカード</a></li>
-<li><a href="/card-bluerose-life">BLUE ROSE CARD（ライフカード発行）</a></li>
-<li><a href="/card-aoyama-visa">AOYAMA VISAカード / PiTaPa</a></li>
-<li><a href="/card-bluerose-visa">BLUE ROSE CARD（三井住友カード発行）</a></li>
-<li><a href="/card-capital">AOYAMAカード・SUGOCA（青山キャピタル発行）</a></li>
-<li><a href="/card-bluerose">BLUE ROSE CARD（青山キャピタル発行）</a></li>
-</ul>
+            $p('/card/', 'カードをつくる', '発行会社別のAOYAMAカード・BLUE ROSE CARD一覧。PiTaPa・SUGOCA一体型もあります。', <<<'HTML'
+<nav class="ao-issuer-jump" aria-label="発行会社">
+  <a href="#issuer-life">ライフカード株式会社 発行カード</a>
+  <a href="#issuer-smbc">三井住友カード株式会社 発行カード</a>
+  <a href="#issuer-capital">株式会社青山キャピタル 発行カード</a>
+</nav>
+<p class="ao-lead">PiTaPa機能付カード、SUGOCA機能付きカードもございます。</p>
+
+<section class="ao-movie">
+  <div class="ao-movie-copy">
+    <h2>AOYAMAカードをシンプルに分かりやすく解説します</h2>
+    <p>※ 音量にご注意ください。</p>
+    <a class="ao-btn is-outline" href="https://www.aoyama-card.co.jp/assets/movies/about_aoyama_card_movie.mp4" rel="noopener" target="_blank">動画を見る</a>
+  </div>
+  <a class="ao-movie-thumb" href="https://www.aoyama-card.co.jp/assets/movies/about_aoyama_card_movie.mp4" rel="noopener" target="_blank">
+    <img src="/themes/aoyama/assets/images/movie-thumb.png" alt="青山カード紹介動画" width="480" height="270" loading="lazy">
+  </a>
+</section>
+
+<section id="issuer-life" class="ao-issuer-block">
+  <h2>ライフカード株式会社 発行カード</h2>
+  <article class="ao-catalog-card">
+    <img src="/themes/aoyama/assets/images/card-life.png" alt="AOYAMAライフマスターカード" width="160" height="100" loading="lazy">
+    <div>
+      <h3>AOYAMAライフマスターカード</h3>
+      <p>「洋服の青山」でのお買い物がおトクになるスタンダードなカード</p>
+      <p class="ao-wpoint"><span>Wポイント</span> AOYAMAポイント + サンクスポイント</p>
+      <div class="ao-catalog-actions">
+        <a class="ao-btn" href="https://www.lifecard.co.jp/Aoyama/lp/aoyamacard/?utm_source=aoyama_capital" rel="noopener" target="_blank">カードを申し込む</a>
+        <a class="ao-btn is-outline" href="/card-aoyama-life">詳細を見る</a>
+      </div>
+    </div>
+  </article>
+  <article class="ao-catalog-card">
+    <img src="/themes/aoyama/assets/images/card-bluerose-life.png" alt="BLUE ROSE CARD（ライフカード発行）" width="160" height="100" loading="lazy">
+    <div>
+      <h3>BLUE ROSE CARD（ライフカード発行）</h3>
+      <p>レディース商品がさらにおトクになるカード</p>
+      <p class="ao-wpoint"><span>Wポイント</span> ROSEポイント + サンクスポイント</p>
+      <div class="ao-catalog-actions">
+        <a class="ao-btn" href="https://www.lifecard.co.jp/Aoyama/lp/bluerose/" rel="noopener" target="_blank">カードを申し込む</a>
+        <a class="ao-btn is-outline" href="/card-bluerose-life">詳細を見る</a>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section id="issuer-smbc" class="ao-issuer-block">
+  <h2>三井住友カード株式会社 発行カード</h2>
+  <article class="ao-catalog-card">
+    <img src="/themes/aoyama/assets/images/card-visa.png" alt="AOYAMA VISAカード（IC）" width="160" height="100" loading="lazy">
+    <div>
+      <h3>AOYAMA VISAカード（IC）</h3>
+      <p>「洋服の青山」でのお買い物がおトクになるスタンダードなカード</p>
+      <p class="ao-wpoint"><span>Wポイント</span> AOYAMAポイント + Vポイント</p>
+      <div class="ao-catalog-actions">
+        <a class="ao-btn" href="https://www.smbc-card.com/nyukai/affiliate/aoyama/index.jsp" rel="noopener" target="_blank">カードを申し込む</a>
+        <a class="ao-btn is-outline" href="/card-aoyama-visa">詳細を見る</a>
+      </div>
+    </div>
+  </article>
+  <article class="ao-catalog-card">
+    <img src="/themes/aoyama/assets/images/card-pitapa.png" alt="AOYAMA PiTaPaカード" width="160" height="100" loading="lazy">
+    <div>
+      <h3>AOYAMA PiTaPaカード</h3>
+      <p>電車やバスでの移動もお買物もこれ1枚で！ PiTaPaがついた多機能カード</p>
+      <p class="ao-wpoint"><span>Wポイント</span> AOYAMAポイント + Vポイント</p>
+      <div class="ao-catalog-actions">
+        <a class="ao-btn" href="https://www.smbc-card.com/nyukai/affiliate/aoyama/index.jsp" rel="noopener" target="_blank">カードを申し込む</a>
+        <a class="ao-btn is-outline" href="/card-aoyama-visa">詳細を見る</a>
+      </div>
+    </div>
+  </article>
+  <article class="ao-catalog-card">
+    <img src="/themes/aoyama/assets/images/card-visa-bluerose.png" alt="BLUE ROSE CARD（三井住友カード発行）" width="160" height="100" loading="lazy">
+    <div>
+      <h3>BLUE ROSE CARD（三井住友カード発行）</h3>
+      <p>レディース商品がさらにおトクになるカード</p>
+      <p class="ao-wpoint"><span>Wポイント</span> ROSEポイント + Vポイント</p>
+      <div class="ao-catalog-actions">
+        <a class="ao-btn" href="https://www.smbc-card.com/nyukai/affiliate/aoyama_brc/index.jsp" rel="noopener" target="_blank">カードを申し込む</a>
+        <a class="ao-btn is-outline" href="/card-bluerose-visa">詳細を見る</a>
+      </div>
+    </div>
+  </article>
+</section>
+
+<section id="issuer-capital" class="ao-issuer-block">
+  <h2>株式会社青山キャピタル 発行カード</h2>
+  <article class="ao-catalog-card">
+    <img src="/themes/aoyama/assets/images/card-capital.png" alt="AOYAMAカード" width="160" height="100" loading="lazy">
+    <div>
+      <h3>AOYAMAカード</h3>
+      <p>「洋服の青山」でのお買い物がおトクになるスタンダードなカード</p>
+      <p class="ao-wpoint"><span>Wポイント</span> AOYAMAポイント + UCポイント</p>
+      <div class="ao-catalog-actions">
+        <a class="ao-btn" href="/membership">カードを申し込む</a>
+        <a class="ao-btn is-outline" href="/card-capital">詳細を見る</a>
+      </div>
+    </div>
+  </article>
+  <article class="ao-catalog-card">
+    <img src="/themes/aoyama/assets/images/card-sugoca.png" alt="AOYAMAマスターカードSUGOCA" width="160" height="100" loading="lazy">
+    <div>
+      <h3>AOYAMAマスターカードSUGOCA</h3>
+      <p>JR九州のICカード「SUGOCA」と「AOYAMAカード」が一体になった多機能カード</p>
+      <p class="ao-wpoint"><span>Wポイント</span> AOYAMAポイント + UCポイント</p>
+      <div class="ao-catalog-actions">
+        <a class="ao-btn" href="/membership">カードを申し込む</a>
+        <a class="ao-btn is-outline" href="/card-capital">詳細を見る</a>
+      </div>
+    </div>
+  </article>
+  <article class="ao-catalog-card">
+    <img src="/themes/aoyama/assets/images/card-bluerose-capital.png" alt="BLUE ROSE CARD（青山キャピタル発行）" width="160" height="100" loading="lazy">
+    <div>
+      <h3>BLUE ROSE CARD（青山キャピタル発行）</h3>
+      <p>レディース商品がさらにおトクになるカード</p>
+      <p class="ao-wpoint"><span>Wポイント</span> ROSEポイント + UCポイント</p>
+      <div class="ao-catalog-actions">
+        <a class="ao-btn" href="/membership">カードを申し込む</a>
+        <a class="ao-btn is-outline" href="/card-bluerose">詳細を見る</a>
+      </div>
+    </div>
+  </article>
+  <article class="ao-catalog-card">
+    <img src="/themes/aoyama/assets/images/card-papas-mamas.png" alt="Papasカード Mamasカード" width="160" height="100" loading="lazy">
+    <div>
+      <h3>Papasカード Mamasカード</h3>
+      <p>子育てパパ・ママを応援！家族みんながうれしいカード</p>
+      <p class="ao-wpoint"><span>Wポイント</span> AOYAMAポイント + UCポイント</p>
+      <p class="ao-catalog-note"><a href="/news-2023-02-21-papas-mamas">「Papasカード」「Mamasカード」のカード名称・デザイン変更のお知らせ</a></p>
+    </div>
+  </article>
+</section>
+
+<p class="ao-legal-note">※Apple PayはApple Inc.の商標です。 ※「PiTaPa」は株式会社スルッとKANSAIの登録商標です。 ※Android 、 Google Play 、 Google Pay 、 Google ウォレット は Google LLC の商標です。</p>
+
+<aside class="ao-hurry">
+  <div>
+    <h2>キャッシングについてお急ぎの方</h2>
+    <p>カードをお持ちであれば、ATMでなくても電話やインターネット経由でキャッシングをお申込みいただけます。</p>
+  </div>
+  <a class="ao-btn" href="/cashing-hurry">お急ぎの方はこちら</a>
+</aside>
 HTML),
-            $p('/card/aoyama/life/', 'AOYAMAライフマスターカード', 'ライフカード発行。AOYAMAポイント＋サンクスポイント。', <<<'HTML'
-<h1>AOYAMAライフマスターカード</h1>
-<p>「洋服の青山」でのお買い物がおトクになるスタンダードなカード（ライフカード株式会社発行）。</p>
-<p>Wポイント：AOYAMAポイント + サンクスポイント。年会費は初年度無料・2年目から1,375円（税込）が基本です。</p>
+            $p('/card/aoyama/life/', 'AOYAMAライフマスターカード', 'ライフカード発行。洋服の青山で2.0%ポイント還元。AOYAMAポイント＋サンクスポイント。', <<<'HTML'
+<img class="ao-detail-card" src="/themes/aoyama/assets/images/card-life.png" alt="AOYAMAライフマスターカード" width="220" height="140" loading="lazy">
+<p class="ao-lead">洋服の青山でのご利用で2.0%ポイント還元！毎日のお買い物で２つのポイントが貯まるおトクなカード（ライフカード株式会社発行）。</p>
+<p>洋服の青山でのお買い物時の割引のほか、クレジット決済で「AOYAMAポイント」と「サンクスポイント」が両方貯まります。</p>
+<p><strong>年会費：</strong>入会年度は無料。２年目から1,375円（税込）、家族会員440円（税込）。</p>
+<div class="ao-catalog-actions">
+  <a class="ao-btn" href="https://www.lifecard.co.jp/Aoyama/lp/aoyamacard/?utm_source=aoyama_capital" rel="noopener" target="_blank">お申込みはこちら</a>
+  <a class="ao-btn is-outline" href="/used-preferential">洋服の青山特典</a>
+</div>
+<h2>Wポイント</h2>
+<ul>
+<li><strong>AOYAMAポイント</strong> — 洋服の青山で200円につき4ポイント、それ以外の国内ショッピング100円につき1ポイント。1ポイント＝1円で洋服の青山で利用可。</li>
+<li><strong>サンクスポイント</strong> — カードショッピングご請求金額1,000円（税込）につき1.0ポイント。ギフトカード交換やキャッシュバック等に利用可。</li>
+</ul>
+<h2>便利な機能</h2>
+<ul>
+<li>「iD」「Apple Pay」対応</li>
+<li>ETCカード年会費無料（ご利用分は本カード決済・Wポイント対象）</li>
+<li>インターネットショッピング向け本人認証サービス（LIFE-Web Desk登録が必要）</li>
+</ul>
+<aside class="ao-hurry">
+  <div><h2>キャッシングについてお急ぎの方</h2><p>電話やインターネット経由でキャッシングをお申込みいただけます。</p></div>
+  <a class="ao-btn" href="/cashing-hurry">お急ぎの方はこちら</a>
+</aside>
 HTML),
             $p('/card/aoyama/visa/', 'AOYAMA VISAカード', '三井住友カード発行。AOYAMAポイント＋Vポイント。PiTaPa一体型あり。', <<<'HTML'
-<h1>AOYAMA VISAカード / PiTaPa</h1>
-<p>三井住友カード株式会社発行。ICカード。Wポイント：AOYAMAポイント + Vポイント。</p>
-<p>AOYAMA PiTaPaカードは電車・バスとお買い物がこれ1枚で利用できる多機能カードです。</p>
+<img class="ao-detail-card" src="/themes/aoyama/assets/images/card-visa.png" alt="AOYAMA VISAカード（IC）" width="220" height="140" loading="lazy">
+<p class="ao-lead">洋服の青山でのご利用で2.0%ポイント還元！「AOYAMAポイント」と「Vポイント」が両方貯まるカード（三井住友カード株式会社発行）。</p>
+<p><strong>年会費：</strong>入会年度は無料。２年目から1,375円（税込）、家族会員440円（税込）。</p>
+<div class="ao-catalog-actions">
+  <a class="ao-btn" href="https://www.smbc-card.com/nyukai/affiliate/aoyama/index.jsp" rel="noopener" target="_blank">お申込みはこちら</a>
+  <a class="ao-btn is-outline" href="/used-preferential">洋服の青山特典</a>
+</div>
+<h2>Wポイント</h2>
+<ul>
+<li><strong>AOYAMAポイント</strong> — 洋服の青山で200円につき4ポイント、それ以外の国内ショッピング100円につき1ポイント。</li>
+<li><strong>Vポイント</strong> — ご請求合計200円（税込）ごとに1ポイント（1円相当）。チャージ・キャッシュバック・他社ポイント交換などに利用可。</li>
+</ul>
+<h2>ETCカード</h2>
+<p>年会費550円（税込）。ご入会初年度無料。2年目からも、1年間に1回以上ETC利用のご請求があれば無料。</p>
+<h2>AOYAMA PiTaPaカード</h2>
+<img class="ao-detail-card" src="/themes/aoyama/assets/images/card-pitapa.png" alt="AOYAMA PiTaPaカード" width="220" height="140" loading="lazy">
+<p>電車・バスやショッピングに使える多機能カード。関西地区を中心にPiTaPa交通エリア・ショッピング加盟店で利用でき、ポストペイ（後払い）です。</p>
+<p>※年間1度もPiTaPaサービスをご利用がない場合、維持管理料1,100円（税込）が必要です。</p>
+<p>PiTaPaショッピング加盟店では「ショップdeポイント」も貯まり、交通ご利用代金から自動差引き。「洋服の青山」でのご利用は5倍ポイント進呈。</p>
+<aside class="ao-hurry">
+  <div><h2>キャッシングについてお急ぎの方</h2><p>電話やインターネット経由でキャッシングをお申込みいただけます。</p></div>
+  <a class="ao-btn" href="/cashing-hurry">お急ぎの方はこちら</a>
+</aside>
 HTML),
             $p('/card/bluerose/life/', 'BLUE ROSE CARD（ライフカード発行）', 'レディース向け。ROSEポイント＋サンクスポイント。', <<<'HTML'
-<h1>BLUE ROSE CARD（ライフカード発行）</h1>
-<p>レディース商品がさらにおトクになるカード。Wポイント：ROSEポイント + サンクスポイント。</p>
+<img class="ao-detail-card" src="/themes/aoyama/assets/images/card-bluerose-life.png" alt="BLUE ROSE CARD（ライフカード発行）" width="220" height="140" loading="lazy">
+<p class="ao-lead">BlueRose 花言葉は「不可能を可能にする。夢叶う。」「洋服の青山」「SUIT SQUARE」のレディース商品がさらにおトクになるカードです。</p>
+<p>Wポイント：「ROSEポイント」と「サンクスポイント」が両方貯まります。</p>
+<p><strong>年会費：</strong>入会年度は無料。２年目から1,375円（税込）、家族会員440円（税込）。</p>
+<div class="ao-catalog-actions">
+  <a class="ao-btn" href="https://www.lifecard.co.jp/Aoyama/lp/bluerose/" rel="noopener" target="_blank">お申込みはこちら</a>
+</div>
+<h2>特典イメージ</h2>
+<ul>
+<li>BLUE ROSE CARDご提示でいつでも割引（対象レディース商品）</li>
+<li>新規お届け時と会員一年間継続毎に特別商品割引券3,000円（税込）・特別商品優待券10%OFF</li>
+<li>ETCカード年会費無料、「iD」「Apple Pay」対応</li>
+</ul>
+<aside class="ao-hurry">
+  <div><h2>キャッシングについてお急ぎの方</h2><p>電話やインターネット経由でキャッシングをお申込みいただけます。</p></div>
+  <a class="ao-btn" href="/cashing-hurry">お急ぎの方はこちら</a>
+</aside>
 HTML),
             $p('/card/bluerose/visa/', 'BLUE ROSE CARD（三井住友カード発行）', 'レディース向け。ROSEポイント＋Vポイント。', <<<'HTML'
-<h1>BLUE ROSE CARD（三井住友カード発行）</h1>
-<p>レディース商品がさらにおトクになるカード。Wポイント：ROSEポイント + Vポイント。</p>
+<img class="ao-detail-card" src="/themes/aoyama/assets/images/card-visa-bluerose.png" alt="BLUE ROSE CARD（三井住友カード発行）" width="220" height="140" loading="lazy">
+<p class="ao-lead">レディース商品がさらにおトクになるカード。Wポイント：ROSEポイント + Vポイント（三井住友カード株式会社発行）。</p>
+<p><strong>年会費：</strong>入会年度は無料。２年目から1,375円（税込）、家族会員440円（税込）。</p>
+<div class="ao-catalog-actions">
+  <a class="ao-btn" href="https://www.smbc-card.com/nyukai/affiliate/aoyama_brc/index.jsp" rel="noopener" target="_blank">お申込みはこちら</a>
+</div>
+<ul>
+<li>青山グループ店舗での割引・ROSEポイントサービス</li>
+<li>「iD」「Apple Pay」対応</li>
+<li>ETCカード（条件により年会費無料）</li>
+</ul>
+<aside class="ao-hurry">
+  <div><h2>キャッシングについてお急ぎの方</h2><p>電話やインターネット経由でキャッシングをお申込みいただけます。</p></div>
+  <a class="ao-btn" href="/cashing-hurry">お急ぎの方はこちら</a>
+</aside>
 HTML),
-            $p('/card/capital/', 'AOYAMAカード（青山キャピタル発行）・SUGOCA', '青山キャピタル発行。AOYAMAポイント＋UCポイント。', <<<'HTML'
-<h1>AOYAMAカード・AOYAMAマスターカードSUGOCA</h1>
-<p>株式会社青山キャピタル発行。Wポイント：AOYAMAポイント + UCポイント。</p>
-<p>AOYAMAマスターカードSUGOCAはJR九州のICカード「SUGOCA」一体型です。Papas/Mamasカードは名称・デザイン変更のお知らせがあります。</p>
+            $p('/card/capital/', 'AOYAMAカード（青山キャピタル発行）・SUGOCA', '青山キャピタル発行。AOYAMAポイント＋UCポイント。SUGOCA一体型あり。', <<<'HTML'
+<img class="ao-detail-card" src="/themes/aoyama/assets/images/card-capital.png" alt="AOYAMAカード" width="220" height="140" loading="lazy">
+<p class="ao-lead">洋服の青山で、毎日のお買い物で、ダブルポイントがうれしいおトクなクレジットカード（株式会社青山キャピタル発行）。</p>
+<p>クレジット決済で「UCポイント」と「AOYAMAポイント」が両方貯まります。</p>
+<p><strong>年会費：</strong>入会年度は無料。２年目から1,375円（税込）、家族会員440円（税込）。</p>
+<div class="ao-catalog-actions">
+  <a class="ao-btn" href="/membership">お申込みはこちら</a>
+  <a class="ao-btn is-outline" href="/used-preferential">洋服の青山特典</a>
+</div>
+<h2>Wポイント</h2>
+<ul>
+<li><strong>UCポイント</strong> — カードショッピングご請求合計1,000円＝1ポイント（1ポイント＝5円相当）。請求額充当・ギフト交換などに利用可。</li>
+<li><strong>AOYAMAポイント</strong> — 洋服の青山で200円＝4ポイント、それ以外の国内ショッピング100円＝1ポイント。</li>
+</ul>
+<h2>ETCカード</h2>
+<p>AOYAMAカードならETCカード年会費無料。ご利用分は本カード決済でWポイント対象。</p>
+<h2>AOYAMAマスターカードSUGOCA</h2>
+<img class="ao-detail-card" src="/themes/aoyama/assets/images/card-sugoca.png" alt="AOYAMAマスターカードSUGOCA" width="220" height="140" loading="lazy">
+<p>JR九州のICカード「SUGOCA」一体型。チャージで列車・バスや電子マネー加盟店に利用でき、オートチャージにも対応。JRキューポ加盟店ではJRキューポも貯まります（洋服の青山は対象外）。</p>
+<aside class="ao-hurry">
+  <div><h2>キャッシングについてお急ぎの方</h2><p>電話やインターネット経由でキャッシングをお申込みいただけます。</p></div>
+  <a class="ao-btn" href="/cashing-hurry">お急ぎの方はこちら</a>
+</aside>
 HTML),
             $p('/card/bluerose/', 'BLUE ROSE CARD（青山キャピタル発行）', 'レディース向け。ROSEポイント＋UCポイント。', <<<'HTML'
-<h1>BLUE ROSE CARD（青山キャピタル発行）</h1>
-<p>レディース商品がさらにおトクになるカード。Wポイント：ROSEポイント + UCポイント。</p>
+<img class="ao-detail-card" src="/themes/aoyama/assets/images/card-bluerose-capital.png" alt="BLUE ROSE CARD（青山キャピタル発行）" width="220" height="140" loading="lazy">
+<p class="ao-lead">レディース商品がさらにおトクになるカード。Wポイント：ROSEポイント + UCポイント（株式会社青山キャピタル発行）。</p>
+<p><strong>年会費：</strong>入会年度は無料。２年目から1,375円（税込）、家族会員440円（税込）。</p>
+<div class="ao-catalog-actions">
+  <a class="ao-btn" href="/membership">お申込みはこちら</a>
+</div>
+<ul>
+<li>青山グループ店舗での割引・ROSEポイントサービス</li>
+<li>「iD」「Apple Pay」対応</li>
+<li>ETCカード年会費無料（条件は公式案内に準拠）</li>
+</ul>
+<aside class="ao-hurry">
+  <div><h2>キャッシングについてお急ぎの方</h2><p>電話やインターネット経由でキャッシングをお申込みいただけます。</p></div>
+  <a class="ao-btn" href="/cashing-hurry">お急ぎの方はこちら</a>
+</aside>
 HTML),
             $p('/card/about_pin.html', '暗証番号について', 'カード暗証番号の確認・変更のご案内。', <<<'HTML'
 <h1>暗証番号について</h1>
@@ -564,8 +798,22 @@ HTML),
             'card-life.png' => 'https://www.aoyama-card.co.jp/assets/images/card/life_aoyama_card.png',
             'card-bluerose-life.png' => 'https://www.aoyama-card.co.jp/assets/images/card/life_blue_rose_card.png',
             'card-visa.png' => 'https://www.aoyama-card.co.jp/assets/images/card/visa_ic_aoyama_card.png',
-            'card-capital.png' => 'https://www.aoyama-card.co.jp/assets/images/top/slide_1/ac-aoyama-card.png',
+            'card-pitapa.png' => 'https://www.aoyama-card.co.jp/assets/images/card/aoyama_pitapa_card.png',
+            'card-visa-bluerose.png' => 'https://www.aoyama-card.co.jp/assets/images/card/visa_blue_rose_card.png',
+            'card-capital.png' => 'https://www.aoyama-card.co.jp/assets/images/card/ac_aoyama_card.png',
+            'card-sugoca.png' => 'https://www.aoyama-card.co.jp/assets/images/card/sugoca_life_aoyama_card.png',
+            'card-bluerose-capital.png' => 'https://www.aoyama-card.co.jp/assets/images/card/ac_blue_rose_card.png',
+            'card-papas-mamas.png' => 'https://www.aoyama-card.co.jp/assets/images/card/papas_mamas_card.png',
+            'movie-thumb.png' => 'https://www.aoyama-card.co.jp/assets/images/etc/movie_thumbnail.png',
         ];
+
+        // Refresh assets whose source URL changed (avoid keeping stale PNGs).
+        foreach (['card-capital.png'] as $stale) {
+            $stalePath = $dir.DIRECTORY_SEPARATOR.$stale;
+            if (is_file($stalePath)) {
+                @unlink($stalePath);
+            }
+        }
 
         $count = 0;
         foreach ($map as $filename => $url) {
@@ -605,6 +853,10 @@ HTML),
             );
             $count++;
         }
+
+        // Mirror into public/ so Docker php -S serves images/CSS statically.
+        $this->themes->discover();
+        $this->themes->publishAssets('aoyama');
 
         return $count;
     }

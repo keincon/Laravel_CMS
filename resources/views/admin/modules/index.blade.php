@@ -1,11 +1,11 @@
 @extends('layouts.admin')
 
-@section('title', 'Modules')
+@section('title', __('admin.nav.modules'))
 
 @section('content')
     <div class="admin-page-header">
-        <h1>Modules</h1>
-        <p class="muted">Enable or disable LaravelPress modules under <code>modules/</code>. Changes apply on next request.</p>
+        <h1>{{ __('admin.modules.title') }}</h1>
+        <p class="muted">{!! __('admin.modules.intro') !!}</p>
     </div>
 
     <div class="admin-table-wrap">

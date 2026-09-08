@@ -1,18 +1,18 @@
 @extends('layouts.admin')
-@section('title', $category->exists ? 'Edit Category' : 'New Category')
+@section('title', $category->exists ? __('admin.categories.edit') : __('admin.categories.new'))
 @section('content')
-<h1 class="h3 mb-3">{{ $category->exists ? 'Edit Category' : 'New Category' }}</h1>
+<h1 class="h3 mb-3">{{ $category->exists ? __('admin.categories.edit') : __('admin.categories.new') }}</h1>
 <form method="POST" action="{{ $category->exists ? route('admin.categories.update', $category) : route('admin.categories.store') }}">
     @csrf
     @if ($category->exists) @method('PUT') @endif
     <div class="row g-4">
         <div class="col-lg-8">
             <div class="mb-3">
-                <label class="form-label">Name</label>
+                <label class="form-label">{{ __('admin.ui.name') }}</label>
                 <input name="name" class="form-control" value="{{ old('name', $category->name) }}" required>
             </div>
             <div class="mb-3">
-                <label class="form-label">Slug</label>
+                <label class="form-label">{{ __('admin.ui.slug') }}</label>
                 <input name="slug" class="form-control" value="{{ old('slug', $category->slug) }}">
             </div>
             <div class="mb-3">
@@ -33,9 +33,9 @@
     </div>
 </form>
 @if ($category->exists && $category->slug !== 'uncategorized')
-    <form class="mt-3" method="POST" action="{{ route('admin.categories.destroy', $category) }}" onsubmit="return confirm('Delete this category?')">
+    <form class="mt-3" method="POST" action="{{ route('admin.categories.destroy', $category) }}" onsubmit="return confirm(@js(__('admin.categories.confirm_delete_this')))">
         @csrf @method('DELETE')
-        <button class="btn btn-outline-danger" type="submit">Delete Category</button>
+        <button class="btn btn-outline-danger" type="submit">{{ __('admin.categories.delete_category') }}</button>
     </form>
 @endif
 @endsection

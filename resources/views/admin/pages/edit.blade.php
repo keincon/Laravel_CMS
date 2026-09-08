@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', $page->exists ? 'Edit Page' : 'Add New Page')
+@section('title', $page->exists ? __('admin.pages.edit') : __('admin.pages.add'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
-        <h1 class="h3 mb-1">{{ $page->exists ? 'Edit Page' : 'Add New Page' }}</h1>
-        <p class="page-intro mb-0">Static page content. Reserved slugs: <code>{{ implode(', ', $reservedSlugs ?? []) }}</code></p>
+        <h1 class="h3 mb-1">{{ $page->exists ? __('admin.pages.edit') : __('admin.pages.add') }}</h1>
+        <p class="page-intro mb-0">{{ __('admin.pages.edit_intro') }} <code>{{ implode(', ', $reservedSlugs ?? []) }}</code></p>
     </div>
     @if ($page->exists && ! $page->trashed())
         <div class="d-flex gap-2">

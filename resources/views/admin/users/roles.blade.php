@@ -1,16 +1,16 @@
 @extends('layouts.admin')
 
-@section('title', 'Roles')
+@section('title', __('admin.nav.roles'))
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <p class="page-intro mb-0">Edit role capabilities like WordPress. Administrator always has every capability.</p>
-    <a class="btn btn-outline-secondary" href="{{ route('admin.users.index') }}">← All Users</a>
+    <p class="page-intro mb-0">{{ __('admin.users.roles_intro') }}</p>
+    <a class="btn btn-outline-secondary" href="{{ route('admin.users.index') }}">{{ __('admin.users.all_users') }}</a>
 </div>
 
 <div class="roles-layout">
     <aside class="panel roles-list">
-        <div class="fw-semibold mb-2">Roles</div>
+        <div class="fw-semibold mb-2">{{ __('admin.users.roles_heading') }}</div>
         @foreach ($roles as $role)
             <a href="{{ route('admin.users.roles', ['role' => $role->name]) }}" class="role-link {{ optional($selected)->id === $role->id ? 'is-active' : '' }}">
                 <span>{{ $role->name }}</span>
@@ -21,13 +21,13 @@
 
     <div class="panel">
         @if (! $selected)
-            <div class="empty-state">No roles found. Re-run install sync.</div>
+            <div class="empty-state">{{ __('admin.users.no_roles') }}</div>
         @else
             <h2 class="h5 mb-2">{{ $selected->name }}</h2>
-            <p class="page-intro mb-3">{{ $selected->description ?: 'Choose which capabilities this role should have.' }}</p>
+            <p class="page-intro mb-3">{{ $selected->description ?: __('admin.users.capabilities_help') }}</p>
 
             @if ($selected->name === 'Administrator')
-                <div class="empty-state">Administrator has all capabilities and cannot be restricted.</div>
+                <div class="empty-state">{{ __('admin.users.admin_locked') }}</div>
                 <ul class="capability-list mt-3">
                     @foreach ($capabilities as $name => $label)
                         <li><span class="badge text-bg-success">✓</span> {{ $label }} <code>{{ $name }}</code></li>
@@ -38,7 +38,7 @@
                     @csrf
                     @method('PUT')
                     <div class="mb-3">
-                        <label class="form-label" for="description">Description</label>
+                        <label class="form-label" for="description">{{ __('admin.users.description') }}</label>
                         <input id="description" class="form-control" name="description" value="{{ old('description', $selected->description) }}">
                     </div>
                     <div class="capability-grid mb-3">
@@ -53,7 +53,7 @@
                         @endforeach
                     </div>
                     <div class="form-actions">
-                        <button class="btn btn-primary" type="submit">Save capabilities</button>
+                        <button class="btn btn-primary" type="submit">{{ __('admin.users.save_capabilities') }}</button>
                     </div>
                 </form>
             @endif

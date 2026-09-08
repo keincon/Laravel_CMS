@@ -255,7 +255,66 @@ final class ThemeManager
             return null;
         }
 
-        return route('theme.asset', ['theme' => $slug, 'path' => $relativePath]);
+        // Prefer public/ copy when present so Docker's php -S can serve files
+        // statically (avoids slow sequential Laravel bootstraps for images).
+        $this->ensurePublicAsset($slug, $relativePath, $full);
+
+        $url = route('theme.asset', ['theme' => $slug, 'path' => $relativePath]);
+        $mtime = @filemtime($full);
+        if ($mtime) {
+            $url .= (str_contains($url, '?') ? '&' : '?').'v='.$mtime;
+        }
+
+        return $url;
+    }
+
+    /**
+     * Mirror theme package assets into public/themes/{slug}/assets for static serving.
+     */
+    public function publishAssets(?string $slug = null): int
+    {
+        $slug ??= $this->activeSlug();
+        $theme = $this->get($slug) ?? ($this->discover()[$slug] ?? null);
+        if ($theme === null) {
+            return 0;
+        }
+
+        $srcRoot = rtrim((string) $theme['path'], DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'assets';
+        if (! File::isDirectory($srcRoot)) {
+            return 0;
+        }
+
+        $destRoot = public_path('themes'.DIRECTORY_SEPARATOR.$slug.DIRECTORY_SEPARATOR.'assets');
+        File::ensureDirectoryExists($destRoot);
+
+        $copied = 0;
+        foreach (File::allFiles($srcRoot) as $file) {
+            $rel = ltrim(str_replace('\\', '/', $file->getRelativePathname()), '/');
+            if ($rel === '' || str_contains($rel, '..')) {
+                continue;
+            }
+            $dest = $destRoot.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $rel);
+            File::ensureDirectoryExists(dirname($dest));
+            if (! is_file($dest) || filemtime($dest) < $file->getMTime() || filesize($dest) !== $file->getSize()) {
+                File::copy($file->getPathname(), $dest);
+                $copied++;
+            }
+        }
+
+        return $copied;
+    }
+
+    private function ensurePublicAsset(string $slug, string $relativePath, string $sourceFull): void
+    {
+        $dest = public_path(
+            'themes'.DIRECTORY_SEPARATOR.$slug.DIRECTORY_SEPARATOR.'assets'
+            .DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $relativePath)
+        );
+        if (is_file($dest) && filesize($dest) === @filesize($sourceFull) && filemtime($dest) >= @filemtime($sourceFull)) {
+            return;
+        }
+        File::ensureDirectoryExists(dirname($dest));
+        @File::copy($sourceFull, $dest);
     }
 
     public function publicStylesheetUrl(string $slug): ?string

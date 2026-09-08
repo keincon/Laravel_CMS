@@ -1,11 +1,11 @@
 @extends('layouts.admin')
 
-@section('title', 'Themes')
+@section('title', __('admin.nav.themes'))
 
 @section('content')
 <div class="admin-page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
     <div>
-        <h1>Themes</h1>
+        <h1>{{ __('admin.nav.themes') }}</h1>
         <p class="muted mb-0">
             A <strong>theme</strong> is the live folder under <code>resources/views/themes/{slug}</code>
             (screens, CSS, JS, colors). A <strong>pack</strong> is that theme zipped for download/import.
@@ -36,7 +36,7 @@
 <div class="row g-4 mb-4">
     <div class="col-lg-5">
         <div class="panel h-100">
-            <h2 class="h5">Create theme</h2>
+            <h2 class="h5">{{ __('admin.appearance.create_theme') }}</h2>
             <p class="page-intro">Scaffolds screens, CSS, and JS stubs you can edit on disk.</p>
             <form method="POST" action="{{ route('admin.appearance.themes.scaffold') }}" class="d-grid gap-3">
                 @csrf

@@ -2,11 +2,19 @@
     $ui = app(\App\Services\UIFrameworkService::class);
 @endphp
 
-<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" title="Appearance">
-    <h2 class="{{ $ui->class('heading') }}">Choose UI Framework</h2>
-    <p class="{{ $ui->class('subheading') }}">You can switch this later in CMS settings.</p>
+<x-setup.layout :cms-name="$cmsName" :current-step="$currentStep" :title="__('setup.appearance.title')">
+    <h2 class="{{ $ui->class('heading') }}">{{ __('setup.appearance.heading') }}</h2>
+    <p class="{{ $ui->class('subheading') }}">{{ __('setup.appearance.subheading') }}</p>
 
-    <form method="POST" action="{{ route('setup.appearance.store') }}" x-data="{ selected: '{{ old('ui_framework', $selected) }}' }">
+    <form
+        method="POST"
+        action="{{ route('setup.appearance.store') }}"
+        x-data="{
+            selected: '{{ old('ui_framework', $selected) }}',
+            selectLabel: @js(__('setup.appearance.select')),
+            selectedLabel: @js(__('setup.appearance.selected')),
+        }"
+    >
         @csrf
         <input type="hidden" name="ui_framework" :value="selected">
 
@@ -22,15 +30,15 @@
                     <p class="{{ $ui->class('text_muted') }} mb-3">{{ $framework['description'] }}</p>
                     <span
                         class="{{ $ui->class('btn_secondary') }}"
-                        x-text="selected === '{{ $key }}' ? 'Selected' : 'Select'"
+                        x-text="selected === '{{ $key }}' ? selectedLabel : selectLabel"
                     ></span>
                 </button>
             @endforeach
         </div>
 
         <div class="actions between">
-            <x-ui.button href="{{ route('setup.administrator') }}" variant="secondary" type="button">← Back</x-ui.button>
-            <x-ui.button type="submit" variant="primary">Continue</x-ui.button>
+            <x-ui.button href="{{ route('setup.administrator') }}" variant="secondary" type="button">{{ __('setup.appearance.back') }}</x-ui.button>
+            <x-ui.button type="submit" variant="primary">{{ __('setup.appearance.continue') }}</x-ui.button>
         </div>
     </form>
 </x-setup.layout>

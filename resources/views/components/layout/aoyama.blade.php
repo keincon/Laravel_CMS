@@ -14,7 +14,6 @@
     $activeThemeSlug = $themeManager->activeSlug();
     $themeStylesheets = $themeManager->stylesheetUrls('aoyama');
     $themeScripts = $themeManager->scriptUrls('aoyama');
-    $ui = app(\App\Services\UIFrameworkService::class);
 @endphp
 
 <!DOCTYPE html>
@@ -28,9 +27,7 @@
     <x-json-ld :page="$page" :post="$post" />
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=noto-sans-jp:400,500,700,800&display=swap" rel="stylesheet">
-    @foreach ($ui->stylesheetUrls() as $href)
-        <link rel="stylesheet" href="{{ $href }}">
-    @endforeach
+    {{-- Public aoyama theme is self-contained; skip CMS UI framework (Tailwind/Bootstrap) to avoid Preflight conflicts. --}}
     <x-theme />
     @foreach ($themeStylesheets as $href)
         <link rel="stylesheet" href="{{ $href }}">
@@ -74,9 +71,6 @@
 
     <button type="button" class="ao-back-top" data-ao-back-top aria-label="ページ上部へ">↑</button>
 
-    @foreach ($ui->scriptUrls() as $src)
-        <script src="{{ $src }}" defer></script>
-    @endforeach
     @foreach ($themeScripts as $src)
         <script src="{{ $src }}" defer></script>
     @endforeach

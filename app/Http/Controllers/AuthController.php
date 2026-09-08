@@ -26,7 +26,7 @@ class AuthController extends Controller
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             return back()
                 ->withInput($request->only('email', 'remember'))
-                ->with('error', 'Invalid email or password.');
+                ->with('error', __('auth.invalid_credentials'));
         }
 
         $user = $request->user();
@@ -62,7 +62,7 @@ class AuthController extends Controller
         $user = $userId ? User::query()->find($userId) : null;
 
         if (! $user || ! $twoFactor->verify($user, $data['code'])) {
-            return back()->withErrors(['code' => 'Invalid authentication code.']);
+            return back()->withErrors(['code' => __('auth.invalid_code')]);
         }
 
         $remember = (bool) $request->session()->pull('login.remember', false);
