@@ -19,6 +19,9 @@ use App\Support\Blocks\BlockRegistry;
 use App\Support\Facades\Theme;
 use App\Support\Hooks\HookRegistry;
 use App\Support\Modules\ModuleManager;
+use App\Support\Plugins\PluginManager;
+use App\Support\Plugins\PluginPackageService;
+use App\Support\Plugins\PluginScaffoldService;
 use App\Support\Widgets\WidgetRegistry;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -71,6 +74,13 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ModuleManager::class, fn () => new ModuleManager(
             base_path('modules')
         ));
+        $this->app->singleton(PluginManager::class, fn () => new PluginManager(
+            base_path('plugins')
+        ));
+        $this->app->singleton(PluginPackageService::class);
+        $this->app->singleton(PluginScaffoldService::class);
+        $this->app->singleton(\App\Services\WordPress\WordPressBridgeClient::class);
+        $this->app->singleton(\App\Services\WordPress\WordPressPluginManager::class);
     }
 
     public function boot(): void
@@ -107,6 +117,10 @@ class AppServiceProvider extends ServiceProvider
         $modules = $this->app->make(ModuleManager::class);
         $modules->discover();
         $modules->registerEnabled($this->app);
+
+        $pluginManager = $this->app->make(PluginManager::class);
+        $pluginManager->discover();
+        $pluginManager->registerEnabled($this->app);
 
         $this->app->make(ThemeManager::class)->discover();
 

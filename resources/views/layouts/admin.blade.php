@@ -13,6 +13,7 @@
     <x-favicon />
     <style>
         :root, [data-theme="light"] {
+            color-scheme: light;
             --admin-nav-w: 260px;
             --admin-border: #e2e8f0;
             --admin-muted: #475569;
@@ -37,6 +38,7 @@
             --color-surface: #ffffff;
         }
         [data-theme="dark"] {
+            color-scheme: dark;
             --admin-border: #334155;
             --admin-muted: #94a3b8;
             --admin-text: #e5e7eb;
@@ -68,7 +70,10 @@
             background: var(--admin-bg) !important;
             color: var(--admin-text) !important;
             font-family: "Segoe UI", system-ui, sans-serif;
-            color-scheme: light dark;
+            color-scheme: light;
+        }
+        html[data-theme="dark"], html[data-theme="dark"] body {
+            color-scheme: dark;
         }
         .admin-shell {
             display: grid;
@@ -215,7 +220,13 @@
         .btn-outline-secondary { background: var(--admin-elevated) !important; border-color: var(--admin-input-border) !important; color: var(--admin-text) !important; }
         .btn-outline-danger { background: var(--admin-elevated) !important; border-color: var(--admin-danger-border) !important; color: var(--admin-danger) !important; }
         .btn-outline-primary { background: var(--admin-elevated) !important; border-color: var(--admin-primary) !important; color: var(--admin-primary) !important; }
-        .form-control, .form-select { width: 100%; border: 1px solid var(--admin-input-border); border-radius: .55rem; padding: .55rem .75rem; background: var(--admin-elevated) !important; color: var(--admin-text) !important; }
+        .form-control, .form-select { width: 100%; border: 1px solid var(--admin-input-border); border-radius: .55rem; padding: .55rem .75rem; background: var(--admin-elevated) !important; color: var(--admin-text) !important; color-scheme: inherit; }
+        select:not(.form-select), input:not([type="checkbox"]):not([type="radio"]):not(.form-control), textarea:not(.form-control) {
+            background: var(--admin-elevated);
+            color: var(--admin-text);
+            border-color: var(--admin-input-border);
+            color-scheme: inherit;
+        }
         .form-label { display: block; font-size: .85rem; font-weight: 650; margin-bottom: .35rem; }
         .table { width: 100%; border-collapse: collapse; background: var(--admin-elevated); color: var(--admin-text); }
         .table th, .table td { padding: .75rem .9rem; border-bottom: 1px solid var(--admin-border); text-align: left; }
@@ -379,7 +390,9 @@
             <a href="{{ route('admin.appearance.custom-code') }}" class="{{ request()->routeIs('admin.appearance.custom-code*') ? 'active' : '' }}" @click="open=false">Custom Code</a>
         </details>
 
-        <details class="admin-nav-section" @if(request()->routeIs('admin.settings.*')) open @endif>
+        <a href="{{ route('admin.plugins.index') }}" class="{{ request()->routeIs('admin.plugins.*') ? 'active' : '' }}" @click="open=false">Plugins</a>
+
+        <details class="admin-nav-section" @if(request()->routeIs('admin.settings.*','admin.redirects.*','admin.audit-logs.*','admin.modules.*')) open @endif>
             <summary>Settings</summary>
             <a href="{{ route('admin.settings.general') }}" class="{{ request()->routeIs('admin.settings.general*') ? 'active' : '' }}" @click="open=false">General / UI</a>
             <a href="{{ route('admin.redirects.index') }}" class="{{ request()->routeIs('admin.redirects.*') ? 'active' : '' }}" @click="open=false">Redirects</a>

@@ -97,4 +97,22 @@
         </form>
     </div>
 </section>
+
+<section class="panel mt-4">
+    <header class="panel-head">
+        <h2 class="h6 mb-0">Aoyama Card site (JP)</h2>
+        <p class="panel-desc mb-0">Seed pages, news posts, categories, and the primary menu modeled after <a href="https://www.aoyama-card.co.jp/" target="_blank" rel="noopener">aoyama-card.co.jp</a>（青山キャピタル / AOYAMAカード）.</p>
+    </header>
+    <div class="panel-body">
+        <form method="POST" action="{{ route('admin.settings.aoyama-data') }}" class="d-flex flex-wrap align-items-center gap-3"
+              onsubmit="return confirm('Install Aoyama Card site content? Site name will become 青山キャピタル. Existing Aoyama slugs are skipped unless you choose replace.');">
+            @csrf
+            <label class="capability-item mb-0">
+                <input type="checkbox" name="fresh" value="1">
+                <span><strong>Replace previous Aoyama content</strong><small>Soft-deletes known Aoyama slugs, then reseeds</small></span>
+            </label>
+            <button type="submit" class="btn btn-outline-primary">Install Aoyama Card Site</button>
+        </form>
+    </div>
+</section>
 @endsection

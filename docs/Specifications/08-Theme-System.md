@@ -44,6 +44,7 @@ Missing screens fall back to `themes.default.*`.
 
 | Slug | Look |
 |------|------|
+| `aoyama` | Aoyama Card (navy JP demo, responsive) |
 | `default` | Full screen set (fallback) |
 | `aurora` | Cool teal / sky |
 | `meadow` | Botanical greens |

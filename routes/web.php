@@ -32,6 +32,7 @@ use App\Http\Controllers\Admin\ThemeAdminController;
 use App\Http\Controllers\Admin\ThemeSettingsController;
 use App\Http\Controllers\Admin\WidgetController;
 use App\Http\Controllers\Admin\CustomCodeController;
+use App\Http\Controllers\Admin\PluginAdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Setup\SetupController;
 use App\Http\Controllers\SiteController;
@@ -199,6 +200,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/settings/cors', [CorsSettingsController::class, 'edit'])->name('settings.cors');
         Route::put('/settings/cors', [CorsSettingsController::class, 'update'])->name('settings.cors.update');
         Route::post('/settings/demo-data', [DemoDataController::class, 'install'])->name('settings.demo-data');
+        Route::post('/settings/aoyama-data', [DemoDataController::class, 'installAoyama'])->name('settings.aoyama-data');
 
         Route::get('/redirects', [RedirectAdminController::class, 'index'])->name('redirects.index');
         Route::post('/redirects', [RedirectAdminController::class, 'store'])->name('redirects.store');
@@ -209,6 +211,19 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
         Route::get('/modules', [ModuleAdminController::class, 'index'])->name('modules.index');
         Route::put('/modules/{module}', [ModuleAdminController::class, 'update'])->name('modules.update');
+    });
+
+    Route::middleware('permission:manage_plugins')->group(function () {
+        Route::get('/plugins', [PluginAdminController::class, 'index'])->name('plugins.index');
+        Route::post('/plugins/scaffold', [PluginAdminController::class, 'scaffold'])->name('plugins.scaffold');
+        Route::post('/plugins/import', [PluginAdminController::class, 'import'])->name('plugins.import');
+        Route::post('/plugins/rebuild-packs', [PluginAdminController::class, 'rebuildPacks'])->name('plugins.rebuild');
+        Route::post('/plugins/wordpress/activate', [PluginAdminController::class, 'wpActivate'])->name('plugins.wp.activate');
+        Route::post('/plugins/wordpress/deactivate', [PluginAdminController::class, 'wpDeactivate'])->name('plugins.wp.deactivate');
+        Route::post('/plugins/wordpress/upload', [PluginAdminController::class, 'wpUpload'])->name('plugins.wp.upload');
+        Route::post('/plugins/{plugin}/activate', [PluginAdminController::class, 'activate'])->name('plugins.activate');
+        Route::post('/plugins/{plugin}/deactivate', [PluginAdminController::class, 'deactivate'])->name('plugins.deactivate');
+        Route::get('/plugins/{plugin}/export', [PluginAdminController::class, 'export'])->name('plugins.export');
     });
 
     Route::middleware('permission:manage_themes')->group(function () {

@@ -123,9 +123,53 @@ services:
     networks:
       - cms
 
+  # Optional WordPress embed (real WP plugins). Start with:
+  #   docker compose --profile wordpress up -d
+  wp_mysql:
+    profiles: ["wordpress"]
+    image: mysql:8.0
+    container_name: laravel-cms-wp-mysql
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      MYSQL_ROOT_PASSWORD: rootsecret
+    volumes:
+      - cms_wp_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-prootsecret"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - cms
+
+  wordpress:
+    profiles: ["wordpress"]
+    image: wordpress:6.7-php8.2-apache
+    container_name: laravel-cms-wordpress
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: wp_mysql
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DB_NAME: wordpress
+      WP_BRIDGE_TOKEN: ${WP_BRIDGE_TOKEN:-laravelpress-dev-bridge-token}
+    volumes:
+      - cms_wp_data:/var/www/html
+      - ./wordpress-bridge/mu-plugins:/var/www/html/wp-content/mu-plugins
+    depends_on:
+      wp_mysql:
+        condition: service_healthy
+    networks:
+      - cms
+
 networks:
   cms:
     driver: bridge
 
 volumes:
   cms_pgdata:
+  cms_wp_mysql:
+  cms_wp_data:

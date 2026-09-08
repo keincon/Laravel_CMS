@@ -1,0 +1,9 @@
+{
+  "name": "Hello LaravelPress",
+  "slug": "hello-laravelpress",
+  "version": "1.0.0",
+  "author": "LaravelPress",
+  "description": "Sample native plugin that appends a small HTML comment to rendered content when active.",
+  "provider": "Plugins\\HelloLaravelpress\\PluginServiceProvider",
+  "provider_file": "src/PluginServiceProvider.php"
+}

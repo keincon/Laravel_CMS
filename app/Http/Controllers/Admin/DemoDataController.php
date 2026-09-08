@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Seeders\AoyamaCardSiteSeeder;
 use App\Services\Themes\DemoContentSeeder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,36 @@ class DemoDataController extends Controller
                 $result['terms'],
                 $result['comments'],
                 $result['media'],
+            )
+        );
+    }
+
+    public function installAoyama(Request $request, AoyamaCardSiteSeeder $seeder): RedirectResponse
+    {
+        $data = $request->validate([
+            'fresh' => ['nullable', 'boolean'],
+        ]);
+
+        try {
+            $result = $seeder->seed(
+                author: $request->user(),
+                fresh: (bool) ($data['fresh'] ?? false),
+            );
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->with('error', 'Could not install Aoyama Card site data. Check logs for details.');
+        }
+
+        return back()->with(
+            'success',
+            sprintf(
+                '青山キャピタル site seeded: %d pages, %d posts, %d terms, %d menu items, %d media. Theme: aoyama.',
+                $result['pages'],
+                $result['posts'],
+                $result['terms'],
+                $result['menu_items'],
+                $result['media'] ?? 0,
             )
         );
     }

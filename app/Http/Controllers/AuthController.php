@@ -24,7 +24,9 @@ class AuthController extends Controller
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
-            return back()->withInput($request->only('email'))->with('error', 'Invalid credentials.');
+            return back()
+                ->withInput($request->only('email', 'remember'))
+                ->with('error', 'Invalid email or password.');
         }
 
         $user = $request->user();

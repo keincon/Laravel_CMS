@@ -406,6 +406,62 @@
   border: 1px solid var(--lp-border);
   border-radius: 2px;
   font: inherit;
+  background: var(--lp-surface) !important;
+  color: var(--lp-accent) !important;
+  color-scheme: light;
+  appearance: auto;
+}
+
+.lp-inspector-field select option {
+  background: #fff;
+  color: #1e1e1e;
+}
+
+.lp-inspector-field input:focus,
+.lp-inspector-field select:focus,
+.lp-inspector-field textarea:focus {
+  outline: 2px solid color-mix(in srgb, var(--lp-focus) 45%, transparent);
+  outline-offset: 1px;
+  border-color: var(--lp-focus);
+}
+
+/* Follow admin theme toggle when dark */
+[data-theme="dark"] .lp-editor {
+  --lp-border: #334155;
+  --lp-accent: #e5e7eb;
+  --lp-muted: #94a3b8;
+  --lp-surface: #111827;
+  --lp-canvas: #0b1220;
+  --lp-focus: #60a5fa;
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .lp-inspector-field input,
+[data-theme="dark"] .lp-inspector-field select,
+[data-theme="dark"] .lp-inspector-field textarea {
+  background: #1f2937 !important;
+  color: #e5e7eb !important;
+  border-color: #475569;
+  color-scheme: dark;
+}
+
+[data-theme="dark"] .lp-inspector-field select option {
+  background: #1f2937;
+  color: #e5e7eb;
+}
+
+[data-theme="dark"] .lp-editor__add-chip {
+  background: #1e3a5f !important;
+  color: #93c5fd !important;
+}
+
+[data-theme="dark"] .lp-block.is-selected {
+  box-shadow: 0 0 0 1px var(--lp-focus);
+}
+
+[data-theme="dark"] .lp-media-modal__panel {
+  background: #111827;
+  color: #e5e7eb;
 }
 
 .lp-media-modal {

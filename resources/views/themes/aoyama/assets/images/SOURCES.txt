@@ -1,0 +1,16 @@
+# Aoyama theme image sources (demo recreation)
+# Official site: https://www.aoyama-card.co.jp/
+# Respect copyright — local demo only.
+
+logo.png                 https://www.aoyama-card.co.jp/assets/images/top/com-logo.png
+hero-bg-1.png            https://www.aoyama-card.co.jp/assets/images/top/slide_1/pc_top_kv_bg1.png
+hero-bg-2.png            https://www.aoyama-card.co.jp/assets/images/top/slide_2/pc_top_kv_bg2.png
+hero-bg-3.png            https://www.aoyama-card.co.jp/assets/images/top/slide_3/pc_top_kv_bg3.png
+hero-card-aoyama.png     https://www.aoyama-card.co.jp/assets/images/top/slide_1/ac-aoyama-card.png
+hero-card-bluerose.png   https://www.aoyama-card.co.jp/assets/images/top/slide_2/ac-blue-rose.png
+card-life.png            https://www.aoyama-card.co.jp/assets/images/card/life_aoyama_card.png
+card-bluerose-life.png   https://www.aoyama-card.co.jp/assets/images/card/life_blue_rose_card.png
+card-visa.png            https://www.aoyama-card.co.jp/assets/images/card/visa_ic_aoyama_card.png
+card-capital.png         https://www.aoyama-card.co.jp/assets/images/top/slide_1/ac-aoyama-card.png
+
+Downloaded by: php artisan laravelpress:seed-aoyama
