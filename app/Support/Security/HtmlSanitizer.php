@@ -16,7 +16,8 @@ final class HtmlSanitizer
         'strong', 'em', 'b', 'i', 'u', 's', 'code', 'pre', 'blockquote',
         'ul', 'ol', 'li', 'a', 'img', 'figure', 'figcaption',
         'table', 'thead', 'tbody', 'tr', 'th', 'td',
-        'div', 'span', 'section', 'article',
+        'div', 'span', 'section', 'article', 'nav', 'header', 'footer', 'main', 'aside',
+        'small', 'button', 'label',
         'video', 'audio', 'source', 'iframe',
     ];
 
@@ -30,7 +31,8 @@ final class HtmlSanitizer
         'source' => ['src', 'type'],
         'td' => ['colspan', 'rowspan'],
         'th' => ['colspan', 'rowspan'],
-        '*' => ['class', 'id'],
+        'button' => ['type', 'disabled'],
+        '*' => ['class', 'id', 'role', 'aria-label', 'aria-hidden'],
     ];
 
     public function sanitize(?string $html): string

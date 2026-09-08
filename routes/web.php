@@ -26,7 +26,7 @@ use App\Http\Controllers\Admin\HeaderController;
 use App\Http\Controllers\Admin\LayoutSettingsController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
-use App\Http\Controllers\Admin\SeoSettingsController;
+use App\Http\Controllers\Admin\SetupGuideController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\ThemeAdminController;
 use App\Http\Controllers\Admin\ThemeSettingsController;
@@ -82,6 +82,7 @@ Route::prefix('setup')->name('setup.')->group(function () {
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     // Any authenticated user
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('/help/setup-guide', [SetupGuideController::class, 'show'])->name('help.setup-guide');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/two-factor/enable', [ProfileController::class, 'enableTwoFactor'])->name('profile.two-factor.enable');

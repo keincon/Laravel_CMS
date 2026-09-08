@@ -64,6 +64,8 @@ Vanilla modules under `resources/js/admin/` (`api`, `toast`, `modal`, `form`, `m
 
 Fresh installs use `/setup`. If `storage/app/cms/installed.json` exists, setup returns 404.
 
+**Japanese UI / site language:** see [docs/guides/setup-japanese.md](docs/guides/setup-japanese.md).
+
 **Docker database defaults (use these in the wizard):**
 
 | Field | Value |

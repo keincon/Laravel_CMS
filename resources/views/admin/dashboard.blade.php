@@ -3,7 +3,10 @@
 @section('title', __('admin.dashboard.title'))
 
 @section('content')
-<p class="page-intro mb-4">{{ __('admin.dashboard.at_a_glance') }}</p>
+<p class="page-intro mb-3">{{ __('admin.dashboard.at_a_glance') }}</p>
+<p class="mb-4">
+    <a class="btn btn-outline-primary btn-sm" href="{{ route('admin.help.setup-guide') }}">{{ __('admin.dashboard.setup_guide') }}</a>
+</p>
 
 <div class="stat-grid mb-4">
     <div class="stat-card">

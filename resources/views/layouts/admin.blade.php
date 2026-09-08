@@ -372,6 +372,7 @@
         </a>
 
         <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.dashboard') }}</a>
+        <a href="{{ route('admin.help.setup-guide') }}" class="{{ request()->routeIs('admin.help.setup-guide') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.setup_guide') }}</a>
 
         <details class="admin-nav-section" @if(request()->routeIs('admin.pages.*','admin.posts.*','admin.contents.*','admin.categories.*','admin.tags.*','admin.taxonomies.*','admin.media.*','admin.comments.*')) open @endif>
             <summary>{{ __('admin.nav.content') }}</summary>

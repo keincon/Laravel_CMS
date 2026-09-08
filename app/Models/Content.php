@@ -103,6 +103,43 @@ class Content extends Model
         return $this->attributes['body'] ?? null;
     }
 
+    /**
+     * True when the page has HTML in body but no block editor data yet
+     * (common for seeded theme pages).
+     */
+    public function hasHtmlBodyWithoutBlocks(): bool
+    {
+        $blocks = $this->blocks;
+
+        return ( ! is_array($blocks) || $blocks === []) && filled(trim((string) $this->body));
+    }
+
+    /**
+     * Blocks for the admin editor. If blocks are empty but body has HTML,
+     * wrap body in a single Custom HTML block so editors can see/edit it.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function editorBlocks(): array
+    {
+        $blocks = $this->blocks;
+        if (is_array($blocks) && $blocks !== []) {
+            return array_values($blocks);
+        }
+
+        $body = (string) $this->body;
+        if (trim($body) === '') {
+            return [];
+        }
+
+        return [[
+            'type' => 'html',
+            'content' => $body,
+            'attrs' => ['from_html_body' => true],
+            'innerBlocks' => [],
+        ]];
+    }
+
     public function featuredImage(): BelongsTo
     {
         return $this->featuredMedia();

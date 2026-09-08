@@ -124,6 +124,17 @@ export function bindBlockEditor(root, options = {}) {
 
   if (!hiddenInput) return null;
 
+  const i18n = {
+    htmlHint: root.dataset.i18nHtmlHint || 'Edit this HTML to change what appears on the live page.',
+    htmlPreview: root.dataset.i18nHtmlPreview || 'Live preview',
+    emptyTitle: root.dataset.i18nEmptyTitle || 'No content blocks yet',
+    emptyHelp: root.dataset.i18nEmptyHelp || 'Add a paragraph to write normally, or Custom HTML for full HTML pages.',
+    previewEmpty: root.dataset.i18nPreviewEmpty || 'Nothing to preview yet. Add a block first.',
+    customHtml: root.dataset.i18nCustomHtml || 'Custom HTML',
+    previewBtn: root.dataset.i18nPreviewBtn || 'Preview',
+    backEditor: root.dataset.i18nBackEditor || 'Back to editor',
+  };
+
   let state = ensureIds(
     Array.isArray(initialBlocks) && initialBlocks.length
       ? initialBlocks
@@ -597,6 +608,18 @@ export function bindBlockEditor(root, options = {}) {
     card.className = `lp-block lp-block--${block.type}${selectedId === block.id ? ' is-selected' : ''}`;
     card.dataset.blockId = block.id;
     card.draggable = true;
+
+    const typeBadge = document.createElement('div');
+    typeBadge.className = 'lp-block__type';
+    const typeMeta = BLOCK_TYPES.find((t) => t.type === block.type);
+    typeBadge.textContent = block.type === 'html'
+      ? i18n.customHtml
+      : (typeMeta?.label || block.type);
+    if (block.attrs?.from_html_body) {
+      typeBadge.classList.add('is-imported');
+    }
+    card.appendChild(typeBadge);
+
     card.addEventListener('dragstart', (e) => {
       dragId = block.id;
       card.classList.add('is-dragging');
@@ -792,15 +815,45 @@ export function bindBlockEditor(root, options = {}) {
       spacer.style.height = `${Number(block.attrs.height) || 24}px`;
       body.appendChild(spacer);
     } else if (['code', 'html'].includes(block.type)) {
+      if (block.type === 'html') {
+        const hint = document.createElement('p');
+        hint.className = 'lp-html-hint';
+        hint.textContent = i18n.htmlHint;
+        body.appendChild(hint);
+      }
       const area = document.createElement('textarea');
-      area.className = 'form-control';
-      area.rows = 5;
+      area.className = block.type === 'html' ? 'form-control lp-html-editor' : 'form-control';
+      area.rows = block.type === 'html' ? 14 : 5;
+      area.spellcheck = false;
       area.value = block.content || '';
+      area.placeholder = block.type === 'html' ? '<div>…</div>' : '';
+
+      let live = null;
+      if (block.type === 'html') {
+        const wrap = document.createElement('div');
+        wrap.className = 'lp-html-live';
+        const label = document.createElement('div');
+        label.className = 'lp-html-live__label';
+        label.textContent = i18n.htmlPreview;
+        live = document.createElement('div');
+        live.className = 'lp-html-live__frame';
+        live.innerHTML = block.content || `<p class="text-muted">${escapeHtml(i18n.previewEmpty)}</p>`;
+        wrap.appendChild(label);
+        wrap.appendChild(live);
+        // Append live after textarea below
+        area._livePreview = live;
+        area._liveWrap = wrap;
+      }
+
       area.addEventListener('input', () => {
         block.content = area.value;
         syncHidden();
+        if (area._livePreview) {
+          area._livePreview.innerHTML = area.value || `<p class="text-muted">${escapeHtml(i18n.previewEmpty)}</p>`;
+        }
       });
       body.appendChild(area);
+      if (area._liveWrap) body.appendChild(area._liveWrap);
     }
 
     card.appendChild(body);
@@ -903,12 +956,12 @@ export function bindBlockEditor(root, options = {}) {
 
     const title = document.createElement('p');
     title.className = 'lp-empty__title';
-    title.textContent = 'Start writing';
+    title.textContent = i18n.emptyTitle;
     empty.appendChild(title);
 
     const help = document.createElement('p');
     help.className = 'lp-empty__help';
-    help.textContent = 'Click a block below, or press + Add block. You can also type / inside a paragraph.';
+    help.textContent = i18n.emptyHelp;
     empty.appendChild(help);
 
     const quick = document.createElement('div');
@@ -917,8 +970,8 @@ export function bindBlockEditor(root, options = {}) {
       ['paragraph', 'Paragraph'],
       ['heading', 'Heading'],
       ['image', 'Image'],
+      ['html', i18n.customHtml],
       ['list', 'List'],
-      ['quote', 'Quote'],
     ].forEach(([type, label]) => {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -977,7 +1030,8 @@ export function bindBlockEditor(root, options = {}) {
 
     const previewToggle = document.createElement('button');
     previewToggle.type = 'button';
-    previewToggle.textContent = mode === 'edit' ? 'Preview' : 'Back to editor';
+    previewToggle.className = mode === 'preview' ? 'lp-editor__preview-btn is-active' : 'lp-editor__preview-btn';
+    previewToggle.textContent = mode === 'edit' ? i18n.previewBtn : i18n.backEditor;
     previewToggle.addEventListener('click', () => {
       mode = mode === 'edit' ? 'preview' : 'edit';
       render();
@@ -1012,7 +1066,7 @@ export function bindBlockEditor(root, options = {}) {
 
     previewEl = document.createElement('div');
     previewEl.className = `lp-editor__preview${mode === 'edit' ? ' is-hidden' : ''}`;
-    previewEl.innerHTML = renderPreviewHtml(state) || '<p class="text-muted">Nothing to preview yet.</p>';
+    previewEl.innerHTML = renderPreviewHtml(state) || `<p class="text-muted">${escapeHtml(i18n.previewEmpty)}</p>`;
 
     inspectorEl = document.createElement('aside');
     inspectorEl.className = 'lp-editor__inspector';

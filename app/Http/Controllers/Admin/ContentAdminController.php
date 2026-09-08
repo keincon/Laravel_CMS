@@ -295,6 +295,16 @@ class ContentAdminController extends Controller
         }
 
         $data['blocks'] = $blocks;
+
+        // Empty canvas must not wipe legacy HTML stored in the body textarea.
+        if ($blocks === []) {
+            if (! filled($data['body'] ?? null)) {
+                $data['body'] = $this->blocks->render($blocks);
+            }
+
+            return $data;
+        }
+
         $data['body'] = $this->blocks->render($blocks);
 
         return $data;

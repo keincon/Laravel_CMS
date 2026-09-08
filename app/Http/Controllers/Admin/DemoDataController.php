@@ -27,19 +27,18 @@ class DemoDataController extends Controller
         } catch (Throwable $e) {
             report($e);
 
-            return back()->with('error', 'Could not install dummy data. Check logs for details.');
+            return back()->with('error', __('admin.settings.demo_error'));
         }
 
         return back()->with(
             'success',
-            sprintf(
-                'Dummy data installed: %d posts, %d pages, %d terms, %d comments, %d media.',
-                $result['posts'],
-                $result['pages'],
-                $result['terms'],
-                $result['comments'],
-                $result['media'],
-            )
+            __('admin.settings.demo_success', [
+                'posts' => $result['posts'],
+                'pages' => $result['pages'],
+                'terms' => $result['terms'],
+                'comments' => $result['comments'],
+                'media' => $result['media'],
+            ])
         );
     }
 
@@ -57,19 +56,18 @@ class DemoDataController extends Controller
         } catch (Throwable $e) {
             report($e);
 
-            return back()->with('error', 'Could not install Aoyama Card site data. Check logs for details.');
+            return back()->with('error', __('admin.settings.aoyama_error'));
         }
 
         return back()->with(
             'success',
-            sprintf(
-                '青山キャピタル site seeded: %d pages, %d posts, %d terms, %d menu items, %d media. Theme: aoyama.',
-                $result['pages'],
-                $result['posts'],
-                $result['terms'],
-                $result['menu_items'],
-                $result['media'] ?? 0,
-            )
+            __('admin.settings.aoyama_success', [
+                'pages' => $result['pages'],
+                'posts' => $result['posts'],
+                'terms' => $result['terms'],
+                'menu_items' => $result['menu_items'],
+                'media' => $result['media'] ?? 0,
+            ])
         );
     }
 }

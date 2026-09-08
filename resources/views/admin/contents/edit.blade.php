@@ -7,7 +7,14 @@
     <div>
         <h1 class="h3 mb-1">{{ $content->exists ? __('admin.contents.edit') : __('admin.contents.add') }} {{ $type->singular_label }}</h1>
     </div>
-    <a class="btn btn-outline-secondary" href="{{ route('admin.contents.index', ['type' => $type->slug]) }}">{{ __('admin.contents.back') }}</a>
+    <div class="d-flex gap-2 flex-wrap">
+        @if ($content->exists && filled($content->slug))
+            <a class="btn btn-outline-primary" href="{{ url('/'.$content->slug) }}" target="_blank" rel="noopener">
+                {{ __('admin.contents.view_page') }}
+            </a>
+        @endif
+        <a class="btn btn-outline-secondary" href="{{ route('admin.contents.index', ['type' => $type->slug]) }}">{{ __('admin.contents.back') }}</a>
+    </div>
 </div>
 
 @if (session('status'))
@@ -37,15 +44,48 @@
 
                 <label class="form-label mt-3">{{ __('admin.contents.content') }}</label>
                 <p class="form-text mb-2">{!! __('admin.contents.content_help') !!}</p>
-                <input type="hidden" name="blocks_json" id="blocks_json" value='@json(old('blocks', $content->blocks ?? []))'>
+
+                @php
+                    $editorBlocks = old('blocks');
+                    if (! is_array($editorBlocks)) {
+                        $editorBlocks = $content->editorBlocks();
+                    }
+                    $hydratedFromHtml = old('blocks') === null && $content->exists && $content->hasHtmlBodyWithoutBlocks();
+                @endphp
+
+                @if ($hydratedFromHtml)
+                    <div class="alert alert-info d-flex flex-column gap-1 mb-3" role="status">
+                        <strong>{{ __('admin.contents.html_imported_title') }}</strong>
+                        <span>{!! __('admin.contents.html_imported_help') !!}</span>
+                    </div>
+                @endif
+
+                <div class="small text-muted mb-2">
+                    <div class="fw-semibold text-body mb-1">{{ __('admin.contents.where_to_edit') }}</div>
+                    <ol class="mb-0 ps-3">
+                        <li>{!! __('admin.contents.where_to_edit_blocks') !!}</li>
+                        <li>{!! __('admin.contents.where_to_edit_raw') !!}</li>
+                    </ol>
+                </div>
+
+                <script type="application/json" id="blocks_json_data">@json($editorBlocks)</script>
+                <input type="hidden" name="blocks_json" id="blocks_json" value="">
                 <div id="block-editor-root"
                      class="mb-3"
-                     data-media-json-url="{{ route('admin.media.json') }}"></div>
+                     data-media-json-url="{{ route('admin.media.json') }}"
+                     data-i18n-html-hint="{{ __('admin.contents.html_block_hint') }}"
+                     data-i18n-html-preview="{{ __('admin.contents.html_live_preview') }}"
+                     data-i18n-empty-title="{{ __('admin.contents.empty_title') }}"
+                     data-i18n-empty-help="{{ __('admin.contents.empty_help') }}"
+                     data-i18n-preview-empty="{{ __('admin.contents.preview_empty') }}"
+                     data-i18n-custom-html="{{ __('admin.contents.block_custom_html') }}"
+                     data-i18n-preview-btn="{{ __('admin.contents.preview_btn') }}"
+                     data-i18n-back-editor="{{ __('admin.contents.back_to_editor') }}"></div>
 
-                <details class="mt-3">
-                    <summary class="form-label" style="cursor:pointer">{{ __('admin.contents.advanced_html') }}</summary>
-                    <p class="form-text">{{ __('admin.contents.advanced_html_help') }}</p>
-                    <textarea class="form-control mt-2" name="body" rows="6">{{ old('body', $content->body) }}</textarea>
+                <details class="mt-3 border rounded p-3 bg-light">
+                    <summary class="form-label mb-0" style="cursor:pointer">{{ __('admin.contents.advanced_html') }}</summary>
+                    <p class="form-text mt-2 mb-2">{{ __('admin.contents.advanced_html_help') }}</p>
+                    <textarea class="form-control font-monospace" name="body" rows="10" spellcheck="false">{{ old('body', $content->body) }}</textarea>
                 </details>
 
                 @if ($type->supports('excerpt'))
@@ -166,8 +206,8 @@
 @endsection
 
 @push('head')
-    <link rel="stylesheet" href="{{ asset('css/admin-editor.css') }}">
-    <script src="{{ asset('js/laravelpress-editor.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ asset('css/admin-editor.css') }}?v={{ @filemtime(public_path('css/admin-editor.css')) ?: time() }}">
+    <script src="{{ asset('js/laravelpress-editor.js') }}?v={{ @filemtime(public_path('js/laravelpress-editor.js')) ?: time() }}" defer></script>
 @endpush
 
 @push('scripts')
