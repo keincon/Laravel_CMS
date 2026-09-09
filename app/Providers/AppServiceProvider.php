@@ -44,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(HookRegistry::class);
         $this->app->singleton(SettingsService::class);
         $this->app->singleton(\App\Services\CorsSettingsService::class);
+        $this->app->singleton(\App\Services\MailSettingsService::class);
+        $this->app->singleton(\App\Services\MailTemplateService::class);
         $this->app->singleton(SearchDriver::class, function () {
             return match (config('cms.search.driver', 'database')) {
                 'meilisearch' => new \App\Services\Search\MeilisearchSearchDriver,
@@ -133,5 +135,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->make(ThemeManager::class)->discover();
 
         $this->app->make(\App\Services\CorsSettingsService::class)->applyFromDatabase();
+        $this->app->make(\App\Services\MailSettingsService::class)->applyFromDatabase();
     }
 }

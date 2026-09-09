@@ -40,7 +40,7 @@ class LayoutSettingsController extends Controller
         $settings->fill($data)->save();
         $layouts->clearCaches();
 
-        return back()->with('success', 'Master layout settings saved.');
+        return back()->with('success', __('admin.appearance.layout_saved'));
     }
 
     public function reading(): View

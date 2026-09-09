@@ -40,14 +40,14 @@ class ThemeSettingsController extends Controller
             ]);
         }
 
-        return back()->with('success', 'Theme colors saved.');
+        return back()->with('success', __('admin.appearance.colors_saved'));
     }
 
     public function reset(ThemeService $theme): RedirectResponse
     {
         $theme->reset();
 
-        return back()->with('success', 'Theme colors reset to defaults.');
+        return back()->with('success', __('admin.appearance.colors_reset_done'));
     }
 
     public function mode(ThemeService $theme): View

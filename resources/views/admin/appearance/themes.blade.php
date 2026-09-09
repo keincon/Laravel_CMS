@@ -6,14 +6,11 @@
 <div class="admin-page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
     <div>
         <h1>{{ __('admin.nav.themes') }}</h1>
-        <p class="muted mb-0">
-            A <strong>theme</strong> is the live folder under <code>resources/views/themes/{slug}</code>
-            (screens, CSS, JS, colors). A <strong>pack</strong> is that theme zipped for download/import.
-        </p>
+        <p class="muted mb-0">{!! __('admin.appearance.themes_intro_html') !!}</p>
     </div>
     <form method="POST" action="{{ route('admin.appearance.themes.rebuild') }}">
         @csrf
-        <button type="submit" class="btn btn-outline-secondary btn-sm">Rebuild download packs</button>
+        <button type="submit" class="btn btn-outline-secondary btn-sm">{{ __('admin.appearance.themes_rebuild') }}</button>
     </form>
 </div>
 
@@ -27,11 +24,11 @@
 <x-admin.help-next context="themes" />
 
 <div class="panel mb-4">
-    <h2 class="h6">Theme vs pack</h2>
+    <h2 class="h6">{{ __('admin.appearance.themes_vs_pack') }}</h2>
     <ul class="mb-0 small">
-        <li><strong>Theme</strong> — installed on disk: Blade <em>screens</em> (<code>pages/</code>, <code>dynamic/</code>), <code>assets/*.css</code>, <code>assets/*.js</code>, images, and <code>theme.json</code>.</li>
-        <li><strong>Pack</strong> — ZIP export of a theme for sharing or reinstalling. Import unpacks it back into a theme folder.</li>
-        <li>Missing screens fall back to the <code>default</code> theme. Raw PHP is blocked; <code>.blade.php</code> screens are allowed.</li>
+        <li><strong>{{ __('admin.appearance.themes_vs_theme_label') }}</strong> — {{ __('admin.appearance.themes_vs_theme') }}</li>
+        <li><strong>{{ __('admin.appearance.themes_vs_pack_label') }}</strong> — {{ __('admin.appearance.themes_vs_pack_item') }}</li>
+        <li>{{ __('admin.appearance.themes_vs_fallback') }}</li>
     </ul>
 </div>
 
@@ -39,38 +36,31 @@
     <div class="col-lg-5">
         <div class="panel h-100">
             <h2 class="h5">{{ __('admin.appearance.create_theme') }}</h2>
-            <p class="page-intro">Scaffolds screens, CSS, and JS stubs you can edit on disk.</p>
+            <p class="page-intro">{{ __('admin.appearance.themes_scaffold_help') }}</p>
             <form method="POST" action="{{ route('admin.appearance.themes.scaffold') }}" class="d-grid gap-3">
                 @csrf
                 <div>
-                    <label class="form-label" for="scaffold_slug">Slug</label>
+                    <label class="form-label" for="scaffold_slug">{{ __('admin.appearance.themes_slug') }}</label>
                     <input type="text" name="slug" id="scaffold_slug" class="form-control" placeholder="my-store" required pattern="[a-z0-9\-]+" maxlength="64">
                 </div>
                 <div>
-                    <label class="form-label" for="scaffold_name">Display name</label>
+                    <label class="form-label" for="scaffold_name">{{ __('admin.appearance.themes_display_name') }}</label>
                     <input type="text" name="name" id="scaffold_name" class="form-control" placeholder="My Store" maxlength="120">
                 </div>
                 <label class="form-check">
                     <input type="checkbox" name="activate" value="1" class="form-check-input">
-                    <span class="form-check-label">Activate after create</span>
+                    <span class="form-check-label">{{ __('admin.appearance.themes_activate_after_create') }}</span>
                 </label>
                 <div>
-                    <button type="submit" class="btn btn-primary">Scaffold theme</button>
+                    <button type="submit" class="btn btn-primary">{{ __('admin.appearance.themes_scaffold_btn') }}</button>
                 </div>
             </form>
         </div>
     </div>
     <div class="col-lg-7">
         <div class="panel h-100">
-            <h2 class="h5">What you can put in a theme</h2>
-            <pre class="small bg-dark text-white p-3 rounded mb-0" style="white-space:pre-wrap">themes/{slug}/
-  theme.json          # name, colors, stylesheets[], scripts[]
-  pages/*.blade.php   # page screens/templates
-  dynamic/*.blade.php # blog, post, archive, search, 404…
-  partials/           # @@include('themes.{slug}.partials.name')
-  assets/theme.css    # styles (also extra *.css)
-  assets/theme.js     # scripts (also extra *.js)
-  assets/images/…     # images, fonts, etc.</pre>
+            <h2 class="h5">{{ __('admin.appearance.themes_structure_title') }}</h2>
+            <pre class="small bg-dark text-white p-3 rounded mb-0" style="white-space:pre-wrap">{{ __('admin.appearance.themes_structure') }}</pre>
         </div>
     </div>
 </div>
@@ -97,20 +87,20 @@
                         <div class="text-muted small">{{ $slug }} · v{{ $theme['version'] ?? '1.0.0' }}</div>
                     </div>
                     @if ($isActive)
-                        <span class="badge text-bg-primary">Active</span>
+                        <span class="badge text-bg-primary">{{ __('admin.appearance.themes_active') }}</span>
                     @endif
                 </div>
-                <p class="small mb-2">{{ $theme['description'] ?? 'No description.' }}</p>
-                <p class="small text-muted mb-3">{{ $screenCount }} screens · {{ $cssCount }} CSS · {{ $jsCount }} JS</p>
+                <p class="small mb-2">{{ $theme['description'] ?? __('admin.appearance.themes_no_description') }}</p>
+                <p class="small text-muted mb-3">{{ __('admin.appearance.themes_counts', ['screens' => $screenCount, 'css' => $cssCount, 'js' => $jsCount]) }}</p>
                 <div class="d-flex flex-wrap gap-2">
                     @unless ($isActive)
                         <form method="POST" action="{{ route('admin.appearance.themes.activate', $slug) }}">
                             @csrf
-                            <button type="submit" class="btn btn-primary btn-sm">Activate</button>
+                            <button type="submit" class="btn btn-primary btn-sm">{{ __('admin.appearance.themes_activate') }}</button>
                         </form>
                     @endunless
-                    <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.appearance.themes.export', $slug) }}">Export theme ZIP</a>
-                    <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.appearance.themes.pack', $slug) }}">Download pack</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.appearance.themes.export', $slug) }}">{{ __('admin.appearance.themes_export') }}</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.appearance.themes.pack', $slug) }}">{{ __('admin.appearance.themes_download_pack') }}</a>
                 </div>
             </div>
         </div>
@@ -120,36 +110,36 @@
 <div class="row g-4">
     <div class="col-lg-6">
         <div class="panel">
-            <h2 class="h5">Import theme (from pack)</h2>
-            <p class="page-intro">Upload a ZIP with <code>theme.json</code>, optional Blade screens, and <code>assets/</code>. Raw PHP/executables are rejected; <code>.blade.php</code> is allowed.</p>
+            <h2 class="h5">{{ __('admin.appearance.themes_import_title') }}</h2>
+            <p class="page-intro">{{ __('admin.appearance.themes_import_help') }}</p>
             <form method="POST" action="{{ route('admin.appearance.themes.import') }}" enctype="multipart/form-data" class="d-grid gap-3">
                 @csrf
                 <div>
-                    <label class="form-label" for="package">Theme pack ZIP</label>
+                    <label class="form-label" for="package">{{ __('admin.appearance.themes_pack_zip') }}</label>
                     <input type="file" name="package" id="package" class="form-control" accept=".zip,application/zip" required>
                 </div>
                 <label class="form-check">
                     <input type="checkbox" name="activate" value="1" class="form-check-input">
-                    <span class="form-check-label">Activate after import</span>
+                    <span class="form-check-label">{{ __('admin.appearance.themes_activate_after_import') }}</span>
                 </label>
                 <div>
-                    <button type="submit" class="btn btn-primary">Import pack → theme</button>
+                    <button type="submit" class="btn btn-primary">{{ __('admin.appearance.themes_import_btn') }}</button>
                 </div>
             </form>
         </div>
     </div>
     <div class="col-lg-6">
         <div class="panel">
-            <h2 class="h5">Downloadable packs</h2>
-            <p class="page-intro">Prebuilt ZIPs in <code>storage/app/theme-packs/</code> — same content as each theme folder.</p>
+            <h2 class="h5">{{ __('admin.appearance.themes_packs_title') }}</h2>
+            <p class="page-intro">{{ __('admin.appearance.themes_packs_help') }}</p>
             <ul class="list-unstyled mb-0">
                 @forelse ($packs as $pack)
                     <li class="d-flex justify-content-between align-items-center py-2 border-bottom">
                         <span>{{ $pack['name'] }} <span class="text-muted small">({{ number_format($pack['size'] / 1024, 1) }} KB)</span></span>
-                        <a href="{{ route('admin.appearance.themes.pack', $pack['slug']) }}">Download pack</a>
+                        <a href="{{ route('admin.appearance.themes.pack', $pack['slug']) }}">{{ __('admin.appearance.themes_download_pack') }}</a>
                     </li>
                 @empty
-                    <li class="text-muted">No packs yet — click “Rebuild download packs”.</li>
+                    <li class="text-muted">{{ __('admin.appearance.themes_packs_empty') }}</li>
                 @endforelse
             </ul>
         </div>

@@ -486,6 +486,8 @@
             <a href="{{ route('admin.settings.reading') }}" class="{{ request()->routeIs('admin.settings.reading*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.reading') }}</a>
             <a href="{{ route('admin.settings.api') }}" class="{{ request()->routeIs('admin.settings.api*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.api') }}</a>
             <a href="{{ route('admin.settings.cors') }}" class="{{ request()->routeIs('admin.settings.cors*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.cors') }}</a>
+            <a href="{{ route('admin.settings.mail') }}" class="{{ request()->routeIs('admin.settings.mail') || request()->routeIs('admin.settings.mail.update') || request()->routeIs('admin.settings.mail.test') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.mail') }}</a>
+            <a href="{{ route('admin.settings.mail.templates') }}" class="{{ request()->routeIs('admin.settings.mail.templates*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.mail_templates') }}</a>
         </details>
 
         <details class="admin-nav-section" @if($usersNavOpen) open @endif>

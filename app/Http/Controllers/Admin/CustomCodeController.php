@@ -35,6 +35,6 @@ class CustomCodeController extends Controller
 
         $code->update($data);
 
-        return back()->with('success', 'Custom HTML / CSS / JS saved.');
+        return back()->with('success', __('admin.appearance.custom_code_saved'));
     }
 }

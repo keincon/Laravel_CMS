@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\DiscussionSettingsController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\Admin\CorsSettingsController;
+use App\Http\Controllers\Admin\MailSettingsController;
 use App\Http\Controllers\Admin\DemoDataController;
 use App\Http\Controllers\Admin\GeneralSettingsController;
 use App\Http\Controllers\Admin\MediaController;
@@ -205,6 +206,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/settings/api', [ApiDocsController::class, 'show'])->name('settings.api');
         Route::get('/settings/cors', [CorsSettingsController::class, 'edit'])->name('settings.cors');
         Route::put('/settings/cors', [CorsSettingsController::class, 'update'])->name('settings.cors.update');
+        Route::get('/settings/mail', [MailSettingsController::class, 'edit'])->name('settings.mail');
+        Route::put('/settings/mail', [MailSettingsController::class, 'update'])->name('settings.mail.update');
+        Route::post('/settings/mail/test', [MailSettingsController::class, 'sendTest'])->name('settings.mail.test');
+        Route::get('/settings/mail/templates', [MailSettingsController::class, 'editTemplates'])->name('settings.mail.templates');
+        Route::put('/settings/mail/templates', [MailSettingsController::class, 'updateTemplates'])->name('settings.mail.templates.update');
         Route::post('/settings/demo-data', [DemoDataController::class, 'install'])->name('settings.demo-data');
         Route::post('/settings/aoyama-data', [DemoDataController::class, 'installAoyama'])->name('settings.aoyama-data');
 

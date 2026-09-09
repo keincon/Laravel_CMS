@@ -105,10 +105,39 @@ class CommentController extends Controller
             'status' => $status,
         ]);
 
+        $this->notifyNewComment(
+            author: $request->user()?->name ?? ($data['author_name'] ?? ''),
+            email: $request->user()?->email ?? ($data['author_email'] ?? ''),
+            body: $data['content'],
+            postTitle: $content?->title ?? $post?->title ?? '',
+        );
+
         $message = $status === 'approved'
             ? 'Your comment has been posted.'
             : 'Your comment is awaiting moderation.';
 
         return back()->with('success', $message);
+    }
+
+    private function notifyNewComment(string $author, string $email, string $body, string $postTitle): void
+    {
+        try {
+            $templates = app(\App\Services\MailTemplateService::class);
+            $mail = app(\App\Services\MailSettingsService::class)->current();
+            $to = (string) ($mail['from_address'] ?? '');
+            if ($to === '') {
+                return;
+            }
+
+            $templates->send('comment_notification', $to, [
+                'post_title' => $postTitle,
+                'comment_author' => $author,
+                'comment_email' => $email,
+                'comment_content' => e($body),
+                'comment_moderate_url' => route('admin.comments.index'),
+            ]);
+        } catch (\Throwable) {
+            // Mail misconfiguration must not block public comments.
+        }
     }
 }
