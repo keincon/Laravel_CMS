@@ -108,7 +108,7 @@
             @csrf
             <div class="col-md-8">
                 <label class="form-label" for="test_to">{{ __('admin.settings.mail_test_to') }}</label>
-                <input type="email" name="test_to" id="test_to" class="form-control" value="{{ old('test_to', auth()->user()?->email) }}" required>
+                <input type="email" name="test_to" id="test_to" class="form-control" value="{{ old('test_to') }}" required>
             </div>
             <div class="col-md-4">
                 <button class="btn btn-outline-primary w-100" type="submit">{{ __('admin.settings.mail_test_send') }}</button>
