@@ -11,7 +11,9 @@ services:
       APP_NAME: "LaravelPress"
       APP_ENV: local
       APP_DEBUG: "true"
-      APP_URL: http://localhost
+      # Do not hardcode APP_URL to http://localhost — Docker maps a dynamic host port
+      # (e.g. :32772). Override via host .env APP_URL when needed.
+      APP_URL: ${APP_URL:-http://localhost:32772}
       CMS_NAME: "LaravelPress"
       DB_CONNECTION: pgsql
       DB_HOST: postgres

@@ -6,6 +6,12 @@
 
 @php
     $selected = $value ? \App\Models\Media::query()->find($value) : null;
+    $selectedUrl = null;
+    if ($selected) {
+        $selectedUrl = ($selected->disk ?: 'public') === 'public'
+            ? '/storage/'.ltrim((string) $selected->path, '/')
+            : $selected->url();
+    }
 @endphp
 
 <div
@@ -13,7 +19,7 @@
     x-data="mediaPicker({
         name: @js($name),
         value: @js($value ? (int) $value : null),
-        selectedUrl: @js($selected?->url()),
+        selectedUrl: @js($selectedUrl),
         selectedName: @js($selected?->alt ?: $selected?->filename),
         listUrl: @js(route('admin.media.json')),
         uploadUrl: @js(route('admin.media.store.json')),

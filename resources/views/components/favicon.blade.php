@@ -1,7 +1,8 @@
 @php
     $mediaId = \App\Models\CmsSetting::getValue('site_favicon_media_id');
     $media = $mediaId ? \App\Models\Media::query()->find($mediaId) : null;
-    $href = $media?->url();
+    // Root-relative avoids hanging on wrong APP_URL host/port (Docker).
+    $href = $media ? '/storage/'.ltrim((string) $media->path, '/') : null;
     $type = $media?->mime_type;
 @endphp
 

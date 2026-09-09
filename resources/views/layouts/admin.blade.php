@@ -99,6 +99,16 @@
             background: linear-gradient(145deg, #2563eb, #0ea5e9);
             color: #fff !important; display: grid; place-items: center;
             font-size: .85rem; font-weight: 800;
+            flex-shrink: 0;
+        }
+        .admin-brand-logo {
+            width: 2rem; height: 2rem; border-radius: .55rem;
+            object-fit: contain; background: var(--admin-elevated);
+            border: 1px solid var(--admin-border);
+            flex-shrink: 0;
+        }
+        .admin-brand-logo.is-wide {
+            width: auto; max-width: 8.5rem; height: 2rem;
         }
         .admin-nav-section { margin-top: .85rem; }
         .admin-nav-section summary {
@@ -369,12 +379,19 @@
 <body>
 @php
     $siteName = \App\Models\CmsSetting::getValue('site_name') ?: config('cms.name');
+    $logoMediaId = \App\Models\CmsSetting::getValue('site_logo_media_id');
+    $logoMedia = $logoMediaId ? \App\Models\Media::query()->find($logoMediaId) : null;
+    $logoHref = $logoMedia ? '/storage/'.ltrim((string) $logoMedia->path, '/') : null;
 @endphp
 <div class="admin-shell" x-data="{ open: false }" :class="{ 'nav-open': open }">
     <div class="admin-backdrop" @click="open = false"></div>
     <aside class="admin-nav">
         <a href="{{ route('admin.dashboard') }}" class="admin-brand">
-            <span class="admin-brand-mark">{{ strtoupper(substr($siteName, 0, 1)) }}</span>
+            @if ($logoHref)
+                <img class="admin-brand-logo" src="{{ $logoHref }}" alt="{{ $siteName }}">
+            @else
+                <span class="admin-brand-mark">{{ strtoupper(substr($siteName, 0, 1)) }}</span>
+            @endif
             <span>{{ $siteName }}</span>
         </a>
 

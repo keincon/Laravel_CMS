@@ -1022,6 +1022,7 @@ HTML),
                     'body' => $body,
                     'published_at' => $def['date'],
                     'term_ids' => $termId ? [$termId] : [],
+                    'comment_status' => 'open',
                 ]);
                 $posts[] = $existing->fresh();
                 continue;
@@ -1035,7 +1036,7 @@ HTML),
                 'status' => ContentStatus::Published->value,
                 'published_at' => $def['date'],
                 'term_ids' => $termId ? [$termId] : [],
-                'comment_status' => 'closed',
+                'comment_status' => 'open',
             ], $author);
         }
 

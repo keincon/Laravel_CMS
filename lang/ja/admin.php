@@ -268,7 +268,7 @@ return [
             ],
             [
                 'title' => '一般 / UI・言語',
-                'body' => 'サイト名、ファビコン、サイト言語、ダミー / 青山シーダー。',
+                'body' => 'サイト名、管理画面ロゴ、ファビコン、サイト言語、ダミー / 青山シーダー。',
                 'route' => 'admin.settings.general',
                 'params' => [],
             ],
@@ -620,12 +620,15 @@ return [
 
     'settings' => [
         'general' => '一般 / UI',
-        'general_intro' => 'サイト名、ファビコン、管理画面UIスタイルを更新します。保存後すぐに反映されます。',
+        'general_intro' => 'サイト名、管理画面ロゴ、ファビコン、管理画面UIスタイルを更新します。保存後すぐに反映されます。',
         'site_identity' => 'サイト情報',
         'site_identity_desc' => '管理画面のブランド、ログイン画面、公開サイトに表示されます。',
         'site_name' => 'サイト名',
         'site_description' => 'サイトの説明',
         'site_url' => 'サイトURL',
+        'admin_logo' => '管理画面 / ログインのロゴ',
+        'admin_logo_help' => 'PNG、WebP、JPEG。管理画面サイドバーとログイン画面の文字マークの代わりに表示されます。正方形（約128×128）がおすすめです。',
+        'choose_logo' => 'ロゴを選択',
         'favicon' => 'ファビコン',
         'favicon_help' => 'PNG、WebP、JPEG、GIF、またはICO。管理画面・ログイン・公開ページのブラウザタブで使用されます。',
         'choose_favicon' => 'ファビコンを選択',

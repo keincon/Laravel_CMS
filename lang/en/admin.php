@@ -268,7 +268,7 @@ return [
             ],
             [
                 'title' => 'General / UI & language',
-                'body' => 'Site name, favicon, site language, and the Dummy / Aoyama seeders.',
+                'body' => 'Site name, admin logo, favicon, site language, and the Dummy / Aoyama seeders.',
                 'route' => 'admin.settings.general',
                 'params' => [],
             ],
@@ -620,12 +620,15 @@ return [
 
     'settings' => [
         'general' => 'General / UI',
-        'general_intro' => 'Update your site name, favicon, and admin UI styling. Changes apply immediately after save.',
+        'general_intro' => 'Update your site name, admin logo, favicon, and admin UI styling. Changes apply immediately after save.',
         'site_identity' => 'Site identity',
         'site_identity_desc' => 'Shown in the admin brand, login screen, and public site.',
         'site_name' => 'Site name',
         'site_description' => 'Site description',
         'site_url' => 'Site URL',
+        'admin_logo' => 'Admin / login logo',
+        'admin_logo_help' => 'PNG, WebP, or JPEG. Replaces the letter mark in the admin sidebar and on the login screen. Square logos work best (~128×128).',
+        'choose_logo' => 'Choose logo',
         'favicon' => 'Favicon',
         'favicon_help' => 'PNG, WebP, JPEG, GIF, or ICO. Used in browser tabs on admin, login, and public pages.',
         'choose_favicon' => 'Choose favicon',

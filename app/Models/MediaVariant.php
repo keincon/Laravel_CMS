@@ -28,6 +28,16 @@ class MediaVariant extends Model
 
     public function url(): string
     {
+        if (($this->disk ?: 'public') === 'public') {
+            $path = 'storage/'.ltrim((string) $this->path, '/');
+
+            if (request()?->getHost()) {
+                return url($path);
+            }
+
+            return '/'.$path;
+        }
+
         return Storage::disk($this->disk)->url($this->path);
     }
 }

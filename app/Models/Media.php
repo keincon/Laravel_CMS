@@ -35,6 +35,19 @@ class Media extends Model
 
     public function url(): string
     {
+        // Prefer request-aware / root-relative URLs so Docker-mapped ports work.
+        // Storage::url() uses APP_URL (often http://localhost without :32772), which
+        // makes browsers hang waiting on the wrong origin for favicons/media.
+        if (($this->disk ?: 'public') === 'public') {
+            $path = 'storage/'.ltrim((string) $this->path, '/');
+
+            if (request()?->getHost()) {
+                return url($path);
+            }
+
+            return '/'.$path;
+        }
+
         return Storage::disk($this->disk)->url($this->path);
     }
 }

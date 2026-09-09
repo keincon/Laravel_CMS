@@ -2,6 +2,9 @@
     $ui = app(\App\Services\UIFrameworkService::class);
     $siteName = \App\Models\CmsSetting::getValue('site_name') ?: config('cms.name', config('app.name'));
     $siteDescription = \App\Models\CmsSetting::getValue('site_description') ?: __('auth.sign_in_continue');
+    $logoMediaId = \App\Models\CmsSetting::getValue('site_logo_media_id');
+    $logoMedia = $logoMediaId ? \App\Models\Media::query()->find($logoMediaId) : null;
+    $logoHref = $logoMedia ? '/storage/'.ltrim((string) $logoMedia->path, '/') : null;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light">
@@ -102,6 +105,13 @@
             background: linear-gradient(145deg, var(--login-accent), color-mix(in srgb, var(--login-accent) 55%, #0ea5e9));
             box-shadow: 0 14px 34px var(--login-glow);
         }
+        .login-mark-logo {
+            width: 64px; height: 64px; margin: 0 auto .9rem; border-radius: 18px;
+            object-fit: contain; background: #fff;
+            border: 1px solid var(--login-line);
+            box-shadow: 0 14px 34px var(--login-glow);
+            display: block;
+        }
         .login-brand h1 {
             margin: 0; font-family: Fraunces, Georgia, serif;
             font-size: clamp(1.75rem, 4vw, 2.15rem); font-weight: 700;
@@ -198,7 +208,11 @@
     <main class="login-stage">
         <div class="login-shell">
             <div class="login-brand">
-                <div class="login-mark" aria-hidden="true">{{ mb_strtoupper(mb_substr($siteName, 0, 1)) }}</div>
+                @if ($logoHref)
+                    <img class="login-mark-logo" src="{{ $logoHref }}" alt="{{ $siteName }}">
+                @else
+                    <div class="login-mark" aria-hidden="true">{{ mb_strtoupper(mb_substr($siteName, 0, 1)) }}</div>
+                @endif
                 <h1>{{ $siteName }}</h1>
                 <p>{{ __('auth.sign_in_continue') }}</p>
             </div>

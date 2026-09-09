@@ -20,6 +20,15 @@
                 <label class="form-label" for="site_description">{{ __('admin.settings.site_description') }}</label>
                 <textarea id="site_description" name="site_description" class="form-control" rows="3" maxlength="500">{{ old('site_description', $siteDescription) }}</textarea>
             </div>
+            <div class="mb-3">
+                <label class="form-label">{{ __('admin.settings.admin_logo') }}</label>
+                <p class="form-text mb-2">{{ __('admin.settings.admin_logo_help') }}</p>
+                <x-admin.media-picker
+                    name="site_logo_media_id"
+                    :value="old('site_logo_media_id', $logoMediaId ?? null)"
+                    :label="__('admin.settings.choose_logo')"
+                />
+            </div>
             <div>
                 <label class="form-label">{{ __('admin.settings.favicon') }}</label>
                 <p class="form-text mb-2">{{ __('admin.settings.favicon_help') }}</p>
