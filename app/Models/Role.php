@@ -13,11 +13,11 @@ class Role extends SpatieRole
     ];
 
     /**
-     * WordPress-style capability labels for admin UI.
+     * Canonical English capability labels (DB sync / fallback).
      *
      * @return array<string, string>
      */
-    public static function capabilityLabels(): array
+    public static function capabilityDefinitions(): array
     {
         return [
             // Legacy CMS capabilities (kept for existing admin routes)
@@ -51,13 +51,51 @@ class Role extends SpatieRole
     }
 
     /**
+     * Localized capability labels for admin UI.
+     *
+     * @return array<string, string>
+     */
+    public static function capabilityLabels(): array
+    {
+        $out = [];
+        foreach (self::capabilityDefinitions() as $key => $english) {
+            $out[$key] = __('admin.users.capabilities.'.$key);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Localized display name for the role (DB name stays English for Spatie).
+     */
+    public function localizedName(): string
+    {
+        $key = 'admin.users.role_names.'.$this->name;
+
+        return trans()->has($key) ? __($key) : $this->name;
+    }
+
+    /**
+     * Localized blurb for the role detail panel.
+     */
+    public function localizedDescription(): string
+    {
+        $key = 'admin.users.role_descriptions.'.$this->name;
+        if (trans()->has($key)) {
+            return __($key);
+        }
+
+        return $this->description ?: __('admin.users.capabilities_help');
+    }
+
+    /**
      * Default capability map by role name (WordPress-like).
      *
      * @return array<string, list<string>>
      */
     public static function defaultCapabilities(): array
     {
-        $all = array_keys(self::capabilityLabels());
+        $all = array_keys(self::capabilityDefinitions());
 
         return [
             'Administrator' => $all,

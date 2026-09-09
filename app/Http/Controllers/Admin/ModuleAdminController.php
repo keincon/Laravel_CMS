@@ -9,13 +9,17 @@ use App\Support\Modules\ModuleManager;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use InvalidArgumentException;
 
 class ModuleAdminController extends Controller
 {
     public function index(ModuleManager $modules): View
     {
+        $discovered = $modules->discover();
+        ksort($discovered, SORT_NATURAL | SORT_FLAG_CASE);
+
         return view('admin.modules.index', [
-            'modules' => $modules->discover(),
+            'modules' => $discovered,
         ]);
     }
 
@@ -25,8 +29,16 @@ class ModuleAdminController extends Controller
             'enabled' => ['required', 'boolean'],
         ]);
 
-        $modules->setEnabled($module, (bool) $data['enabled']);
+        try {
+            $modules->setEnabled($module, (bool) $data['enabled']);
+        } catch (InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
-        return back()->with('success', "Module [{$module}] ".($data['enabled'] ? 'enabled' : 'disabled').'.');
+        $message = $data['enabled']
+            ? __('admin.modules.flash_enabled', ['name' => $module])
+            : __('admin.modules.flash_disabled', ['name' => $module]);
+
+        return back()->with('success', $message);
     }
 }

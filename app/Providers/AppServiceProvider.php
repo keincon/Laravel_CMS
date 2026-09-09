@@ -6,6 +6,7 @@ use App\Events\ContentPublished;
 use App\Events\ContentUpdated;
 use App\Events\SettingsUpdated;
 use App\Listeners\InvalidateCmsCaches;
+use App\Listeners\RecordAuditLog;
 use App\Models\Content;
 use App\Policies\ContentPolicy;
 use App\Services\Search\DatabaseSearchDriver;
@@ -29,6 +30,8 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -113,6 +116,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(ContentUpdated::class, [InvalidateCmsCaches::class, 'handleContentUpdated']);
         Event::listen(ContentPublished::class, [InvalidateCmsCaches::class, 'handleContentUpdated']);
         Event::listen(SettingsUpdated::class, [InvalidateCmsCaches::class, 'handleSettingsUpdated']);
+
+        $audit = $this->app->make(RecordAuditLog::class);
+        $audit->subscribe();
+        Event::listen(Login::class, [$audit, 'handleLogin']);
+        Event::listen(Logout::class, [$audit, 'handleLogout']);
 
         $modules = $this->app->make(ModuleManager::class);
         $modules->discover();

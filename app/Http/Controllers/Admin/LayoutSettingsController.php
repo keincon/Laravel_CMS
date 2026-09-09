@@ -63,6 +63,6 @@ class LayoutSettingsController extends Controller
         $settings->fill($data)->save();
         $layouts->clearCaches();
 
-        return back()->with('success', 'Reading settings saved.');
+        return back()->with('success', __('admin.settings.reading_saved'));
     }
 }

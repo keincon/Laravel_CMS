@@ -12,16 +12,31 @@ final class SetupGuideController extends Controller
 {
     public function show(): View
     {
-        $howto = __('admin.setup_guide.howto');
-        if (! is_array($howto)) {
-            $howto = [];
+        return view('admin.help.setup-guide', [
+            'steps' => __('admin.setup_guide.steps'),
+            'dynamicItems' => $this->linkedItems(__('admin.setup_guide.dynamic_steps')),
+            'howtoItems' => $this->linkedItems(__('admin.setup_guide.howto')),
+            'canSeed' => auth()->user()?->can('manage_settings') ?? false,
+            'markdownPath' => 'docs/guides/setup-japanese.md',
+        ]);
+    }
+
+    /**
+     * @param  mixed  $items
+     * @return list<array{title: string, body: string, url: ?string, button: string}>
+     */
+    private function linkedItems(mixed $items): array
+    {
+        if (! is_array($items)) {
+            return [];
         }
 
-        $howtoItems = [];
-        foreach ($howto as $item) {
+        $out = [];
+        foreach ($items as $item) {
             if (! is_array($item)) {
                 continue;
             }
+
             $routeName = (string) ($item['route'] ?? '');
             $params = is_array($item['params'] ?? null) ? $item['params'] : [];
             $url = null;
@@ -32,18 +47,15 @@ final class SetupGuideController extends Controller
                     $url = null;
                 }
             }
-            $howtoItems[] = [
+
+            $out[] = [
                 'title' => (string) ($item['title'] ?? ''),
                 'body' => (string) ($item['body'] ?? ''),
                 'url' => $url,
+                'button' => (string) ($item['button'] ?? __('admin.setup_guide.open')),
             ];
         }
 
-        return view('admin.help.setup-guide', [
-            'steps' => __('admin.setup_guide.steps'),
-            'howtoItems' => $howtoItems,
-            'canSeed' => auth()->user()?->can('manage_settings') ?? false,
-            'markdownPath' => 'docs/guides/setup-japanese.md',
-        ]);
+        return $out;
     }
 }

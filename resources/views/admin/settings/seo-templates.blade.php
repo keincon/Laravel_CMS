@@ -2,12 +2,10 @@
 @section('title', __('admin.nav.seo_templates'))
 @section('content')
 <h1 class="h3 mb-2">{{ __('admin.nav.seo_templates') }}</h1>
-<p class="text-muted mb-4">
-    These templates generate titles and descriptions for dynamic pages (and fill in when Static Pages / Posts have no manual SEO).
-</p>
+<p class="text-muted mb-4">{{ __('admin.settings.seo_templates_intro') }}</p>
 
 <div class="alert alert-secondary">
-    <strong>Available variables:</strong>
+    <strong>{{ __('admin.settings.seo_templates_variables') }}:</strong>
     <code>{site_name}</code>,
     <code>{post_title}</code>,
     <code>{post_excerpt}</code>,
@@ -24,17 +22,23 @@
     @csrf @method('PUT')
     @foreach ($templates as $type => $template)
         <div class="border rounded p-3 bg-white mb-3">
-            <h2 class="h6 text-uppercase">{{ str_replace('_', ' ', $type) }}</h2>
+            <h2 class="h6">
+                @if (trans()->has('admin.settings.seo_template_types.'.$type))
+                    {{ __('admin.settings.seo_template_types.'.$type) }}
+                @else
+                    {{ str_replace('_', ' ', $type) }}
+                @endif
+            </h2>
             <div class="mb-3">
-                <label class="form-label">Title</label>
+                <label class="form-label">{{ __('admin.settings.seo_templates_title') }}</label>
                 <input class="form-control" name="templates[{{ $type }}][title]" value="{{ old("templates.$type.title", $template['title'] ?? '') }}">
             </div>
             <div class="mb-0">
-                <label class="form-label">Description</label>
+                <label class="form-label">{{ __('admin.settings.seo_templates_description') }}</label>
                 <textarea class="form-control" rows="2" name="templates[{{ $type }}][description]">{{ old("templates.$type.description", $template['description'] ?? '') }}</textarea>
             </div>
         </div>
     @endforeach
-    <button class="btn btn-primary" type="submit">Save SEO Templates</button>
+    <button class="btn btn-primary" type="submit">{{ __('admin.settings.seo_templates_save') }}</button>
 </form>
 @endsection

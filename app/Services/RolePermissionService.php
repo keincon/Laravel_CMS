@@ -23,7 +23,7 @@ class RolePermissionService
 
         foreach (config('cms.permissions', []) as $name) {
             $permission = Permission::findOrCreate($name, $guard);
-            $label = Role::capabilityLabels()[$name] ?? Str::headline(str_replace('_', ' ', $name));
+            $label = Role::capabilityDefinitions()[$name] ?? Str::headline(str_replace('_', ' ', $name));
             if ($permission->description !== $label) {
                 $permission->description = $label;
                 $permission->save();

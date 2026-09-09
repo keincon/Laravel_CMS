@@ -855,6 +855,139 @@ body.theme-aoyama.ao-site .ao-news-title {
   color: var(--ao-navy);
 }
 
+body.theme-aoyama.ao-site .ao-news-new {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--ao-red);
+  color: var(--ao-red);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  vertical-align: 0.1em;
+}
+
+body.theme-aoyama.ao-site .ao-news-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12.5rem;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+body.theme-aoyama.ao-site .ao-news-aside-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ao-navy);
+  border-bottom: 2px solid var(--ao-navy);
+  padding-bottom: 0.4rem;
+}
+
+body.theme-aoyama.ao-site .ao-backnumber {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+body.theme-aoyama.ao-site .ao-backnumber li {
+  border-bottom: 1px solid var(--ao-border);
+}
+
+body.theme-aoyama.ao-site .ao-backnumber a {
+  display: block;
+  padding: 0.55rem 0.1rem;
+  color: var(--ao-navy-mid);
+  font-size: 0.9rem;
+}
+
+body.theme-aoyama.ao-site .ao-backnumber a:hover {
+  color: var(--ao-navy);
+}
+
+/* —— Campaign cards —— */
+body.theme-aoyama.ao-site .ao-campaign-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+body.theme-aoyama.ao-site .ao-campaign-card {
+  padding: 1.35rem 1.4rem 1.45rem;
+  border: 1px solid var(--ao-border);
+  background: linear-gradient(180deg, #f8fafc 0%, var(--ao-white) 42%);
+}
+
+body.theme-aoyama.ao-site .ao-campaign-card-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.12rem;
+  font-weight: 800;
+  line-height: 1.45;
+  color: var(--ao-navy);
+}
+
+body.theme-aoyama.ao-site .ao-campaign-card-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+body.theme-aoyama.ao-site .ao-campaign-card-title a:hover {
+  color: var(--ao-navy-mid);
+  text-decoration: underline;
+}
+
+body.theme-aoyama.ao-site .ao-campaign-card-lead {
+  margin: 0 0 0.65rem;
+  color: var(--ao-text);
+  font-size: 0.95rem;
+}
+
+body.theme-aoyama.ao-site .ao-campaign-card-note {
+  margin: 0 0 0.75rem;
+  padding: 0.65rem 0.75rem;
+  background: color-mix(in srgb, var(--ao-red) 8%, white);
+  border-left: 3px solid var(--ao-red);
+  color: var(--ao-text);
+  font-size: 0.88rem;
+}
+
+body.theme-aoyama.ao-site .ao-campaign-card-more {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
+body.theme-aoyama.ao-site .ao-campaign-facts {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 1.15rem;
+  padding: 0.85rem 0 0;
+  border-top: 1px solid var(--ao-border);
+}
+
+body.theme-aoyama.ao-site .ao-campaign-facts.is-detail {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--ao-border);
+  background: var(--ao-surface);
+}
+
+body.theme-aoyama.ao-site .ao-campaign-facts dt {
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ao-navy);
+}
+
+body.theme-aoyama.ao-site .ao-campaign-facts dd {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--ao-text);
+}
+
+body.theme-aoyama.ao-site .ao-campaign-card-cta {
+  margin: 0;
+}
+
 /* —— Inner page —— */
 body.theme-aoyama.ao-site .ao-page-header {
   margin-bottom: 1.5rem;
@@ -1192,6 +1325,11 @@ body.theme-aoyama.ao-site .post-card h2 {
   body.theme-aoyama.ao-site .ao-news-list a {
     grid-template-columns: 1fr;
     gap: 0.25rem;
+  }
+
+  body.theme-aoyama.ao-site .ao-news-layout {
+    grid-template-columns: 1fr;
+    gap: 2rem;
   }
 
   body.theme-aoyama.ao-site .ao-faq-float {

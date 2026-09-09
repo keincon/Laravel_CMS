@@ -21,11 +21,13 @@ class PermalinkService
      */
     public function options(): array
     {
+        $base = $this->blogBase();
+
         return [
             self::STRUCTURE_POSTS => '/posts/{slug}',
-            self::STRUCTURE_BLOG => '/blog/{slug}',
+            self::STRUCTURE_BLOG => '/'.$base.'/{slug}',
             self::STRUCTURE_ROOT => '/{slug}',
-            self::STRUCTURE_DATED => '/blog/{year}/{month}/{slug}',
+            self::STRUCTURE_DATED => '/'.$base.'/{year}/{month}/{slug}',
         ];
     }
 
@@ -34,6 +36,16 @@ class PermalinkService
         $value = SeoSetting::current()->permalink_structure ?: self::STRUCTURE_BLOG;
 
         return array_key_exists($value, $this->options()) ? $value : self::STRUCTURE_BLOG;
+    }
+
+    public function blogIndexPath(): string
+    {
+        return $this->blogBase();
+    }
+
+    public function blogIndexUrl(): string
+    {
+        return url('/'.$this->blogIndexPath());
     }
 
     public function postPath(Post $post): string
@@ -49,6 +61,10 @@ class PermalinkService
             return $content->slug;
         }
 
+        if ($type === 'campaign') {
+            return 'campaign/'.$content->slug;
+        }
+
         return $this->resolvePath($content->slug, $content->published_at);
     }
 
@@ -58,7 +74,7 @@ class PermalinkService
             return $this->contentUrl($post);
         }
 
-        return app(SeoService::class)->siteUrl().'/'.$this->postPath($post);
+        return url('/'.$this->postPath($post));
     }
 
     public function entryUrl(Post|Content $entry): string
@@ -68,7 +84,7 @@ class PermalinkService
 
     public function contentUrl(Content $content): string
     {
-        return app(SeoService::class)->siteUrl().'/'.$this->contentPath($content);
+        return url('/'.$this->contentPath($content));
     }
 
     public function categoryPath(string $slug): string
@@ -81,18 +97,34 @@ class PermalinkService
         return 'tag/'.$slug;
     }
 
+    private function blogBase(): string
+    {
+        try {
+            $path = (string) (app(DynamicPageService::class)->get('blog')->url_path ?: '/blog');
+        } catch (\Throwable) {
+            $path = '/blog';
+        }
+
+        $base = trim($path, '/');
+
+        return $base !== '' ? $base : 'blog';
+    }
+
     private function resolvePath(string $slug, mixed $publishedAt): string
     {
+        $base = $this->blogBase();
+
         return match ($this->structure()) {
             self::STRUCTURE_POSTS => 'posts/'.$slug,
             self::STRUCTURE_ROOT => $slug,
             self::STRUCTURE_DATED => sprintf(
-                'blog/%s/%s/%s',
+                '%s/%s/%s/%s',
+                $base,
                 optional($publishedAt)?->format('Y') ?? now()->format('Y'),
                 optional($publishedAt)?->format('m') ?? now()->format('m'),
                 $slug,
             ),
-            default => 'blog/'.$slug,
+            default => $base.'/'.$slug,
         };
     }
 }

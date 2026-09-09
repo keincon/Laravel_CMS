@@ -84,21 +84,26 @@ class SeoSettingsController extends Controller
             'og_site_name' => ['nullable', 'string', 'max:255'],
             'og_locale' => ['nullable', 'string', 'max:20'],
             'twitter_card' => ['required', 'in:summary,summary_large_image'],
-            'og_image_url' => ['nullable', 'url', 'max:255'],
+            'og_image_url' => ['nullable', 'string', 'max:255'],
         ]);
+
+        if (! empty($data['og_image_url']) && ! filter_var($data['og_image_url'], FILTER_VALIDATE_URL)) {
+            return back()
+                ->withInput()
+                ->withErrors(['og_image_url' => __('admin.ogp.invalid_image_url')]);
+        }
 
         $settings = SeoSetting::current();
         $settings->fill(collect($data)->except('og_image_url')->all());
+        $settings->save();
 
-        if (! empty($data['og_image_url'])) {
-            // Store URL in organization_logo fallback path via cms setting for simplicity when no media upload yet
-            CmsSetting::setValue('og_image_url', $data['og_image_url']);
+        if (array_key_exists('og_image_url', $data)) {
+            CmsSetting::setValue('og_image_url', (string) ($data['og_image_url'] ?? ''));
         }
 
-        $settings->save();
         SeoSetting::forgetCache();
 
-        return back()->with('success', 'OGP settings saved.');
+        return back()->with('success', __('admin.ogp.saved'));
     }
 
     public function editPermalinks(PermalinkService $permalinks): View

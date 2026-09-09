@@ -59,6 +59,6 @@ class CorsSettingsController extends Controller
             'supports_credentials' => $request->boolean('supports_credentials'),
         ]);
 
-        return back()->with('success', 'CORS settings saved.');
+        return back()->with('success', __('admin.settings.cors_saved'));
     }
 }

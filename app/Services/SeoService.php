@@ -20,13 +20,34 @@ class SeoService
 
     public function siteUrl(): string
     {
-        $settings = $this->settings();
+        $configured = $this->settings()->canonical_url
+            ?: CmsSetting::getValue('site_url', config('app.url'));
 
-        return rtrim(
-            $settings->canonical_url
-                ?: CmsSetting::getValue('site_url', config('app.url')),
-            '/'
-        );
+        $configured = is_string($configured) ? rtrim($configured, '/') : '';
+
+        // Prefer the live request host/port (Docker mapped ports like :32772).
+        if (! app()->runningInConsole()) {
+            $request = request();
+            if ($request) {
+                $requestRoot = rtrim($request->getSchemeAndHttpHost(), '/');
+                $configuredHost = parse_url($configured !== '' ? $configured : 'http://localhost', PHP_URL_HOST);
+                $requestHost = $request->getHost();
+
+                if (
+                    $configured === ''
+                    || $configuredHost === $requestHost
+                    || in_array($configuredHost, ['localhost', '127.0.0.1'], true)
+                ) {
+                    return $requestRoot;
+                }
+            }
+        }
+
+        if ($configured !== '') {
+            return $configured;
+        }
+
+        return rtrim((string) config('app.url'), '/');
     }
 
     /**

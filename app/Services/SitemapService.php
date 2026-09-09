@@ -78,6 +78,17 @@ class SitemapService
             );
         });
 
+        $push($this->seo->siteUrl().'/campaign', now()->toAtomString(), 'weekly', '0.8');
+
+        Content::query()->ofType('campaign')->published()->orderBy('menu_order')->orderByDesc('published_at')->each(function (Content $campaign) use ($push) {
+            $push(
+                $this->permalinks->contentUrl($campaign),
+                optional($campaign->updated_at)?->toAtomString(),
+                'weekly',
+                '0.7'
+            );
+        });
+
         Post::query()->published()->orderByDesc('published_at')->each(function (Post $post) use ($push) {
             $push(
                 $this->permalinks->postUrl($post),

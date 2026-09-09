@@ -19,7 +19,7 @@
     </a>
     @foreach ($roles as $r)
         <a href="{{ route('admin.users.index', array_filter(['role' => $r->name, 'q' => $q ?: null])) }}" class="{{ $roleFilter === $r->name ? 'is-active' : '' }}">
-            {{ $r->name }} <span>({{ $roleCounts[$r->name] ?? 0 }})</span>
+            {{ $r->localizedName() }} <span>({{ $roleCounts[$r->name] ?? 0 }})</span>
         </a>
     @endforeach
 </div>
@@ -49,7 +49,7 @@
             <select name="role" class="form-select" style="max-width: 200px">
                 <option value="">{{ __('admin.users.role_placeholder') }}</option>
                 @foreach ($roles as $r)
-                    <option value="{{ $r->name }}">{{ $r->name }}</option>
+                    <option value="{{ $r->name }}">{{ $r->localizedName() }}</option>
                 @endforeach
             </select>
             <button class="btn btn-outline-secondary" type="submit">{{ __('admin.users.apply') }}</button>
@@ -92,7 +92,7 @@
                                 <td>{{ $user->email }}</td>
                                 <td>
                                     @forelse ($user->roles as $role)
-                                        <span class="badge text-bg-primary">{{ $role->name }}</span>
+                                        <span class="badge text-bg-primary">{{ $role->localizedName() }}</span>
                                     @empty
                                         <span class="badge text-bg-secondary">{{ __('admin.users.none') }}</span>
                                     @endforelse

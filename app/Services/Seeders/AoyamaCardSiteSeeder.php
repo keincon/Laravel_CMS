@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Services\Seeders;
 
 use App\Enums\ContentStatus;
+use App\Enums\MetaType;
 use App\Models\Category;
 use App\Models\CmsSetting;
 use App\Models\Content;
+use App\Models\ContentMeta;
+use App\Models\ContentType;
+use App\Models\DynamicPageSetting;
 use App\Models\Media;
 use App\Models\Menu;
 use App\Models\MenuItem;
@@ -16,6 +20,7 @@ use App\Models\Taxonomy;
 use App\Models\Term;
 use App\Models\User;
 use App\Services\Content\ContentService;
+use App\Services\DynamicPageService;
 use App\Services\LaravelPressBootstrapService;
 use App\Services\RolePermissionService;
 use App\Services\Themes\ThemeManager;
@@ -68,19 +73,123 @@ final class AoyamaCardSiteSeeder
 
         return DB::transaction(function () use ($author, $mediaCount): array {
             $this->seedSiteSettings();
+            $this->seedDynamicNews();
+            $this->seedDynamicCampaign();
             $termIds = $this->seedTerms();
             $pages = $this->seedPages($author);
             $posts = $this->seedPosts($author, $termIds);
+            $campaigns = $this->seedCampaigns($author);
             $menuItems = $this->seedMenu($pages);
 
             return [
                 'pages' => count($pages),
-                'posts' => count($posts),
+                'posts' => count($posts) + count($campaigns),
                 'terms' => count($termIds),
                 'menu_items' => $menuItems,
                 'media' => $mediaCount,
             ];
         });
+    }
+
+    /**
+     * Map the blog dynamic page to /news (公式お知らせ一覧) and drop any static /news page.
+     */
+    private function seedDynamicNews(): void
+    {
+        app(DynamicPageService::class)->ensureDefaults();
+
+        DynamicPageSetting::query()->where('type', 'blog')->update([
+            'label' => 'お知らせ',
+            'title' => 'お知らせ',
+            'description' => '青山キャピタルからのお知らせ一覧です。',
+            'url_path' => '/news',
+            'posts_per_page' => 50,
+            'layout' => 'list',
+            'is_enabled' => true,
+        ]);
+
+        DynamicPageSetting::query()->where('type', 'post')->update([
+            'label' => 'お知らせ詳細',
+            'title' => 'お知らせ',
+            'is_enabled' => true,
+        ]);
+
+        DynamicPageSetting::query()->where('type', 'archive')->update([
+            'label' => 'バックナンバー',
+            'title' => 'バックナンバー',
+            'is_enabled' => true,
+            'posts_per_page' => 50,
+        ]);
+
+        DynamicPageSetting::forgetCache();
+
+        Content::withTrashed()->where('slug', 'news')->forceDelete();
+        Page::query()->where('slug', 'news')->delete();
+    }
+
+    /**
+     * Map the campaign dynamic page to /campaign and ensure the campaign content type exists.
+     */
+    private function seedDynamicCampaign(): void
+    {
+        ContentType::query()->updateOrCreate(
+            ['slug' => 'campaign'],
+            [
+                'name' => 'campaign',
+                'singular_label' => 'キャンペーン',
+                'plural_label' => 'キャンペーン',
+                'supports' => [
+                    'title', 'editor', 'excerpt', 'author', 'featured_image',
+                    'revisions', 'custom_fields', 'archive',
+                ],
+                'capabilities' => [
+                    'create_posts', 'edit_posts', 'edit_others_posts',
+                    'publish_posts', 'delete_posts',
+                ],
+                'hierarchical' => false,
+                'has_archive' => true,
+                'public' => true,
+                'show_in_rest' => true,
+                'rest_base' => 'campaigns',
+                'menu_icon' => 'gift',
+                'menu_position' => 8,
+                'is_builtin' => false,
+            ]
+        );
+
+        app(DynamicPageService::class)->ensureDefaults();
+
+        DynamicPageSetting::query()->where('type', 'campaign')->update([
+            'label' => 'キャンペーン',
+            'title' => 'キャンペーン',
+            'description' => '開催中の入会・リボ・ポイントキャンペーンをご案内します。',
+            'url_path' => '/campaign',
+            'posts_per_page' => 20,
+            'layout' => 'list',
+            'is_enabled' => true,
+        ]);
+
+        DynamicPageSetting::query()->where('type', 'campaign_item')->update([
+            'label' => 'キャンペーン詳細',
+            'title' => 'キャンペーン',
+            'is_enabled' => true,
+        ]);
+
+        DynamicPageSetting::forgetCache();
+
+        Content::withTrashed()
+            ->whereIn('slug', [
+                'campaign',
+                'campaign-u26031-php',
+                'campaign-u26041-php',
+            ])
+            ->whereHas('type', fn ($q) => $q->where('slug', 'page'))
+            ->forceDelete();
+        Page::query()->whereIn('slug', [
+            'campaign',
+            'campaign-u26031-php',
+            'campaign-u26041-php',
+        ])->delete();
     }
 
     private function seedSiteSettings(): void
@@ -90,7 +199,7 @@ final class AoyamaCardSiteSeeder
             'site_description',
             '「洋服の青山」などでのお買い物が毎回お得に！ポイントもダブルで貯まるクレジットカード「AOYAMAカード」を発行・ご案内する青山グループの金融サービスサイト。'
         );
-        CmsSetting::setValue('site_url', 'https://www.aoyama-card.co.jp/');
+        CmsSetting::setValue('site_url', rtrim((string) config('app.url'), '/').'/');
         CmsSetting::setValue('language', 'ja');
         CmsSetting::setValue('timezone', 'Asia/Tokyo');
 
@@ -304,7 +413,7 @@ final class AoyamaCardSiteSeeder
       <h3>Papasカード Mamasカード</h3>
       <p>子育てパパ・ママを応援！家族みんながうれしいカード</p>
       <p class="ao-wpoint"><span>Wポイント</span> AOYAMAポイント + UCポイント</p>
-      <p class="ao-catalog-note"><a href="/news-2023-02-21-papas-mamas">「Papasカード」「Mamasカード」のカード名称・デザイン変更のお知らせ</a></p>
+      <p class="ao-catalog-note"><a href="/news/news-2023-02-21-papas-mamas">「Papasカード」「Mamasカード」のカード名称・デザイン変更のお知らせ</a></p>
     </div>
   </article>
 </section>
@@ -586,24 +695,6 @@ HTML),
 <h1>CD・ATMのご利用について</h1>
 <p>キャッシングがご利用いただけるCD・ATMの操作方法をご案内します。</p>
 HTML),
-            $p('/campaign/', 'キャンペーン', '開催中の入会・リボ・ポイントキャンペーン。', <<<'HTML'
-<h1>キャンペーン</h1>
-<ul>
-<li>【三井住友カード発行】新規ご入会＆ご利用＆ご登録でもれなく最大5,000円キャッシュバック！</li>
-<li>【最大2万円キャッシュバック】リボ宣言登録＆利用キャンペーン！</li>
-<li>【最大3万円相当のUCポイントプレゼント】新規入会キャンペーン！</li>
-<li>【ライフカード発行】もれなく1,000円分がもらえる新規ご入会キャンペーン！</li>
-<li>大切なひと時を演出するMastercardプロモーションのご案内</li>
-</ul>
-HTML),
-            $p('/campaign/U26031.php', '新規入会キャンペーン（UCポイント）', '最大3万円相当UCポイント。', <<<'HTML'
-<h1>【最大3万円相当のUCポイントプレゼント】新規入会キャンペーン</h1>
-<p>青山キャピタル発行カード向け。入会申込期間・利用条件は公式キャンペーンページをご確認ください。</p>
-HTML),
-            $p('/campaign/U26041.php', 'リボ宣言キャンペーン', '最大2万円キャッシュバック。', <<<'HTML'
-<h1>【最大2万円キャッシュバック】リボ宣言登録＆利用キャンペーン</h1>
-<p>リボ宣言登録かつショッピングリボ利用で条件達成の方にキャッシュバック。詳細は公式をご確認ください。</p>
-HTML),
             $p('/support/', 'カード会員の方', '発行会社別のWeb・電話窓口・各種手続き。', <<<'HTML'
 <h1>カード会員の方</h1>
 <p>カード番号の先頭4桁で発行会社が異なります。</p>
@@ -654,11 +745,6 @@ HTML),
             $p('/membership/', '青山キャピタル発行カードの紹介', '青山キャピタル発行カードのご案内。', <<<'HTML'
 <h1>青山キャピタル発行カードの紹介</h1>
 <p>株式会社青山キャピタルが発行するAOYAMAカード・BLUE ROSE CARD・SUGOCA一体型などのご案内です。</p>
-HTML),
-            $p('/news/', 'お知らせ', '公式お知らせ一覧。', <<<'HTML'
-<h1>お知らせ</h1>
-<p>日付付きの公式お知らせはブログ（お知らせ）一覧をご覧ください。</p>
-<p><a href="/blog">お知らせ一覧へ</a></p>
 HTML),
             $p('/company/about/', '企業情報', '株式会社青山キャピタルの会社概要。', <<<'HTML'
 <h1>企業情報</h1>
@@ -949,6 +1035,173 @@ HTML),
     }
 
     /**
+     * @return list<Content>
+     */
+    private function seedCampaigns(User $author): array
+    {
+        $definitions = [
+            [
+                'title' => '【三井住友カード発行】新規ご入会＆ご利用＆ご登録でもれなく最大5,000円キャッシュバック！',
+                'slug' => 'smbc-new-member-cashback',
+                'excerpt' => 'ご入会＆ご入会の翌月末までに合計15,000円(税込)のお買い物で2,000円キャッシュバック♪さらに3,000円キャッシュバックとなる、お申込み時の「マイ・ペイすリボ」の条件は詳細ページをご確認ください。',
+                'period_label' => '入会申込期間',
+                'period' => '2026年4月27日（月）～',
+                'target_label' => '対象カード',
+                'target' => 'AOYAMA VISAカード／AOYAMA VISA PiTaPaカード／BLUE ROSE CARD(三井住友カード発行)',
+                'note' => '※上記のマイ・ペイすリボプランは2026年9月30日(水)をもって終了いたします。2026年10月1日(木)より、5,000円キャッシュバックに変更予定です。',
+                'date' => '2026-04-27',
+                'order' => 1,
+                'body' => <<<'HTML'
+<p>三井住友カード発行の対象カードへ新規ご入会のうえ、条件を満たすとキャッシュバックを進呈するキャンペーンです。</p>
+<ul>
+<li>ご入会＆ご入会の翌月末までに合計15,000円（税込）以上のお買い物で2,000円キャッシュバック</li>
+<li>お申込み時の「マイ・ペイすリボ」条件達成でさらに3,000円（合計最大5,000円）</li>
+</ul>
+<p>本コンテンツはデモ用に <a href="https://www.aoyama-card.co.jp/campaign/" rel="noopener">aoyama-card.co.jp/campaign/</a> を参考に作成しています。正式な条件は公式サイトをご確認ください。</p>
+HTML,
+            ],
+            [
+                'title' => '【最大2万円キャッシュバック】リボ宣言登録＆利用キャンペーン！',
+                'slug' => 'ribo-declaration-cashback',
+                'excerpt' => '「リボ宣言にご登録」かつ「ショッピングリボのご利用」で、条件を満たした方に、最大2万円キャッシュバック！特典内容はご利用金額に応じて異なります。',
+                'period_label' => 'キャンペーン期間',
+                'period' => '2026年4月1日（水）～2026年6月30日（火）',
+                'target_label' => '対象カード',
+                'target' => '青山キャピタル発行のAOYAMAカード／BLUE ROSE CARD／AOYAMAマスターカードSUGOCA',
+                'note' => null,
+                'date' => '2026-04-01',
+                'order' => 2,
+                'body' => <<<'HTML'
+<p>リボ宣言へのご登録とショッピングリボのご利用で、ご利用金額に応じたキャッシュバックを進呈します（最大2万円）。</p>
+<p>本コンテンツはデモ用に <a href="https://www.aoyama-card.co.jp/campaign/U26041.php" rel="noopener">公式キャンペーン詳細</a> を参考に作成しています。</p>
+HTML,
+            ],
+            [
+                'title' => '【最大3万円相当のUCポイントプレゼント】新規入会キャンペーン！',
+                'slug' => 'uc-point-new-member',
+                'excerpt' => '新規入会＆ご利用で、最大3万円相当のUCポイントプレゼント♪利用対象期間中のショッピング利用において、3回以上の決済、かつ一定額以上の利用が必要です。利用対象期間は、入会申込月の翌々月末日まで！ご利用金額に応じて、特典内容が異なります！',
+                'period_label' => '入会申込期間',
+                'period' => '2026年3月1日（日）～2026年9月30日（水）',
+                'target_label' => '対象',
+                'target' => '入会申込期間中に青山キャピタル発行のAOYAMAカード／BLUE ROSE CARD／AOYAMAマスターカードSUGOCAへお申込みいただいた方',
+                'note' => null,
+                'date' => '2026-03-01',
+                'order' => 3,
+                'body' => <<<'HTML'
+<p>青山キャピタル発行カードへの新規入会＆ご利用で、最大3万円相当のUCポイントをプレゼントします。</p>
+<ul>
+<li>利用対象期間中に3回以上の決済</li>
+<li>一定額以上のご利用（金額に応じて特典が異なります）</li>
+<li>利用対象期間は入会申込月の翌々月末日まで</li>
+</ul>
+<p>本コンテンツはデモ用に <a href="https://www.aoyama-card.co.jp/campaign/U26031.php" rel="noopener">公式キャンペーン詳細</a> を参考に作成しています。</p>
+HTML,
+            ],
+            [
+                'title' => '【ライフカード発行】もれなく1,000円分がもらえる新規ご入会キャンペーン！',
+                'slug' => 'life-new-member-1000',
+                'excerpt' => 'もれなく1,000円分のVプリカギフトプレゼント！対象期間中に新規ご入会のうえ、3回以上＆合計10,000円(税込)以上のお買い物で対象になります！利用対象期間は、入会申込月の翌々月末日まで！',
+                'period_label' => '入会申込期間',
+                'period' => '2026年4月1日（水）～2026年9月30日（水）',
+                'target_label' => '対象',
+                'target' => '入会申込期間中にライフカード発行のAOYAMAカード／BLUE ROSE CARDへお申込みいただいた方',
+                'note' => null,
+                'date' => '2026-04-01',
+                'order' => 4,
+                'body' => <<<'HTML'
+<p>ライフカード発行の対象カードへ新規ご入会のうえ、条件達成でもれなく1,000円分のVプリカギフトをプレゼントします。</p>
+<ul>
+<li>3回以上のお買い物</li>
+<li>合計10,000円（税込）以上のご利用</li>
+<li>利用対象期間は入会申込月の翌々月末日まで</li>
+</ul>
+<p>本コンテンツはデモ用に <a href="https://www.aoyama-card.co.jp/campaign/" rel="noopener">aoyama-card.co.jp/campaign/</a> を参考に作成しています。</p>
+HTML,
+            ],
+            [
+                'title' => '大切なひと時を演出するMastercardプロモーションのご案内',
+                'slug' => 'mastercard-promotion',
+                'excerpt' => 'Mastercard主催のキャンペーン・プロモーションをご案内します。対象カードでご利用のうえ、各プロモーションの条件をご確認ください。',
+                'period_label' => null,
+                'period' => null,
+                'target_label' => '対象カード',
+                'target' => '青山キャピタル発行のAOYAMAカード／BLUE ROSE CARD／AOYAMAマスターカードSUGOCA',
+                'note' => null,
+                'date' => '2026-01-01',
+                'order' => 5,
+                'body' => <<<'HTML'
+<p>Mastercard主催の各種プロモーション情報です。最新の内容・応募条件はMastercardおよび公式サイトのご案内をご確認ください。</p>
+<p>本コンテンツはデモ用に <a href="https://www.aoyama-card.co.jp/campaign/" rel="noopener">aoyama-card.co.jp/campaign/</a> を参考に作成しています。</p>
+HTML,
+            ],
+        ];
+
+        $items = [];
+        foreach ($definitions as $def) {
+            $existing = Content::withTrashed()
+                ->whereHas('type', fn ($q) => $q->where('slug', 'campaign'))
+                ->where('slug', $def['slug'])
+                ->first();
+
+            $payload = [
+                'title' => $def['title'],
+                'excerpt' => $def['excerpt'],
+                'body' => $def['body'],
+                'published_at' => $def['date'],
+                'menu_order' => $def['order'],
+                'comment_status' => 'closed',
+            ];
+
+            if ($existing) {
+                if (method_exists($existing, 'trashed') && $existing->trashed()) {
+                    $existing->restore();
+                }
+                $this->contents->update($existing, $payload);
+                $content = $existing->fresh(['meta']);
+            } else {
+                $content = $this->contents->create('campaign', array_merge($payload, [
+                    'slug' => $def['slug'],
+                    'status' => ContentStatus::Published->value,
+                ]), $author);
+            }
+
+            $this->syncCampaignMeta($content, $def);
+            $items[] = $content->fresh(['meta']);
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param  array<string, mixed>  $def
+     */
+    private function syncCampaignMeta(Content $content, array $def): void
+    {
+        $pairs = [
+            'period_label' => $def['period_label'] ?? null,
+            'period' => $def['period'] ?? null,
+            'target_label' => $def['target_label'] ?? null,
+            'target' => $def['target'] ?? null,
+            'note' => $def['note'] ?? null,
+        ];
+
+        foreach ($pairs as $key => $value) {
+            if ($value === null || $value === '') {
+                ContentMeta::query()
+                    ->where('content_id', $content->id)
+                    ->where('key', $key)
+                    ->delete();
+                continue;
+            }
+
+            ContentMeta::query()->updateOrCreate(
+                ['content_id' => $content->id, 'key' => $key],
+                ['type' => MetaType::Text, 'value' => (string) $value]
+            );
+        }
+    }
+
+    /**
      * @param  array<string, Content>  $pages
      */
     private function seedMenu(array $pages): int
@@ -1056,6 +1309,9 @@ HTML),
             'home', 'card', 'card-capital', 'card-bluerose', 'used', 'used-preferential',
             'used-aoyama-point', 'biz-yuutai', 'cashing', 'campaign', 'support', 'lost-card',
             'company', 'faq', 'compare', 'news',
+            'campaign', 'campaign-u26031-php', 'campaign-u26041-php',
+            'smbc-new-member-cashback', 'ribo-declaration-cashback', 'uc-point-new-member',
+            'life-new-member-1000', 'mastercard-promotion',
         ];
 
         Content::withTrashed()->whereIn('slug', array_merge($pageSlugs, $postSlugs))->forceDelete();

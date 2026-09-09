@@ -110,6 +110,13 @@
         .admin-nav-section summary::-webkit-details-marker { display: none; }
         .admin-nav-section summary::after { content: "▾"; font-size: .7rem; opacity: .7; }
         .admin-nav-section:not([open]) summary::after { content: "▸"; }
+        .admin-nav-section > a {
+            padding-left: 1.05rem;
+            font-size: .88rem;
+        }
+        .admin-nav > a.admin-nav-top {
+            margin-top: .35rem;
+        }
         .admin-nav a {
             display: flex; align-items: center; gap: .55rem;
             padding: .5rem .65rem; border-radius: .55rem;
@@ -371,33 +378,73 @@
             <span>{{ $siteName }}</span>
         </a>
 
-        <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.dashboard') }}</a>
-        <a href="{{ route('admin.help.setup-guide') }}" class="{{ request()->routeIs('admin.help.setup-guide') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.setup_guide') }}</a>
+        <a href="{{ route('admin.dashboard') }}" class="admin-nav-top {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.dashboard') }}</a>
+        <a href="{{ route('admin.help.setup-guide') }}" class="admin-nav-top {{ request()->routeIs('admin.help.setup-guide') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.setup_guide') }}</a>
 
-        <details class="admin-nav-section" @if(request()->routeIs('admin.pages.*','admin.posts.*','admin.contents.*','admin.categories.*','admin.tags.*','admin.taxonomies.*','admin.media.*','admin.comments.*')) open @endif>
+        @php
+            $routeName = (string) (request()->route()?->getName() ?? '');
+            $navStarts = static function (string $prefix) use ($routeName): bool {
+                return $routeName === $prefix
+                    || str_starts_with($routeName, $prefix.'.');
+            };
+            $seoNavActive = in_array($routeName, ['admin.settings.seo', 'admin.settings.seo.update'], true);
+            $seoTemplatesNavActive = str_starts_with($routeName, 'admin.settings.seo.templates');
+            $contentsType = request()->query('type');
+            $onContents = $navStarts('admin.contents');
+            $postsNavActive = $onContents && ($contentsType === null || $contentsType === 'post');
+            $pagesNavActive = $onContents && $contentsType === 'page';
+            $allContentsNavActive = $onContents && $contentsType !== null && ! in_array($contentsType, ['post', 'page'], true);
+            $otherContentType = once(static fn () => \App\Models\ContentType::query()
+                ->whereNotIn('slug', ['post', 'page'])
+                ->orderBy('menu_position')
+                ->value('slug'));
+            $contentNavOpen = $onContents
+                || $navStarts('admin.content-types')
+                || $navStarts('admin.pages')
+                || $navStarts('admin.posts')
+                || $navStarts('admin.categories')
+                || $navStarts('admin.tags')
+                || $navStarts('admin.taxonomies')
+                || $navStarts('admin.media')
+                || $navStarts('admin.comments');
+            $appearanceNavOpen = $navStarts('admin.headers')
+                || $navStarts('admin.footers')
+                || $navStarts('admin.menus')
+                || $navStarts('admin.appearance')
+                || $navStarts('admin.plugins');
+            $settingsNavOpen = $navStarts('admin.settings')
+                || $navStarts('admin.redirects')
+                || $navStarts('admin.audit-logs')
+                || $navStarts('admin.modules');
+            $usersNavOpen = $navStarts('admin.users') || $navStarts('admin.profile');
+        @endphp
+
+        <details class="admin-nav-section" @if($contentNavOpen) open @endif>
             <summary>{{ __('admin.nav.content') }}</summary>
-            <a href="{{ route('admin.contents.index', ['type' => 'post']) }}" class="{{ request()->routeIs('admin.contents.*') && request('type', 'post') === 'post' ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.posts') }}</a>
-            <a href="{{ route('admin.contents.index', ['type' => 'page']) }}" class="{{ request()->routeIs('admin.contents.*') && request('type') === 'page' ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.pages') }}</a>
-            <a href="{{ route('admin.contents.index') }}" class="{{ request()->routeIs('admin.contents.*') && ! in_array(request('type'), ['post', 'page'], true) ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.all_contents') }}</a>
-            @if(app(\App\Services\Content\LegacyRetirementService::class)->adminUiEnabled())
-                <a href="{{ route('admin.posts.index', ['legacy' => 1]) }}" class="{{ request()->routeIs('admin.posts.*') ? 'active' : '' }}" @click="open=false" style="opacity:.65">{{ __('admin.nav.legacy_posts') }}</a>
-                <a href="{{ route('admin.pages.index', ['legacy' => 1]) }}" class="{{ request()->routeIs('admin.pages.*') ? 'active' : '' }}" @click="open=false" style="opacity:.65">{{ __('admin.nav.legacy_pages') }}</a>
+            <a href="{{ route('admin.contents.index', ['type' => 'post']) }}" class="{{ $postsNavActive ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.posts') }}</a>
+            <a href="{{ route('admin.contents.index', ['type' => 'page']) }}" class="{{ $pagesNavActive ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.pages') }}</a>
+            @if ($otherContentType)
+                <a href="{{ route('admin.contents.index', ['type' => $otherContentType]) }}" class="{{ $allContentsNavActive ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.all_contents') }}</a>
             @endif
-            <a href="{{ route('admin.content-types.index') }}" class="{{ request()->routeIs('admin.content-types.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.content_types') }}</a>
-            <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.categories') }}</a>
-            <a href="{{ route('admin.taxonomies.index') }}" class="{{ request()->routeIs('admin.taxonomies.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.taxonomies') }}</a>
-            <a href="{{ route('admin.tags.index') }}" class="{{ request()->routeIs('admin.tags.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.tags') }}</a>
-            <a href="{{ route('admin.media.index') }}" class="{{ request()->routeIs('admin.media.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.media') }}</a>
+            @if(app(\App\Services\Content\LegacyRetirementService::class)->adminUiEnabled())
+                <a href="{{ route('admin.posts.index', ['legacy' => 1]) }}" class="{{ $navStarts('admin.posts') ? 'active' : '' }}" @click="open=false" style="opacity:.65">{{ __('admin.nav.legacy_posts') }}</a>
+                <a href="{{ route('admin.pages.index', ['legacy' => 1]) }}" class="{{ $navStarts('admin.pages') ? 'active' : '' }}" @click="open=false" style="opacity:.65">{{ __('admin.nav.legacy_pages') }}</a>
+            @endif
+            <a href="{{ route('admin.content-types.index') }}" class="{{ $navStarts('admin.content-types') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.content_types') }}</a>
+            <a href="{{ route('admin.categories.index') }}" class="{{ $navStarts('admin.categories') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.categories') }}</a>
+            <a href="{{ route('admin.taxonomies.index') }}" class="{{ $navStarts('admin.taxonomies') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.taxonomies') }}</a>
+            <a href="{{ route('admin.tags.index') }}" class="{{ $navStarts('admin.tags') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.tags') }}</a>
+            <a href="{{ route('admin.media.index') }}" class="{{ $navStarts('admin.media') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.media') }}</a>
             @can('manage_comments')
-                <a href="{{ route('admin.comments.index') }}" class="{{ request()->routeIs('admin.comments.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.comments') }}</a>
+                <a href="{{ route('admin.comments.index') }}" class="{{ $navStarts('admin.comments') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.comments') }}</a>
             @endcan
         </details>
 
-        <details class="admin-nav-section" @if(request()->routeIs('admin.headers.*','admin.footers.*','admin.menus.*','admin.appearance.*')) open @endif>
+        <details class="admin-nav-section" @if($appearanceNavOpen) open @endif>
             <summary>{{ __('admin.nav.appearance') }}</summary>
-            <a href="{{ route('admin.headers.index') }}" class="{{ request()->routeIs('admin.headers.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.header') }}</a>
-            <a href="{{ route('admin.footers.index') }}" class="{{ request()->routeIs('admin.footers.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.footer') }}</a>
-            <a href="{{ route('admin.menus.index') }}" class="{{ request()->routeIs('admin.menus.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.menus') }}</a>
+            <a href="{{ route('admin.headers.index') }}" class="{{ $navStarts('admin.headers') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.header') }}</a>
+            <a href="{{ route('admin.footers.index') }}" class="{{ $navStarts('admin.footers') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.footer') }}</a>
+            <a href="{{ route('admin.menus.index') }}" class="{{ $navStarts('admin.menus') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.menus') }}</a>
             <a href="{{ route('admin.appearance.themes') }}" class="{{ request()->routeIs('admin.appearance.themes*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.themes') }}</a>
             <a href="{{ route('admin.appearance.layout') }}" class="{{ request()->routeIs('admin.appearance.layout') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.master_layout') }}</a>
             <a href="{{ route('admin.appearance.dynamic-pages.index') }}" class="{{ request()->routeIs('admin.appearance.dynamic-pages.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.dynamic_pages') }}</a>
@@ -405,36 +452,35 @@
             <a href="{{ route('admin.appearance.mode') }}" class="{{ request()->routeIs('admin.appearance.mode') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.color_mode') }}</a>
             <a href="{{ route('admin.appearance.widgets') }}" class="{{ request()->routeIs('admin.appearance.widgets*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.widgets') }}</a>
             <a href="{{ route('admin.appearance.custom-code') }}" class="{{ request()->routeIs('admin.appearance.custom-code*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.custom_code') }}</a>
+            <a href="{{ route('admin.plugins.index') }}" class="{{ $navStarts('admin.plugins') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.plugins') }}</a>
         </details>
 
-        <a href="{{ route('admin.plugins.index') }}" class="{{ request()->routeIs('admin.plugins.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.plugins') }}</a>
-
-        <details class="admin-nav-section" @if(request()->routeIs('admin.settings.*','admin.redirects.*','admin.audit-logs.*','admin.modules.*')) open @endif>
+        <details class="admin-nav-section" @if($settingsNavOpen) open @endif>
             <summary>{{ __('admin.nav.settings') }}</summary>
             <a href="{{ route('admin.settings.general') }}" class="{{ request()->routeIs('admin.settings.general*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.general_ui') }}</a>
-            <a href="{{ route('admin.redirects.index') }}" class="{{ request()->routeIs('admin.redirects.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.redirects') }}</a>
-            <a href="{{ route('admin.audit-logs.index') }}" class="{{ request()->routeIs('admin.audit-logs.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.audit_log') }}</a>
-            <a href="{{ route('admin.modules.index') }}" class="{{ request()->routeIs('admin.modules.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.modules') }}</a>
+            <a href="{{ route('admin.redirects.index') }}" class="{{ $navStarts('admin.redirects') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.redirects') }}</a>
+            <a href="{{ route('admin.audit-logs.index') }}" class="{{ $navStarts('admin.audit-logs') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.audit_log') }}</a>
+            <a href="{{ route('admin.modules.index') }}" class="{{ $navStarts('admin.modules') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.modules') }}</a>
             <a href="{{ route('admin.settings.discussion') }}" class="{{ request()->routeIs('admin.settings.discussion*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.discussion') }}</a>
-            <a href="{{ route('admin.settings.seo') }}" class="{{ request()->routeIs('admin.settings.seo') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.seo') }}</a>
-            <a href="{{ route('admin.settings.seo.templates') }}" class="{{ request()->routeIs('admin.settings.seo.templates*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.seo_templates') }}</a>
-            <a href="{{ route('admin.settings.ogp') }}" class="{{ request()->routeIs('admin.settings.ogp') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.social_ogp') }}</a>
-            <a href="{{ route('admin.settings.permalinks') }}" class="{{ request()->routeIs('admin.settings.permalinks') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.permalinks') }}</a>
+            <a href="{{ route('admin.settings.seo') }}" class="{{ $seoNavActive ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.seo') }}</a>
+            <a href="{{ route('admin.settings.seo.templates') }}" class="{{ $seoTemplatesNavActive ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.seo_templates') }}</a>
+            <a href="{{ route('admin.settings.ogp') }}" class="{{ request()->routeIs('admin.settings.ogp*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.social_ogp') }}</a>
+            <a href="{{ route('admin.settings.permalinks') }}" class="{{ request()->routeIs('admin.settings.permalinks*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.permalinks') }}</a>
             <a href="{{ route('admin.settings.reading') }}" class="{{ request()->routeIs('admin.settings.reading*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.reading') }}</a>
-            <a href="{{ route('admin.settings.api') }}" class="{{ request()->routeIs('admin.settings.api') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.api') }}</a>
+            <a href="{{ route('admin.settings.api') }}" class="{{ request()->routeIs('admin.settings.api*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.api') }}</a>
             <a href="{{ route('admin.settings.cors') }}" class="{{ request()->routeIs('admin.settings.cors*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.cors') }}</a>
         </details>
 
-        <details class="admin-nav-section" @if(request()->routeIs('admin.users.*','admin.profile.*')) open @endif>
+        <details class="admin-nav-section" @if($usersNavOpen) open @endif>
             <summary>{{ __('admin.nav.users') }}</summary>
             @can('manage_users')
-                <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.index','admin.users.create','admin.users.edit') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.all_users') }}</a>
+                <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.index','admin.users.edit') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.all_users') }}</a>
                 <a href="{{ route('admin.users.create') }}" class="{{ request()->routeIs('admin.users.create') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.add_new') }}</a>
             @endcan
             @can('manage_roles')
                 <a href="{{ route('admin.users.roles') }}" class="{{ request()->routeIs('admin.users.roles*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.roles') }}</a>
             @endcan
-            <a href="{{ route('admin.profile.edit') }}" class="{{ request()->routeIs('admin.profile.*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.profile') }}</a>
+            <a href="{{ route('admin.profile.edit') }}" class="{{ $navStarts('admin.profile') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.profile') }}</a>
             <a href="{{ route('admin.users.tokens') }}" class="{{ request()->routeIs('admin.users.tokens*') ? 'active' : '' }}" @click="open=false">{{ __('admin.nav.api_tokens') }}</a>
         </details>
 

@@ -24,7 +24,7 @@
     </div>
     <div class="mb-3">
         <label class="form-label">{{ __('admin.profile.role') }}</label>
-        <div>@forelse($user->roles as $role)<span class="badge text-bg-primary">{{ $role->name }}</span>@empty<span class="badge text-bg-secondary">{{ __('admin.profile.none') }}</span>@endforelse</div>
+        <div>@forelse($user->roles as $role)<span class="badge text-bg-primary">{{ $role->localizedName() }}</span>@empty<span class="badge text-bg-secondary">{{ __('admin.profile.none') }}</span>@endforelse</div>
     </div>
     <div class="mb-3">
         <label class="form-label" for="locale">{{ __('admin.profile.locale') }}</label>

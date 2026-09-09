@@ -261,6 +261,8 @@ return [
         'logout',
         'register',
         'blog',
+        'news',
+        'campaign',
         'posts',
         'category',
         'tag',
@@ -334,6 +336,21 @@ return [
             'default_posts_per_page' => 12,
             'view' => 'dynamic.archive',
         ],
+        'campaign' => [
+            'label' => 'Campaign Archive',
+            'default_title' => 'キャンペーン',
+            'default_url' => '/campaign',
+            'default_layout' => 'list',
+            'default_posts_per_page' => 20,
+            'view' => 'dynamic.campaign',
+        ],
+        'campaign_item' => [
+            'label' => 'Campaign Detail',
+            'default_title' => 'キャンペーン',
+            'default_url' => null,
+            'default_layout' => 'standard',
+            'view' => 'dynamic.campaign-item',
+        ],
         '404' => [
             'label' => '404',
             'default_title' => 'Page Not Found',
@@ -385,6 +402,14 @@ return [
         'archive' => [
             'title' => 'Archive: {archive_label} — {site_name}',
             'description' => 'Posts from {archive_label}.',
+        ],
+        'campaign' => [
+            'title' => '{page_title} — {site_name}',
+            'description' => '{page_excerpt}',
+        ],
+        'campaign_item' => [
+            'title' => '{post_title} — {site_name}',
+            'description' => '{post_excerpt}',
         ],
         '404' => [
             'title' => 'Page Not Found — {site_name}',

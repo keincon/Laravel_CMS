@@ -25,19 +25,28 @@ class CmsSetting extends Model
     public static function getValue(string $key, mixed $default = null): mixed
     {
         try {
-            $setting = Cache::remember("cms_setting.{$key}", 3600, function () use ($key) {
-                return static::query()->where('key', $key)->first();
+            // Cache scalars only — Eloquent models break after unserialize (incomplete object).
+            $payload = Cache::remember("cms_setting.{$key}", 3600, function () use ($key) {
+                $setting = static::query()->where('key', $key)->first();
+                if (! $setting) {
+                    return null;
+                }
+
+                return [
+                    'type' => $setting->type,
+                    'value' => $setting->value,
+                ];
             });
 
-            if (! $setting) {
+            if (! is_array($payload)) {
                 return $default;
             }
 
-            return match ($setting->type) {
-                'boolean' => filter_var($setting->value, FILTER_VALIDATE_BOOLEAN),
-                'integer' => (int) $setting->value,
-                'json' => json_decode($setting->value, true),
-                default => $setting->value,
+            return match ($payload['type'] ?? 'string') {
+                'boolean' => filter_var($payload['value'], FILTER_VALIDATE_BOOLEAN),
+                'integer' => (int) $payload['value'],
+                'json' => json_decode((string) $payload['value'], true),
+                default => $payload['value'],
             };
         } catch (\Throwable) {
             return $default;

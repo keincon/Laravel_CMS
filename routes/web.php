@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\LayoutSettingsController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\SetupGuideController;
+use App\Http\Controllers\Admin\SeoSettingsController;
 use App\Http\Controllers\Admin\TagController;
 use App\Http\Controllers\Admin\ThemeAdminController;
 use App\Http\Controllers\Admin\ThemeSettingsController;
@@ -288,6 +289,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
 
 Route::get('/', [SiteController::class, 'home'])->name('home');
 Route::get('/blog', [SiteController::class, 'blog'])->name('blog');
+Route::get('/news', [SiteController::class, 'blog'])->name('news');
+Route::get('/campaign', [SiteController::class, 'campaign'])->name('campaign');
 Route::get('/search', [SiteController::class, 'search'])->name('search');
 Route::get('/archive/{year?}/{month?}/{day?}', [SiteController::class, 'archive'])
     ->whereNumber('year')
@@ -300,9 +303,11 @@ Route::get('/author/{username}', [SiteController::class, 'author'])->name('autho
 
 Route::get('/posts/{slug}', [SiteController::class, 'post'])->name('posts.show.posts');
 Route::get('/blog/{slug}', [SiteController::class, 'post'])->name('posts.show.blog');
+Route::get('/news/{slug}', [SiteController::class, 'post'])->name('posts.show.news');
+Route::get('/campaign/{slug}', [SiteController::class, 'campaignShow'])->name('campaign.show');
 
 $reserved = collect(config('cms.reserved_slugs', [
-    'admin', 'api', 'setup', 'login', 'logout', 'register', 'blog', 'posts',
+    'admin', 'api', 'setup', 'login', 'logout', 'register', 'blog', 'news', 'campaign', 'posts',
     'category', 'tag', 'author', 'search', 'archive',
 ]))->map(fn ($slug) => preg_quote((string) $slug, '/'))->implode('|');
 

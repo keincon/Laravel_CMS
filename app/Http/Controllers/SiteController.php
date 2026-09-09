@@ -34,6 +34,16 @@ class SiteController extends Controller
         return $this->renderer->renderPost($slug);
     }
 
+    public function campaign(Request $request): View
+    {
+        return $this->renderer->renderCampaign($request);
+    }
+
+    public function campaignShow(string $slug): View
+    {
+        return $this->renderer->renderCampaignItem($slug);
+    }
+
     public function category(string $slug): View
     {
         return $this->renderer->renderCategory($slug);

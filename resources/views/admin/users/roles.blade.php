@@ -13,7 +13,7 @@
         <div class="fw-semibold mb-2">{{ __('admin.users.roles_heading') }}</div>
         @foreach ($roles as $role)
             <a href="{{ route('admin.users.roles', ['role' => $role->name]) }}" class="role-link {{ optional($selected)->id === $role->id ? 'is-active' : '' }}">
-                <span>{{ $role->name }}</span>
+                <span>{{ $role->localizedName() }}</span>
                 <span class="badge text-bg-secondary">{{ $role->users_count }}</span>
             </a>
         @endforeach
@@ -23,8 +23,7 @@
         @if (! $selected)
             <div class="empty-state">{{ __('admin.users.no_roles') }}</div>
         @else
-            <h2 class="h5 mb-2">{{ $selected->name }}</h2>
-            <p class="page-intro mb-3">{{ $selected->description ?: __('admin.users.capabilities_help') }}</p>
+            <h2 class="h5 mb-2">{{ $selected->localizedName() }}</h2>
 
             @if ($selected->name === 'Administrator')
                 <div class="empty-state">{{ __('admin.users.admin_locked') }}</div>
@@ -34,6 +33,7 @@
                     @endforeach
                 </ul>
             @else
+                <p class="page-intro mb-3">{{ $selected->localizedDescription() }}</p>
                 <form method="POST" action="{{ route('admin.users.roles.update', $selected) }}">
                     @csrf
                     @method('PUT')

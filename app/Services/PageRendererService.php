@@ -123,18 +123,100 @@ class PageRendererService
             'page_excerpt' => $config->description ?: '',
         ];
 
+        $indexPath = ltrim($config->url_path ?: '/blog', '/');
+
         return $this->renderDynamic('blog', [
             'posts' => $posts,
             'page' => null,
             'dynamicConfig' => $config,
             'isHomepage' => $isHomepage,
             'layoutStyle' => $config->layout ?: 'list',
-            'seoMeta' => $this->seo->resolveDynamic('blog', $seoVars, $isHomepage ? '/' : ltrim($config->url_path ?: '/blog', '/')),
-            'seoPath' => $isHomepage ? '/' : ltrim($config->url_path ?: '/blog', '/'),
+            'archiveMonths' => $this->newsArchiveMonths(),
+            'seoMeta' => $this->seo->resolveDynamic('blog', $seoVars, $isHomepage ? '/' : $indexPath),
+            'seoPath' => $isHomepage ? '/' : $indexPath,
             'context' => 'blog',
             'breadcrumbs' => $this->breadcrumbs([
                 ['label' => 'Home', 'url' => url('/')],
                 ['label' => $config->title ?: 'Blog', 'url' => null],
+            ]),
+        ]);
+    }
+
+    public function renderCampaign(Request $request): View
+    {
+        $config = $this->requireEnabled('campaign');
+        $perPage = $this->dynamicPages->postsPerPage('campaign');
+
+        $campaigns = Content::query()
+            ->ofType('campaign')
+            ->published()
+            ->with(['author', 'featuredMedia', 'meta'])
+            ->orderBy('menu_order')
+            ->latest('published_at')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $indexPath = ltrim($config->url_path ?: '/campaign', '/');
+        $seoVars = [
+            'page_title' => $config->title ?: 'キャンペーン',
+            'page_excerpt' => $config->description ?: '',
+        ];
+
+        return $this->renderDynamic('campaign', [
+            'campaigns' => $campaigns,
+            'posts' => $campaigns,
+            'page' => null,
+            'dynamicConfig' => $config,
+            'layoutStyle' => $config->layout ?: 'list',
+            'seoMeta' => $this->seo->resolveDynamic('campaign', $seoVars, $indexPath),
+            'seoPath' => $indexPath,
+            'context' => 'campaign',
+            'breadcrumbs' => $this->breadcrumbs([
+                ['label' => 'Home', 'url' => url('/')],
+                ['label' => $config->title ?: 'キャンペーン', 'url' => null],
+            ]),
+        ]);
+    }
+
+    public function renderCampaignItem(string $slug): View
+    {
+        $config = $this->requireEnabled('campaign_item');
+
+        $campaign = Content::query()
+            ->ofType('campaign')
+            ->published()
+            ->with(['author', 'featuredMedia', 'meta'])
+            ->where('slug', $slug)
+            ->firstOrFail();
+
+        $seoPath = $this->permalinks->contentPath($campaign);
+        $seoVars = [
+            'post_title' => $campaign->title,
+            'post_excerpt' => $campaign->excerpt ?: '',
+            'page_title' => $campaign->title,
+        ];
+
+        $related = Content::query()
+            ->ofType('campaign')
+            ->published()
+            ->where('id', '!=', $campaign->id)
+            ->orderBy('menu_order')
+            ->latest('published_at')
+            ->limit(4)
+            ->get();
+
+        return $this->renderDynamic('campaign_item', [
+            'campaign' => $campaign,
+            'post' => $campaign,
+            'relatedCampaigns' => $related,
+            'dynamicConfig' => $config,
+            'seoMeta' => $this->seo->resolveDynamic('campaign_item', $seoVars, $seoPath, $campaign),
+            'seoPath' => $seoPath,
+            'context' => 'campaign',
+            'breadcrumbs' => $this->breadcrumbs([
+                ['label' => 'Home', 'url' => url('/')],
+                ['label' => $this->campaignIndexLabel(), 'url' => url('/campaign')],
+                ['label' => $campaign->title, 'url' => null],
             ]),
         ]);
     }
@@ -184,7 +266,7 @@ class PageRendererService
                 'context' => 'post',
                 'breadcrumbs' => $this->breadcrumbs([
                     ['label' => 'Home', 'url' => url('/')],
-                    ['label' => 'Blog', 'url' => url('/blog')],
+                    ['label' => $this->blogIndexLabel(), 'url' => $this->permalinks->blogIndexUrl()],
                     ['label' => $content->title, 'url' => null],
                 ]),
             ]);
@@ -221,7 +303,7 @@ class PageRendererService
             'context' => 'post',
             'breadcrumbs' => $this->breadcrumbs([
                 ['label' => 'Home', 'url' => url('/')],
-                ['label' => 'Blog', 'url' => url('/blog')],
+                ['label' => $this->blogIndexLabel(), 'url' => $this->permalinks->blogIndexUrl()],
                 ['label' => $post->title, 'url' => null],
             ]),
         ]);
@@ -488,7 +570,17 @@ class PageRendererService
             throw new NotFoundHttpException('Date archives are disabled.');
         }
 
-        $query = Post::query()->published()->with('author')->latest('published_at');
+        $perPage = $this->dynamicPages->postsPerPage('archive');
+
+        if (Content::query()->ofType('post')->published()->exists() || ! $this->legacyPublicFallback()) {
+            $query = Content::query()
+                ->ofType('post')
+                ->published()
+                ->with(['author', 'featuredMedia', 'terms'])
+                ->latest('published_at');
+        } else {
+            $query = Post::query()->published()->with('author')->latest('published_at');
+        }
 
         if ($year) {
             $query->whereYear('published_at', $year);
@@ -500,7 +592,7 @@ class PageRendererService
             $query->whereDay('published_at', $day);
         }
 
-        $posts = $query->paginate($this->dynamicPages->postsPerPage('archive'))->withQueryString();
+        $posts = $query->paginate($perPage)->withQueryString();
 
         $label = $this->archiveLabel($year, $month, $day);
         $path = 'archive'.($year ? '/'.$year : '').($month ? '/'.sprintf('%02d', $month) : '').($day ? '/'.sprintf('%02d', $day) : '');
@@ -523,6 +615,7 @@ class PageRendererService
             'context' => 'archive',
             'breadcrumbs' => $this->breadcrumbs([
                 ['label' => 'Home', 'url' => url('/')],
+                ['label' => $this->blogIndexLabel(), 'url' => $this->permalinks->blogIndexUrl()],
                 ['label' => $label, 'url' => null],
             ]),
         ]);
@@ -635,16 +728,83 @@ class PageRendererService
     protected function archiveLabel(?int $year, ?int $month, ?int $day): string
     {
         if ($year && $month && $day) {
-            return sprintf('%04d-%02d-%02d', $year, $month, $day);
+            return sprintf('%04d年%02d月%02d日', $year, $month, $day);
         }
         if ($year && $month) {
-            return sprintf('%04d-%02d', $year, $month);
+            return sprintf('%04d年%d月', $year, $month);
         }
         if ($year) {
-            return (string) $year;
+            return sprintf('%04d年', $year);
         }
 
         return 'Archives';
+    }
+
+    protected function blogIndexLabel(): string
+    {
+        try {
+            return $this->dynamicPages->get('blog')->title ?: 'お知らせ';
+        } catch (\Throwable) {
+            return 'お知らせ';
+        }
+    }
+
+    protected function campaignIndexLabel(): string
+    {
+        try {
+            return $this->dynamicPages->get('campaign')->title ?: 'キャンペーン';
+        } catch (\Throwable) {
+            return 'キャンペーン';
+        }
+    }
+
+    /**
+     * Distinct year-month buckets for the バックナンバー sidebar (newest first).
+     *
+     * @return list<array{year: int, month: int, label: string, url: string}>
+     */
+    protected function newsArchiveMonths(int $limit = 12): array
+    {
+        $dates = Content::query()
+            ->ofType('post')
+            ->published()
+            ->whereNotNull('published_at')
+            ->orderByDesc('published_at')
+            ->limit(500)
+            ->pluck('published_at');
+
+        if ($dates->isEmpty() && $this->legacyPublicFallback()) {
+            $dates = Post::query()
+                ->published()
+                ->whereNotNull('published_at')
+                ->orderByDesc('published_at')
+                ->limit(500)
+                ->pluck('published_at');
+        }
+
+        $seen = [];
+        $months = [];
+
+        foreach ($dates as $publishedAt) {
+            $year = (int) $publishedAt->format('Y');
+            $month = (int) $publishedAt->format('n');
+            $key = sprintf('%04d-%02d', $year, $month);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $months[] = [
+                'year' => $year,
+                'month' => $month,
+                'label' => sprintf('%04d年%d月', $year, $month),
+                'url' => url(sprintf('/archive/%04d/%02d', $year, $month)),
+            ];
+            if (count($months) >= $limit) {
+                break;
+            }
+        }
+
+        return $months;
     }
 
     protected function likeOperator(): string

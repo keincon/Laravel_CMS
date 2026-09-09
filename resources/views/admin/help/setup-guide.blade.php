@@ -109,7 +109,26 @@
     @endif
 </section>
 
-{{-- 3. How-to --}}
+{{-- 3. Dynamic pages & data --}}
+<section class="panel mb-4">
+    <h2 class="h5 mb-2">{{ __('admin.setup_guide.dynamic_heading') }}</h2>
+    <p class="page-intro mb-2">{{ __('admin.setup_guide.dynamic_intro') }}</p>
+    <div class="alert alert-warning py-2 small mb-3">{{ __('admin.setup_guide.dynamic_note') }}</div>
+
+    <ol class="setup-guide-list mb-0 ps-3">
+        @foreach ($dynamicItems as $index => $item)
+            <li class="mb-4">
+                <h3 class="h6 mb-2">{{ $index + 1 }}. {{ $item['title'] }}</h3>
+                <div class="text-body mb-2" style="white-space: pre-line">{{ $item['body'] }}</div>
+                @if ($item['url'])
+                    <a class="btn btn-sm btn-outline-primary" href="{{ $item['url'] }}">{{ $item['button'] }}</a>
+                @endif
+            </li>
+        @endforeach
+    </ol>
+</section>
+
+{{-- 4. How-to --}}
 <section class="panel mb-4">
     <h2 class="h5 mb-2">{{ __('admin.setup_guide.howto_heading') }}</h2>
     <p class="page-intro mb-3">{{ __('admin.setup_guide.howto_intro') }}</p>
@@ -120,7 +139,7 @@
                     <h3 class="h6 mb-2">{{ $item['title'] }}</h3>
                     <p class="small text-muted flex-grow-1 mb-3">{{ $item['body'] }}</p>
                     @if ($item['url'])
-                        <a class="btn btn-sm btn-outline-primary align-self-start" href="{{ $item['url'] }}">{{ __('admin.setup_guide.open') }}</a>
+                        <a class="btn btn-sm btn-outline-primary align-self-start" href="{{ $item['url'] }}">{{ $item['button'] ?: __('admin.setup_guide.open') }}</a>
                     @endif
                 </div>
             </div>
