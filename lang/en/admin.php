@@ -51,6 +51,16 @@ return [
         'setup_guide' => 'Setup guide',
     ],
 
+    'admin_bar' => [
+        'dashboard' => 'Dashboard',
+        'new_post' => '+ New Post',
+        'new_page' => '+ New Page',
+        'media' => 'Media',
+        'comments' => 'Comments',
+        'edit' => 'Edit',
+        'log_out' => 'Log Out',
+    ],
+
     'setup_guide' => [
         'title' => 'Setup & how-to guide',
         'intro' => 'Install LaravelPress, load demo data, add dynamic archives (news / campaigns), and learn where to manage pages, posts, media, and more. Use the language switcher for English or 日本語.',
