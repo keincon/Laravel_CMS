@@ -10,10 +10,14 @@
     </div>
 </div>
 
+@if (session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
+
 <div class="row g-3">
     <div class="col-lg-4">
         <div class="panel">
-            <h2 class="h6 mb-3">Add New Category</h2>
+            <h2 class="h6 mb-3">{{ __('admin.categories.add_new') }}</h2>
             <form method="POST" action="{{ route('admin.categories.store') }}">
                 @csrf
                 <div class="mb-2">
@@ -26,19 +30,19 @@
                     <input name="slug" class="form-control" value="{{ old('slug') }}" placeholder="{{ __('admin.ui.optional') }}">
                 </div>
                 <div class="mb-2">
-                    <label class="form-label">Parent</label>
+                    <label class="form-label">{{ __('admin.categories.parent') }}</label>
                     <select name="parent_id" class="form-select">
-                        <option value="">— None —</option>
+                        <option value="">{{ __('admin.categories.none_parent') }}</option>
                         @foreach ($parents as $parent)
                             <option value="{{ $parent->id }}" @selected(old('parent_id') == $parent->id)>{{ $parent->name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Description</label>
+                    <label class="form-label">{{ __('admin.categories.description') }}</label>
                     <textarea name="description" class="form-control" rows="3">{{ old('description') }}</textarea>
                 </div>
-                <button class="btn btn-primary" type="submit">Add New Category</button>
+                <button class="btn btn-primary" type="submit">{{ __('admin.categories.add_new') }}</button>
             </form>
         </div>
     </div>
@@ -48,9 +52,9 @@
                 <thead>
                     <tr>
                         <th>{{ __('admin.ui.name') }}</th>
-                        <th>Description</th>
+                        <th>{{ __('admin.categories.description') }}</th>
                         <th>{{ __('admin.ui.slug') }}</th>
-                        <th>Count</th>
+                        <th>{{ __('admin.categories.count') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -64,7 +68,7 @@
                                     @if ($category->slug !== 'uncategorized')
                                         · <button form="del-cat-{{ $category->id }}" class="link-danger" type="submit" onclick="return confirm(@js(__('admin.categories.confirm_delete')))">{{ __('admin.ui.delete') }}</button>
                                     @endif
-                                    · <a href="{{ url('/category/'.$category->slug) }}" target="_blank">View</a>
+                                    · <a href="{{ url('/category/'.$category->slug) }}" target="_blank" rel="noopener">{{ __('admin.categories.view') }}</a>
                                 </div>
                             </td>
                             <td>{{ \Illuminate\Support\Str::limit($category->description, 60) ?: '—' }}</td>
@@ -72,7 +76,7 @@
                             <td>{{ $category->posts_count }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="4"><div class="empty-state">No categories yet.</div></td></tr>
+                        <tr><td colspan="4"><div class="empty-state">{{ __('admin.categories.empty') }}</div></td></tr>
                     @endforelse
                 </tbody>
             </table>

@@ -32,7 +32,7 @@ class CategoryController extends Controller
     {
         $category = Category::query()->create($this->validated($request));
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category created.');
+        return redirect()->route('admin.categories.index')->with('success', __('admin.categories.created'));
     }
 
     public function edit(Category $category): View
@@ -47,19 +47,19 @@ class CategoryController extends Controller
     {
         $category->update($this->validated($request, $category));
 
-        return back()->with('success', 'Category saved.');
+        return back()->with('success', __('admin.categories.saved'));
     }
 
     public function destroy(Category $category): RedirectResponse
     {
         if ($category->slug === 'uncategorized') {
-            return back()->with('error', 'The default Uncategorized category cannot be deleted.');
+            return back()->with('error', __('admin.categories.cannot_delete_uncategorized'));
         }
 
         $category->children()->update(['parent_id' => $category->parent_id]);
         $category->delete();
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category deleted.');
+        return redirect()->route('admin.categories.index')->with('success', __('admin.categories.deleted'));
     }
 
     protected function validated(Request $request, ?Category $category = null): array

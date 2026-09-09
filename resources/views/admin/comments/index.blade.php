@@ -8,14 +8,14 @@
         <h1 class="h3 mb-1">{{ __('admin.nav.comments') }}</h1>
         <p class="page-intro mb-0">{{ __('admin.comments.intro') }}</p>
     </div>
-    <a class="btn btn-outline-secondary" href="{{ route('admin.settings.discussion') }}">Discussion settings</a>
+    <a class="btn btn-outline-secondary" href="{{ route('admin.settings.discussion') }}">{{ __('admin.comments.discussion_settings') }}</a>
 </div>
 
 <div class="users-role-tabs mb-3">
-    @foreach (['all'=>'All','pending'=>'Pending','approved'=>'Approved','spam'=>'Spam','trash'=>'Trash'] as $key => $label)
+    @foreach (['all', 'pending', 'approved', 'spam', 'trash'] as $key)
         <a href="{{ route('admin.comments.index', array_filter(['status' => $key === 'all' ? null : $key, 'q' => $q ?: null])) }}"
            class="{{ $status === $key ? 'is-active' : '' }}">
-            {{ $label }} <span>({{ $counts[$key] ?? 0 }})</span>
+            {{ __('admin.comments.statuses.'.$key) }} <span>({{ $counts[$key] ?? 0 }})</span>
         </a>
     @endforeach
 </div>
@@ -32,16 +32,16 @@
     @csrf
     <div class="panel">
         <div class="d-flex flex-wrap gap-2 mb-3">
-            <select name="action" class="form-select" style="max-width:200px" required>
-                <option value="">Bulk actions</option>
-                <option value="approve">Approve</option>
-                <option value="unapprove">Unapprove</option>
-                <option value="spam">Mark as spam</option>
-                <option value="trash">Move to Trash</option>
-                <option value="restore">Restore</option>
+            <select name="action" class="form-select" style="max-width:220px" required>
+                <option value="">{{ __('admin.comments.bulk_actions') }}</option>
+                <option value="approve">{{ __('admin.comments.approve') }}</option>
+                <option value="unapprove">{{ __('admin.comments.unapprove') }}</option>
+                <option value="spam">{{ __('admin.comments.mark_spam') }}</option>
+                <option value="trash">{{ __('admin.comments.move_trash') }}</option>
+                <option value="restore">{{ __('admin.comments.restore') }}</option>
                 <option value="delete">{{ __('admin.comments.delete_permanently') }}</option>
             </select>
-            <button class="btn btn-outline-secondary" type="submit">Apply</button>
+            <button class="btn btn-outline-secondary" type="submit">{{ __('admin.comments.apply') }}</button>
         </div>
 
         @forelse ($comments as $comment)
@@ -53,26 +53,28 @@
                             <div>
                                 <strong>{{ $comment->displayName() }}</strong>
                                 <span class="page-intro"> · {{ $comment->displayEmail() }}</span>
-                                <span class="badge text-bg-secondary">{{ $comment->status }}</span>
+                                <span class="badge text-bg-secondary">{{ __('admin.comments.statuses.'.$comment->status) }}</span>
                             </div>
                             <div class="small">{{ $comment->created_at?->diffForHumans() }}</div>
                         </div>
                         <p class="mb-2 mt-2">{{ $comment->content }}</p>
                         <div class="small">
-                            On
+                            {{ __('admin.comments.on_label') }}
                             @if ($comment->post)
                                 <a href="{{ route('admin.posts.edit', $comment->post) }}">{{ $comment->post->title }}</a>
+                            @elseif ($comment->contentEntry)
+                                <a href="{{ route('admin.contents.edit', $comment->contentEntry) }}">{{ $comment->contentEntry->title }}</a>
                             @else
-                                deleted post
+                                {{ __('admin.comments.deleted_post') }}
                             @endif
                         </div>
                         <div class="row-actions small mt-2">
                             @if ($comment->status !== 'approved')
-                                <button form="c-approve-{{ $comment->id }}" type="submit">Approve</button> ·
+                                <button form="c-approve-{{ $comment->id }}" type="submit">{{ __('admin.comments.approve') }}</button> ·
                             @else
-                                <button form="c-pending-{{ $comment->id }}" type="submit">Unapprove</button> ·
+                                <button form="c-pending-{{ $comment->id }}" type="submit">{{ __('admin.comments.unapprove') }}</button> ·
                             @endif
-                            <button form="c-spam-{{ $comment->id }}" type="submit">Spam</button> ·
+                            <button form="c-spam-{{ $comment->id }}" type="submit">{{ __('admin.comments.spam') }}</button> ·
                             <button form="c-trash-{{ $comment->id }}" class="link-danger" type="submit">
                                 {{ $comment->status === 'trash' ? __('admin.comments.delete_permanently') : __('admin.comments.trash') }}
                             </button>
@@ -81,7 +83,7 @@
                 </div>
             </div>
         @empty
-            <div class="empty-state">No comments in this view.</div>
+            <div class="empty-state">{{ __('admin.comments.empty') }}</div>
         @endforelse
 
         <div class="mt-3">{{ $comments->links() }}</div>
