@@ -8,9 +8,13 @@ use App\Enums\ContentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Content;
 use App\Models\ContentType;
+use App\Models\Menu;
+use App\Models\MenuItem;
 use App\Models\Taxonomy;
 use App\Services\Content\ContentService;
 use App\Services\Content\RevisionService;
+use App\Services\PermalinkService;
+use App\Services\Themes\ThemeManager;
 use App\Support\Blocks\BlockRenderer;
 use Illuminate\Http\Request;
 
@@ -20,6 +24,8 @@ class ContentAdminController extends Controller
         private readonly ContentService $contents,
         private readonly RevisionService $revisions,
         private readonly BlockRenderer $blocks,
+        private readonly ThemeManager $themes,
+        private readonly PermalinkService $permalinks,
     ) {}
 
     public function index(Request $request)
@@ -58,6 +64,16 @@ class ContentAdminController extends Controller
             'trash' => Content::query()->where('content_type_id', $type->id)->where('status', ContentStatus::Trash)->count(),
         ];
 
+        $menuPaths = [];
+        if ($type->slug === 'page') {
+            $menuPaths = MenuItem::query()
+                ->whereNotNull('url')
+                ->pluck('url')
+                ->map(fn ($url) => '/'.ltrim((string) $url, '/'))
+                ->unique()
+                ->all();
+        }
+
         return view('admin.contents.index', [
             'contents' => $query->latest('updated_at')->paginate(20)->withQueryString(),
             'type' => $type,
@@ -65,6 +81,9 @@ class ContentAdminController extends Controller
             'status' => $status,
             'q' => $q,
             'counts' => $counts,
+            'isPageType' => $type->slug === 'page',
+            'menuPaths' => $menuPaths,
+            'menus' => $type->slug === 'page' ? Menu::query()->orderBy('name')->get(['id', 'name', 'slug']) : collect(),
         ]);
     }
 
@@ -74,16 +93,11 @@ class ContentAdminController extends Controller
         $typeSlug = (string) $request->string('type', 'post');
         $type = ContentType::query()->where('slug', $typeSlug)->firstOrFail();
 
-        return view('admin.contents.edit', [
-            'content' => new Content(['status' => ContentStatus::Draft, 'content_type_id' => $type->id]),
-            'type' => $type,
-            'types' => ContentType::query()->orderBy('menu_position')->get(),
-            'parents' => $type->hierarchical
-                ? Content::query()->where('content_type_id', $type->id)->orderBy('title')->get()
-                : collect(),
-            'taxonomies' => $this->taxonomiesForType($type),
-            'selectedTermIds' => old('term_ids', []),
-        ]);
+        return view('admin.contents.edit', $this->editorPayload(
+            new Content(['status' => ContentStatus::Draft, 'content_type_id' => $type->id, 'template' => 'default']),
+            $type,
+            old('term_ids', []),
+        ));
     }
 
     public function store(Request $request)
@@ -105,7 +119,11 @@ class ContentAdminController extends Controller
             'featured_media_id' => ['nullable', 'integer', 'exists:media,id'],
             'term_ids' => ['nullable', 'array'],
             'term_ids.*' => ['integer', 'exists:terms,id'],
+            'add_to_menu_id' => ['nullable', 'integer', 'exists:menus,id'],
         ]);
+
+        $addToMenuId = $data['add_to_menu_id'] ?? null;
+        unset($data['add_to_menu_id']);
 
         $data = $this->applyBlocks($data);
 
@@ -118,9 +136,11 @@ class ContentAdminController extends Controller
         $content = $this->contents->create($data['type'], $data, $request->user());
         $this->revisions->snapshot($content, $request->user(), 'created');
 
+        $menuMessage = $this->maybeAddToMenu($content, $addToMenuId);
+
         return redirect()
             ->route('admin.contents.edit', $content)
-            ->with('status', 'Content created.');
+            ->with('status', __('admin.contents.created').($menuMessage ? ' '.$menuMessage : ''));
     }
 
     public function edit(Content $content)
@@ -128,21 +148,12 @@ class ContentAdminController extends Controller
         $this->authorize('update', $content);
         $content->load(['type', 'author', 'terms']);
 
-        return view('admin.contents.edit', [
-            'content' => $content,
-            'type' => $content->type,
-            'types' => ContentType::query()->orderBy('menu_position')->get(),
-            'parents' => $content->type?->hierarchical
-                ? Content::query()
-                    ->where('content_type_id', $content->content_type_id)
-                    ->where('id', '!=', $content->id)
-                    ->orderBy('title')
-                    ->get()
-                : collect(),
-            'revisions' => $content->revisions()->with('user')->limit(20)->get(),
-            'taxonomies' => $this->taxonomiesForType($content->type),
-            'selectedTermIds' => old('term_ids', $content->terms->pluck('id')->all()),
-        ]);
+        return view('admin.contents.edit', $this->editorPayload(
+            $content,
+            $content->type,
+            old('term_ids', $content->terms->pluck('id')->all()),
+            $content->revisions()->with('user')->limit(20)->get(),
+        ));
     }
 
     public function update(Request $request, Content $content)
@@ -164,10 +175,12 @@ class ContentAdminController extends Controller
             'term_ids' => ['nullable', 'array'],
             'term_ids.*' => ['integer', 'exists:terms,id'],
             'action' => ['nullable', 'string'],
+            'add_to_menu_id' => ['nullable', 'integer', 'exists:menus,id'],
         ]);
 
         $action = $data['action'] ?? null;
-        unset($data['action']);
+        $addToMenuId = $data['add_to_menu_id'] ?? null;
+        unset($data['action'], $data['add_to_menu_id']);
 
         if ($action === 'publish') {
             $data['status'] = ContentStatus::Published->value;
@@ -177,14 +190,25 @@ class ContentAdminController extends Controller
             $data['status'] = ContentStatus::Trash->value;
         }
 
+        $oldPath = '/'.ltrim($this->permalinks->contentPath($content), '/');
+
         $data['term_ids'] = $data['term_ids'] ?? [];
         $data = $this->applyBlocks($data);
         $this->revisions->snapshot($content, $request->user(), 'pre-update');
         $content = $this->contents->update($content, $data);
 
+        $newPath = '/'.ltrim($this->permalinks->contentPath($content->fresh(['type'])), '/');
+        if ($oldPath !== $newPath && $oldPath !== '/') {
+            MenuItem::query()
+                ->whereIn('url', [$oldPath, ltrim($oldPath, '/')])
+                ->update(['url' => $newPath]);
+        }
+
+        $menuMessage = $this->maybeAddToMenu($content, $addToMenuId);
+
         return redirect()
             ->route('admin.contents.edit', $content)
-            ->with('status', 'Content updated.');
+            ->with('status', __('admin.contents.saved').($menuMessage ? ' '.$menuMessage : ''));
     }
 
     public function destroy(Content $content)
@@ -194,7 +218,7 @@ class ContentAdminController extends Controller
 
         return redirect()
             ->route('admin.contents.index', ['type' => $content->type?->slug ?? 'post'])
-            ->with('status', 'Content moved to trash.');
+            ->with('status', __('admin.contents.deleted'));
     }
 
     public function autosave(Request $request, Content $content)
@@ -256,6 +280,110 @@ class ContentAdminController extends Controller
         ]);
     }
 
+    public function addToMenu(Request $request, Content $content)
+    {
+        $this->authorize('update', $content);
+
+        $data = $request->validate([
+            'menu_id' => ['required', 'integer', 'exists:menus,id'],
+        ]);
+
+        $message = $this->maybeAddToMenu($content, (int) $data['menu_id']);
+
+        return back()->with('status', $message ?: __('admin.contents.menu_already'));
+    }
+
+    /**
+     * @param  list<int>|mixed  $selectedTermIds
+     * @param  mixed  $revisions
+     * @return array<string, mixed>
+     */
+    private function editorPayload(Content $content, ?ContentType $type, mixed $selectedTermIds, mixed $revisions = null): array
+    {
+        $isPage = ($type?->slug ?? '') === 'page';
+
+        return [
+            'content' => $content,
+            'type' => $type,
+            'types' => ContentType::query()->orderBy('menu_position')->get(),
+            'parents' => $type?->hierarchical
+                ? Content::query()
+                    ->where('content_type_id', $type->id)
+                    ->when($content->exists, fn ($q) => $q->where('id', '!=', $content->id))
+                    ->orderBy('title')
+                    ->get()
+                : collect(),
+            'revisions' => $revisions,
+            'taxonomies' => $this->taxonomiesForType($type),
+            'selectedTermIds' => is_array($selectedTermIds) ? $selectedTermIds : [],
+            'isPageType' => $isPage,
+            'pageTemplates' => $isPage ? $this->themes->pageTemplates() : [],
+            'menus' => $isPage ? Menu::query()->orderBy('name')->get(['id', 'name', 'slug', 'location']) : collect(),
+            'publicPath' => $content->exists && $content->slug
+                ? '/'.ltrim($this->permalinks->contentPath($content->loadMissing('type')), '/')
+                : null,
+            'inMenus' => $isPage && $content->exists
+                ? $this->menusContainingPath('/'.ltrim((string) $content->slug, '/'))
+                : collect(),
+        ];
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, Menu>
+     */
+    private function menusContainingPath(string $path)
+    {
+        $variants = array_unique([$path, ltrim($path, '/')]);
+
+        $menuIds = MenuItem::query()
+            ->whereIn('url', $variants)
+            ->pluck('menu_id')
+            ->unique();
+
+        if ($menuIds->isEmpty()) {
+            return collect();
+        }
+
+        return Menu::query()->whereIn('id', $menuIds)->orderBy('name')->get();
+    }
+
+    private function maybeAddToMenu(Content $content, mixed $menuId): ?string
+    {
+        if (! $menuId) {
+            return null;
+        }
+
+        $content->loadMissing('type');
+        if (($content->type?->slug ?? '') !== 'page') {
+            return null;
+        }
+
+        $menu = Menu::query()->find((int) $menuId);
+        if (! $menu) {
+            return null;
+        }
+
+        $path = '/'.ltrim($this->permalinks->contentPath($content), '/');
+        $exists = $menu->items()
+            ->where(function ($q) use ($path) {
+                $q->where('url', $path)->orWhere('url', ltrim($path, '/'));
+            })
+            ->exists();
+
+        if ($exists) {
+            return __('admin.contents.menu_already');
+        }
+
+        $max = (int) $menu->items()->max('sort_order');
+        $menu->items()->create([
+            'title' => $content->title,
+            'url' => $path,
+            'sort_order' => $max + 1,
+        ]);
+
+        return __('admin.contents.menu_added', ['menu' => $menu->name]);
+    }
+
     /**
      * @return \Illuminate\Support\Collection<int, Taxonomy>
      */
@@ -296,7 +424,6 @@ class ContentAdminController extends Controller
 
         $data['blocks'] = $blocks;
 
-        // Empty canvas must not wipe legacy HTML stored in the body textarea.
         if ($blocks === []) {
             if (! filled($data['body'] ?? null)) {
                 $data['body'] = $this->blocks->render($blocks);

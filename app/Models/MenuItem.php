@@ -31,4 +31,22 @@ class MenuItem extends Model
     {
         return $this->hasMany(self::class, 'parent_id')->orderBy('sort_order');
     }
+
+    public function href(): string
+    {
+        if (filled($this->url)) {
+            $url = (string) $this->url;
+
+            return str_starts_with($url, 'http://') || str_starts_with($url, 'https://') || str_starts_with($url, '//')
+                ? $url
+                : url($url);
+        }
+
+        $page = $this->relationLoaded('page') ? $this->page : $this->page()->first();
+        if ($page) {
+            return url('/'.ltrim((string) $page->slug, '/'));
+        }
+
+        return '#';
+    }
 }

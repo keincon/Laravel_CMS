@@ -1,7 +1,9 @@
 @extends('layouts.admin')
 @section('title', __('admin.nav.menus'))
 @section('content')
-<p class="text-muted mb-4">{{ __('admin.appearance.menus_intro') }}</p>
+<p class="text-muted mb-3">{{ __('admin.appearance.menus_intro') }}</p>
+
+<x-admin.help-next context="menus_index" />
 
 <div class="row g-3">
     <div class="col-lg-5">

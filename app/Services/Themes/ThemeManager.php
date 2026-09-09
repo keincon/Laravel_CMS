@@ -8,6 +8,7 @@ use App\Models\Theme;
 use App\Models\ThemeSetting;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 final class ThemeManager
 {
@@ -120,6 +121,49 @@ final class ThemeManager
     public function themesPath(): string
     {
         return $this->themesPath;
+    }
+
+    /**
+     * Blade templates available for static pages (pages/*.blade.php in active + default themes).
+     *
+     * @return array<string, string> template key => label
+     */
+    public function pageTemplates(?string $themeSlug = null): array
+    {
+        $themeSlug ??= $this->activeSlug();
+        $keys = [];
+
+        foreach (array_unique([$themeSlug, 'default']) as $slug) {
+            $dir = $this->themesPath.DIRECTORY_SEPARATOR.$slug.DIRECTORY_SEPARATOR.'pages';
+            if (! is_dir($dir)) {
+                continue;
+            }
+            foreach (glob($dir.DIRECTORY_SEPARATOR.'*.blade.php') ?: [] as $file) {
+                $key = basename((string) $file, '.blade.php');
+                if ($key !== '' && $key !== 'readme') {
+                    $keys[$key] = true;
+                }
+            }
+        }
+
+        if ($keys === []) {
+            $keys = ['default' => true];
+        }
+
+        $labels = [
+            'default' => __('admin.contents.template_default'),
+            'landing' => __('admin.contents.template_landing'),
+            'full-width' => __('admin.contents.template_full_width'),
+        ];
+
+        $out = [];
+        foreach (array_keys($keys) as $key) {
+            $out[$key] = $labels[$key] ?? Str::headline(str_replace(['-', '_'], ' ', $key));
+        }
+
+        ksort($out);
+
+        return $out;
     }
 
     public function activate(string $slug, bool $applyColors = true): void

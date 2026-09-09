@@ -1,18 +1,37 @@
 @extends('layouts.admin')
 @section('title', __('admin.appearance.edit_menu'))
 @section('content')
+@php
+    $selectedLinkValue = static function (?string $url, $pageId) {
+        if (filled($pageId)) {
+            return 'page:'.$pageId;
+        }
+        if (filled($url)) {
+            $path = str_starts_with($url, 'http') ? $url : '/'.ltrim($url, '/');
+            if ($url === '/' || $path === '/') {
+                return 'url:/';
+            }
+
+            return 'url:'.$path;
+        }
+
+        return '';
+    };
+@endphp
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <a href="{{ route('admin.menus.index') }}" class="text-muted">← Menus</a>
+    <a href="{{ route('admin.menus.index') }}" class="text-muted">← {{ __('admin.nav.menus') }}</a>
     <form method="POST" action="{{ route('admin.menus.destroy', $menu) }}" onsubmit="return confirm(@js(__('admin.menus.confirm_delete_menu')))">
         @csrf @method('DELETE')
         <button class="btn btn-sm btn-outline-danger" type="submit">{{ __('admin.menus.delete_menu') }}</button>
     </form>
 </div>
 
+<x-admin.help-next context="menus_edit" />
+
 <div class="row g-3">
     <div class="col-lg-4">
         <div class="panel mb-3">
-            <h2 class="h6 mb-3">Menu settings</h2>
+            <h2 class="h6 mb-3">{{ __('admin.menus.settings') }}</h2>
             <form method="POST" action="{{ route('admin.menus.update', $menu) }}">
                 @csrf @method('PUT')
                 <div class="mb-3"><label class="form-label">{{ __('admin.ui.name') }}</label><input name="name" class="form-control" value="{{ old('name', $menu->name) }}" required></div>
@@ -25,63 +44,96 @@
                         @endforeach
                     </select>
                 </div>
-                <button class="btn btn-primary" type="submit">Save</button>
+                <button class="btn btn-primary" type="submit">{{ __('admin.ui.save') }}</button>
             </form>
         </div>
         <div class="panel">
-            <h2 class="h6 mb-3">Add item</h2>
-            <form method="POST" action="{{ route('admin.menus.items.store', $menu) }}">
+            <h2 class="h6 mb-3">{{ __('admin.menus.add_item') }}</h2>
+            <p class="small text-muted mb-3">{{ __('admin.menus.link_hint') }}</p>
+            <form method="POST" action="{{ route('admin.menus.items.store', $menu) }}" class="js-menu-item-form">
                 @csrf
-                <div class="mb-3"><label class="form-label">Title</label><input name="title" class="form-control" required></div>
-                <div class="mb-3"><label class="form-label">{{ __('admin.menus.custom_url') }}</label><input name="url" class="form-control" placeholder="/about or https://…"></div>
                 <div class="mb-3">
-                    <label class="form-label">Or page</label>
-                    <select name="page_id" class="form-select">
-                        <option value="">—</option>
-                        @foreach ($pages as $page)
-                            <option value="{{ $page->id }}">{{ $page->title }}</option>
+                    <label class="form-label">{{ __('admin.menus.link_to') }}</label>
+                    <select class="form-select js-menu-link-picker" data-fill-title="1">
+                        <option value="">{{ __('admin.menus.link_custom') }}</option>
+                        @foreach ($linkGroups as $group)
+                            <optgroup label="{{ $group['label'] }}">
+                                @foreach ($group['options'] as $option)
+                                    <option
+                                        value="{{ $option['value'] }}"
+                                        data-url="{{ $option['url'] ?? '' }}"
+                                        data-page-id="{{ $option['page_id'] ?? '' }}"
+                                        data-title="{{ $option['title'] }}"
+                                    >{{ $option['label'] }}</option>
+                                @endforeach
+                            </optgroup>
                         @endforeach
                     </select>
                 </div>
-                <button class="btn btn-outline-primary w-100" type="submit">Add item</button>
+                <div class="mb-3"><label class="form-label">{{ __('admin.ui.title') }}</label><input name="title" class="form-control js-menu-title" required></div>
+                <div class="mb-3"><label class="form-label">{{ __('admin.menus.custom_url') }}</label><input name="url" class="form-control js-menu-url" placeholder="/about or https://…"></div>
+                <input type="hidden" name="page_id" class="js-menu-page-id" value="">
+                <div class="mb-3">
+                    <label class="form-label">{{ __('admin.menus.parent') }}</label>
+                    <select name="parent_id" class="form-select">
+                        <option value="">{{ __('admin.menus.parent_none') }}</option>
+                        @foreach ($parentOptions as $parent)
+                            <option value="{{ $parent->id }}">{{ $parent->title }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <button class="btn btn-outline-primary w-100" type="submit">{{ __('admin.menus.add_item') }}</button>
             </form>
         </div>
     </div>
     <div class="col-lg-8">
         <div class="panel">
-            <h2 class="h6 mb-3">Items</h2>
+            <h2 class="h6 mb-3">{{ __('admin.menus.items') }}</h2>
             @forelse ($menu->items as $item)
-                <div class="border rounded p-3 mb-2 bg-white">
-                    <form method="POST" action="{{ route('admin.menus.items.update', [$menu, $item]) }}">
-                        @csrf @method('PUT')
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-3"><label class="form-label">Title</label><input name="title" class="form-control form-control-sm" value="{{ $item->title }}" required></div>
-                            <div class="col-md-3"><label class="form-label">URL</label><input name="url" class="form-control form-control-sm" value="{{ $item->url }}"></div>
-                            <div class="col-md-3">
-                                <label class="form-label">Page</label>
-                                <select name="page_id" class="form-select form-select-sm">
-                                    <option value="">—</option>
-                                    @foreach ($pages as $page)
-                                        <option value="{{ $page->id }}" @selected($item->page_id == $page->id)>{{ $page->title }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-1"><label class="form-label">Order</label><input type="number" name="sort_order" class="form-control form-control-sm" value="{{ $item->sort_order }}"></div>
-                            <div class="col-md-2"><button class="btn btn-sm btn-primary w-100" type="submit">Save</button></div>
-                        </div>
-                    </form>
-                    <form method="POST" action="{{ route('admin.menus.items.destroy', [$menu, $item]) }}" class="mt-2" onsubmit="return confirm(@js(__('admin.menus.confirm_delete_item')))">
-                        @csrf @method('DELETE')
-                        <button class="btn btn-sm btn-outline-danger" type="submit">{{ __('admin.menus.delete_item') }}</button>
-                    </form>
-                    @foreach ($item->children as $child)
-                        <div class="small text-muted mt-2 ms-3">↳ {{ $child->title }}</div>
-                    @endforeach
-                </div>
+                @include('admin.menus._item-row', ['item' => $item, 'depth' => 0, 'linkGroups' => $linkGroups, 'parentOptions' => $parentOptions, 'selectedLinkValue' => $selectedLinkValue])
+                @foreach ($item->children as $child)
+                    @include('admin.menus._item-row', ['item' => $child, 'depth' => 1, 'linkGroups' => $linkGroups, 'parentOptions' => $parentOptions, 'selectedLinkValue' => $selectedLinkValue])
+                @endforeach
             @empty
-                <div class="empty-state py-4">No items yet. Add a link or page on the left.</div>
+                <div class="empty-state py-4">{{ __('admin.menus.items_empty') }}</div>
             @endforelse
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    function applyPicker(select) {
+        const form = select.closest('.js-menu-item-form');
+        if (!form) return;
+        const option = select.options[select.selectedIndex];
+        const urlInput = form.querySelector('.js-menu-url');
+        const pageInput = form.querySelector('.js-menu-page-id');
+        const titleInput = form.querySelector('.js-menu-title');
+        if (!urlInput || !pageInput) return;
+
+        if (!select.value) {
+            return;
+        }
+
+        const url = option.getAttribute('data-url') || '';
+        const pageId = option.getAttribute('data-page-id') || '';
+        const title = option.getAttribute('data-title') || '';
+
+        urlInput.value = url;
+        pageInput.value = pageId;
+        if (select.dataset.fillTitle === '1' && titleInput && !titleInput.value.trim() && title) {
+            titleInput.value = title;
+        }
+    }
+
+    document.querySelectorAll('.js-menu-link-picker').forEach(function (select) {
+        select.addEventListener('change', function () {
+            applyPicker(select);
+        });
+    });
+})();
+</script>
+@endpush

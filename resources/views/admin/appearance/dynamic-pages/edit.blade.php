@@ -5,9 +5,11 @@
     <a href="{{ route('admin.appearance.dynamic-pages.index') }}">← {{ __('admin.nav.dynamic_pages') }}</a>
 </div>
 <h1 class="h3 mb-1">{{ $setting->label }}</h1>
-<p class="text-muted mb-4">
+<p class="text-muted mb-3">
     Type: <strong>Dynamic</strong> · System: {{ $definition['label'] ?? $setting->type }}
 </p>
+
+<x-admin.help-next context="dynamic_pages_edit" />
 
 <form method="POST" action="{{ route('admin.appearance.dynamic-pages.update', $setting->type) }}">
     @csrf @method('PUT')

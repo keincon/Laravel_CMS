@@ -12,16 +12,23 @@ use App\Models\Content;
 use App\Models\ContentMeta;
 use App\Models\ContentType;
 use App\Models\DynamicPageSetting;
+use App\Models\Footer;
+use App\Models\Header;
+use App\Models\LayoutSetting;
 use App\Models\Media;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Page;
+use App\Models\Sidebar;
 use App\Models\Taxonomy;
 use App\Models\Term;
 use App\Models\User;
+use App\Models\Widget;
 use App\Services\Content\ContentService;
+use App\Services\CustomCodeService;
 use App\Services\DynamicPageService;
 use App\Services\LaravelPressBootstrapService;
+use App\Services\LayoutResolverService;
 use App\Services\RolePermissionService;
 use App\Services\Themes\ThemeManager;
 use Illuminate\Support\Facades\DB;
@@ -79,7 +86,8 @@ final class AoyamaCardSiteSeeder
             $pages = $this->seedPages($author);
             $posts = $this->seedPosts($author, $termIds);
             $campaigns = $this->seedCampaigns($author);
-            $menuItems = $this->seedMenu($pages);
+            $menuItems = $this->seedMenus($pages);
+            $this->seedAppearanceChrome($pages);
 
             return [
                 'pages' => count($pages),
@@ -1202,81 +1210,350 @@ HTML,
     }
 
     /**
+     * Primary + utility + footer menus modeled after aoyama-card.co.jp.
+     *
      * @param  array<string, Content>  $pages
      */
-    private function seedMenu(array $pages): int
+    private function seedMenus(array $pages): int
+    {
+        $count = 0;
+
+        $count += $this->replaceMenuItems('utility', 'ユーティリティ', 'utility', [
+            ['title' => 'カード紛失・盗難', 'url' => '/support-userguide-funshitsu-php'],
+            ['title' => 'お知らせ', 'url' => '/news'],
+            ['title' => '企業情報', 'url' => '/company-about'],
+            ['title' => 'FAQ', 'url' => '/faq'],
+        ]);
+
+        $primaryChildren = [
+            'カードをつくる' => [
+                ['title' => 'AOYAMAライフマスターカード', 'url' => '/card-aoyama-life'],
+                ['title' => 'AOYAMA VISA / PiTaPa', 'url' => '/card-aoyama-visa'],
+                ['title' => 'BLUE ROSE（ライフ）', 'url' => '/card-bluerose-life'],
+                ['title' => 'BLUE ROSE（三井住友）', 'url' => '/card-bluerose-visa'],
+                ['title' => '青山キャピタル発行', 'url' => '/card-capital'],
+                ['title' => 'BLUE ROSE（キャピタル）', 'url' => '/card-bluerose'],
+                ['title' => 'くらべてわかる、カードのお得', 'url' => '/compare'],
+            ],
+            'サービス・特典' => [
+                ['title' => '洋服の青山の特典', 'url' => '/used-preferential'],
+                ['title' => 'AOYAMAポイント', 'url' => '/used-aoyama-point'],
+                ['title' => 'AOYAMA Pay', 'url' => '/used-aoyama-pay'],
+                ['title' => 'ショッピング', 'url' => '/used-shopping'],
+                ['title' => 'ご利用代金のお支払い', 'url' => '/used-flow'],
+                ['title' => 'ETCカード', 'url' => '/used-etc'],
+            ],
+        ];
+
+        $count += $this->replaceMenuItems('primary', 'メインメニュー', 'primary', [
+            ['title' => 'カードをつくる', 'url' => '/card', 'children' => $primaryChildren['カードをつくる']],
+            ['title' => 'サービス・特典', 'url' => '/used', 'children' => $primaryChildren['サービス・特典']],
+            ['title' => 'カード優待特典', 'url' => '/biz-yuutai'],
+            ['title' => 'キャッシング', 'url' => '/cashing'],
+            ['title' => 'キャンペーン', 'url' => '/campaign'],
+            ['title' => 'カード会員の方', 'url' => '/support'],
+        ]);
+
+        $footerMenus = [
+            'footer-card' => [
+                'name' => 'フッター：カードをつくる',
+                'items' => [
+                    ['title' => 'カード一覧', 'url' => '/card'],
+                    ['title' => 'ライフカード発行', 'url' => '/card#issuer-life'],
+                    ['title' => '三井住友カード発行', 'url' => '/card#issuer-smbc'],
+                    ['title' => '青山キャピタル発行', 'url' => '/card#issuer-capital'],
+                ],
+            ],
+            'footer-service' => [
+                'name' => 'フッター：サービス・特典',
+                'items' => [
+                    ['title' => '割引・ポイント', 'url' => '/used'],
+                    ['title' => 'カード優待特典', 'url' => '/biz-yuutai'],
+                    ['title' => 'キャンペーン', 'url' => '/campaign'],
+                ],
+            ],
+            'footer-cashing' => [
+                'name' => 'フッター：キャッシング',
+                'items' => [
+                    ['title' => 'キャッシングについて', 'url' => '/cashing'],
+                    ['title' => 'お急ぎの方', 'url' => '/cashing-hurry'],
+                ],
+            ],
+            'footer-member' => [
+                'name' => 'フッター：会員向け',
+                'items' => [
+                    ['title' => 'カード会員の方', 'url' => '/support'],
+                    ['title' => 'カード紛失・盗難', 'url' => '/support-userguide-funshitsu-php'],
+                    ['title' => 'お知らせ', 'url' => '/news'],
+                ],
+            ],
+            'footer-company' => [
+                'name' => 'フッター：企業情報',
+                'items' => [
+                    ['title' => '会社概要', 'url' => '/company-about'],
+                    ['title' => 'よくあるご質問', 'url' => '/faq'],
+                    ['title' => 'プライバシーポリシー', 'url' => '/company-privacy-php'],
+                ],
+            ],
+        ];
+
+        foreach ($footerMenus as $slug => $def) {
+            $count += $this->replaceMenuItems($slug, $def['name'], 'footer', $def['items']);
+        }
+
+        unset($pages);
+
+        return $count;
+    }
+
+    /**
+     * @param  list<array{title: string, url: string, children?: list<array{title: string, url: string}>}>  $items
+     */
+    private function replaceMenuItems(string $slug, string $name, string $location, array $items): int
     {
         $menu = Menu::query()->updateOrCreate(
-            ['slug' => 'primary'],
-            ['name' => 'メインメニュー', 'location' => 'primary']
+            ['slug' => $slug],
+            ['name' => $name, 'location' => $location]
         );
 
         MenuItem::query()->where('menu_id', $menu->id)->delete();
 
-        $top = [
-            ['title' => 'カードをつくる', 'slug' => 'card', 'path' => '/card'],
-            ['title' => 'サービス・特典', 'slug' => 'used', 'path' => '/used'],
-            ['title' => 'カード優待特典', 'slug' => 'biz-yuutai', 'path' => '/biz-yuutai'],
-            ['title' => 'キャッシング', 'slug' => 'cashing', 'path' => '/cashing'],
-            ['title' => 'キャンペーン', 'slug' => 'campaign', 'path' => '/campaign'],
-            ['title' => 'カード会員の方', 'slug' => 'support', 'path' => '/support'],
-        ];
-
         $count = 0;
-        foreach ($top as $order => $item) {
-            MenuItem::query()->create([
+        foreach ($items as $order => $item) {
+            $parent = MenuItem::query()->create([
                 'menu_id' => $menu->id,
                 'title' => $item['title'],
-                'url' => $item['path'],
+                'url' => $item['url'],
                 'sort_order' => $order,
             ]);
             $count++;
-        }
 
-        $cardParent = MenuItem::query()->where('menu_id', $menu->id)->where('title', 'カードをつくる')->first();
-        if ($cardParent) {
-            foreach ([
-                ['title' => 'AOYAMAライフマスターカード', 'path' => '/card-aoyama-life'],
-                ['title' => 'AOYAMA VISA / PiTaPa', 'path' => '/card-aoyama-visa'],
-                ['title' => 'BLUE ROSE（ライフ）', 'path' => '/card-bluerose-life'],
-                ['title' => 'BLUE ROSE（三井住友）', 'path' => '/card-bluerose-visa'],
-                ['title' => '青山キャピタル発行', 'path' => '/card-capital'],
-                ['title' => 'BLUE ROSE（キャピタル）', 'path' => '/card-bluerose'],
-                ['title' => 'くらべてわかる、カードのお得', 'path' => '/compare'],
-            ] as $i => $child) {
+            foreach ($item['children'] ?? [] as $childOrder => $child) {
                 MenuItem::query()->create([
                     'menu_id' => $menu->id,
-                    'parent_id' => $cardParent->id,
+                    'parent_id' => $parent->id,
                     'title' => $child['title'],
-                    'url' => $child['path'],
-                    'sort_order' => $i,
-                ]);
-                $count++;
-            }
-        }
-
-        $usedParent = MenuItem::query()->where('menu_id', $menu->id)->where('title', 'サービス・特典')->first();
-        if ($usedParent) {
-            foreach ([
-                ['title' => '洋服の青山の特典', 'path' => '/used-preferential'],
-                ['title' => 'AOYAMAポイント', 'path' => '/used-aoyama-point'],
-                ['title' => 'AOYAMA Pay', 'path' => '/used-aoyama-pay'],
-                ['title' => 'ショッピング', 'path' => '/used-shopping'],
-                ['title' => 'ご利用代金のお支払い', 'path' => '/used-flow'],
-                ['title' => 'ETCカード', 'path' => '/used-etc'],
-            ] as $i => $child) {
-                MenuItem::query()->create([
-                    'menu_id' => $menu->id,
-                    'parent_id' => $usedParent->id,
-                    'title' => $child['title'],
-                    'url' => $child['path'],
-                    'sort_order' => $i,
+                    'url' => $child['url'],
+                    'sort_order' => $childOrder,
                 ]);
                 $count++;
             }
         }
 
         return $count;
+    }
+
+    /**
+     * Headers, footers, master layout, widgets, and custom code for admin + master layout.
+     *
+     * @param  array<string, Content>  $pages
+     */
+    private function seedAppearanceChrome(array $pages): void
+    {
+        $headerStructure = [
+            'rows' => [
+                [
+                    'id' => 'top_bar',
+                    'label' => 'ユーティリティバー',
+                    'enabled' => true,
+                    'components' => [
+                        [
+                            'id' => 'ao-util-nav',
+                            'type' => 'navigation',
+                            'enabled' => true,
+                            'settings' => ['menu' => 'utility'],
+                        ],
+                    ],
+                ],
+                [
+                    'id' => 'main',
+                    'label' => 'メインヘッダー',
+                    'enabled' => true,
+                    'components' => [
+                        ['id' => 'ao-logo', 'type' => 'logo', 'enabled' => true, 'settings' => []],
+                        ['id' => 'ao-primary-nav', 'type' => 'navigation', 'enabled' => true, 'settings' => ['menu' => 'primary']],
+                    ],
+                ],
+            ],
+            'style' => [
+                'background' => '#ffffff',
+                'text_color' => '#1a3a6b',
+                'sticky' => true,
+                'transparent' => false,
+                'height' => '72px',
+                'position' => 'static',
+            ],
+            'responsive' => [
+                'desktop' => ['logo', 'navigation'],
+                'tablet' => ['logo', 'navigation'],
+                'mobile' => ['logo', 'menu_toggle'],
+            ],
+            'visibility' => [
+                'show_on' => ['entire_website'],
+                'hide_on' => ['login', 'admin', 'setup'],
+            ],
+            'assignment' => [
+                'scope' => 'entire_website',
+            ],
+        ];
+
+        $header = Header::query()->updateOrCreate(
+            ['slug' => 'aoyama-header'],
+            [
+                'name' => '青山キャピタル ヘッダー',
+                'content' => $headerStructure,
+                'draft_content' => $headerStructure,
+                'settings' => ['theme' => 'aoyama'],
+                'status' => 'published',
+                'is_default' => true,
+            ]
+        );
+        Header::query()->where('id', '!=', $header->id)->update(['is_default' => false]);
+
+        $footerStructure = [
+            'columns' => [
+                [
+                    'id' => 'ao-col-card',
+                    'components' => [
+                        ['id' => 'ao-f-card', 'type' => 'menu', 'enabled' => true, 'settings' => [
+                            'menu' => 'footer-card',
+                            'title' => 'カードをつくる',
+                        ]],
+                    ],
+                ],
+                [
+                    'id' => 'ao-col-service',
+                    'components' => [
+                        ['id' => 'ao-f-service', 'type' => 'menu', 'enabled' => true, 'settings' => [
+                            'menu' => 'footer-service',
+                            'title' => 'サービス・特典',
+                        ]],
+                    ],
+                ],
+                [
+                    'id' => 'ao-col-cashing',
+                    'components' => [
+                        ['id' => 'ao-f-cashing', 'type' => 'menu', 'enabled' => true, 'settings' => [
+                            'menu' => 'footer-cashing',
+                            'title' => 'キャッシング',
+                        ]],
+                    ],
+                ],
+                [
+                    'id' => 'ao-col-member',
+                    'components' => [
+                        ['id' => 'ao-f-member', 'type' => 'menu', 'enabled' => true, 'settings' => [
+                            'menu' => 'footer-member',
+                            'title' => '会員向け',
+                        ]],
+                    ],
+                ],
+                [
+                    'id' => 'ao-col-company',
+                    'components' => [
+                        ['id' => 'ao-f-company', 'type' => 'menu', 'enabled' => true, 'settings' => [
+                            'menu' => 'footer-company',
+                            'title' => '企業情報',
+                        ]],
+                    ],
+                ],
+            ],
+            'bottom' => [
+                ['id' => 'ao-copy', 'type' => 'copyright', 'enabled' => true, 'settings' => [
+                    'text' => 'Copyright © {year} 株式会社青山キャピタル（デモ）',
+                ]],
+                ['id' => 'ao-note', 'type' => 'text', 'enabled' => true, 'settings' => [
+                    'text' => '本テーマは aoyama-card.co.jp を参考にしたデモです。',
+                ]],
+            ],
+            'style' => [
+                'background' => '#0f2744',
+                'text_color' => '#ffffff',
+            ],
+            'visibility' => [
+                'show_on' => ['entire_website'],
+                'hide_on' => ['login', 'admin', 'setup'],
+            ],
+            'assignment' => [
+                'scope' => 'entire_website',
+            ],
+        ];
+
+        $footer = Footer::query()->updateOrCreate(
+            ['slug' => 'aoyama-footer'],
+            [
+                'name' => '青山キャピタル フッター',
+                'content' => $footerStructure,
+                'draft_content' => $footerStructure,
+                'settings' => ['theme' => 'aoyama'],
+                'status' => 'published',
+                'is_default' => true,
+            ]
+        );
+        Footer::query()->where('id', '!=', $footer->id)->update(['is_default' => false]);
+
+        $homePage = Page::query()->where('slug', 'home')->first();
+        $layout = LayoutSetting::current();
+        $layout->fill([
+            'default_header_id' => $header->id,
+            'default_footer_id' => $footer->id,
+            'container_width' => 1100,
+            'content_width' => 760,
+            'sidebar_width' => 280,
+            'page_layout' => 'full_width',
+            'post_layout' => 'standard',
+            'sidebar_position' => 'right',
+            'homepage_type' => 'static',
+            'homepage_page_id' => $homePage?->id,
+            'posts_page_id' => null,
+        ])->save();
+
+        $sidebar = Sidebar::main();
+        $sidebar->fill([
+            'name' => 'メインサイドバー',
+            'description' => 'お知らせ・ブログ用（青山デモ）',
+        ])->save();
+
+        Widget::query()->where('sidebar_id', $sidebar->id)->delete();
+        $widgetDefs = [
+            ['type' => 'search', 'title' => 'サイト内検索', 'settings' => [], 'sort_order' => 1],
+            ['type' => 'recent_posts', 'title' => '最新のお知らせ', 'settings' => ['limit' => 5], 'sort_order' => 2],
+            ['type' => 'categories', 'title' => 'カテゴリー', 'settings' => [], 'sort_order' => 3],
+            ['type' => 'archives', 'title' => 'バックナンバー', 'settings' => [], 'sort_order' => 4],
+            ['type' => 'menu', 'title' => '会員向けリンク', 'settings' => ['menu_id' => Menu::query()->where('slug', 'footer-member')->value('id')], 'sort_order' => 5],
+            ['type' => 'custom_html', 'title' => 'ご注意', 'settings' => [
+                'content' => '<p>カード紛失・盗難時はすぐに<a href="/support-userguide-funshitsu-php">各社窓口</a>へご連絡ください。</p>',
+            ], 'sort_order' => 6],
+        ];
+        foreach ($widgetDefs as $def) {
+            Widget::query()->create([
+                'sidebar_id' => $sidebar->id,
+                'type' => $def['type'],
+                'title' => $def['title'],
+                'settings' => $def['settings'],
+                'sort_order' => $def['sort_order'],
+                'is_active' => true,
+            ]);
+        }
+
+        app(CustomCodeService::class)->update([
+            'additional_css' => <<<'CSS'
+/* Aoyama demo — site-wide tweaks from Appearance → Custom Code */
+.ao-faq-float { z-index: 40; }
+CSS,
+            'header_scripts' => '',
+            'footer_scripts' => '',
+            'custom_html_head' => '<!-- Aoyama Card demo: seeded via AoyamaCardSiteSeeder -->',
+            'custom_html_body_open' => '',
+            'custom_html_body_close' => '',
+        ]);
+
+        Header::forgetCache();
+        Footer::forgetCache();
+        LayoutSetting::forgetCache();
+        app(LayoutResolverService::class)->clearCaches();
+
+        unset($pages);
     }
 
     private function purge(): void

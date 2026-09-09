@@ -3,13 +3,34 @@
 @section('title', $type->plural_label)
 
 @section('content')
+@php $isPageType = $isPageType ?? ($type->slug === 'page'); @endphp
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
         <h1 class="h3 mb-1">{{ $type->plural_label }}</h1>
-        <p class="page-intro mb-0">{{ __('admin.contents.intro', ['slug' => $type->slug]) }}</p>
+        <p class="page-intro mb-0">
+            @if ($isPageType)
+                {{ __('admin.contents.pages_intro') }}
+            @else
+                {{ __('admin.contents.intro', ['slug' => $type->slug]) }}
+            @endif
+        </p>
     </div>
     <a class="btn btn-primary" href="{{ route('admin.contents.create', ['type' => $type->slug]) }}">{{ __('admin.contents.add_new') }}</a>
 </div>
+
+@if (session('status'))
+    <div class="alert alert-success">{{ session('status') }}</div>
+@endif
+
+@if ($isPageType)
+    <x-admin.help-next context="pages_index" />
+@elseif ($type->slug === 'post')
+    <x-admin.help-next context="posts_index" />
+@elseif ($type->slug === 'campaign')
+    <x-admin.help-next context="campaigns_index" />
+@else
+    <x-admin.help-next context="contents_index" />
+@endif
 
 <div class="users-role-tabs mb-3">
     @foreach ($types as $t)
@@ -49,22 +70,61 @@
         <div class="empty-state">{{ __('admin.contents.no_content') }} <a href="{{ route('admin.contents.create', ['type' => $type->slug]) }}">{{ __('admin.contents.create_one') }}</a>.</div>
     @else
         <div class="table-responsive">
-            <table class="table mb-0">
+            <table class="table mb-0 align-middle">
                 <thead>
                     <tr>
                         <th>{{ __('admin.contents.title_label') }}</th>
-                        <th>{{ __('admin.contents.author') }}</th>
+                        @if ($isPageType)
+                            <th>{{ __('admin.contents.public_url') }}</th>
+                            <th>{{ __('admin.contents.in_menu') }}</th>
+                        @else
+                            <th>{{ __('admin.contents.author') }}</th>
+                        @endif
                         <th>{{ __('admin.contents.status') }}</th>
                         <th>{{ __('admin.contents.updated') }}</th>
+                        @if ($isPageType)
+                            <th></th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($contents as $item)
+                        @php
+                            $path = '/'.ltrim((string) $item->slug, '/');
+                            $inMenu = $isPageType && in_array($path, $menuPaths ?? [], true);
+                        @endphp
                         <tr>
                             <td><a class="fw-semibold" href="{{ route('admin.contents.edit', $item) }}">{{ $item->title }}</a></td>
-                            <td>{{ $item->author?->publicName() ?? '—' }}</td>
+                            @if ($isPageType)
+                                <td><code>{{ $path }}</code></td>
+                                <td>
+                                    @if ($inMenu)
+                                        <span class="badge text-bg-success">{{ __('admin.contents.yes') }}</span>
+                                    @else
+                                        <span class="badge text-bg-light text-muted">{{ __('admin.contents.no') }}</span>
+                                    @endif
+                                </td>
+                            @else
+                                <td>{{ $item->author?->publicName() ?? '—' }}</td>
+                            @endif
                             <td>{{ $item->status instanceof \BackedEnum ? $item->status->value : $item->status }}</td>
                             <td>{{ $item->updated_at?->diffForHumans() }}</td>
+                            @if ($isPageType)
+                                <td class="text-end text-nowrap">
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ url($path) }}" target="_blank" rel="noopener">{{ __('admin.contents.view_page') }}</a>
+                                    @if (! $inMenu && ($menus ?? collect())->isNotEmpty())
+                                        <form method="POST" action="{{ route('admin.contents.add-to-menu', $item) }}" class="d-inline-flex gap-1 align-items-center ms-1">
+                                            @csrf
+                                            <select name="menu_id" class="form-select form-select-sm" style="width:auto;max-width:140px" required>
+                                                @foreach ($menus as $menu)
+                                                    <option value="{{ $menu->id }}" @selected($menu->slug === 'primary' || $menu->location === 'primary')>{{ $menu->name }}</option>
+                                                @endforeach
+                                            </select>
+                                            <button class="btn btn-sm btn-outline-primary" type="submit">{{ __('admin.contents.add_to_menu_short') }}</button>
+                                        </form>
+                                    @endif
+                                </td>
+                            @endif
                         </tr>
                     @endforeach
                 </tbody>

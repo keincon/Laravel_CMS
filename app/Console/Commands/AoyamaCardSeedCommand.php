@@ -25,7 +25,8 @@ class AoyamaCardSeedCommand extends Command
             $result['menu_items'],
             $result['media'] ?? 0,
         ));
-        $this->line('Theme activated: aoyama. Site name set to 青山キャピタル. Primary menu updated.');
+        $this->line('Theme activated: aoyama. Site name set to 青山キャピタル.');
+        $this->line('Seeded menus, header/footer builders, layout, widgets, and custom code.');
 
         return self::SUCCESS;
     }

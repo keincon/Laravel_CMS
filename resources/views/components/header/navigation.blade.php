@@ -11,7 +11,7 @@
     <ul class="site-nav" role="list">
         @foreach ($menu->items as $item)
             <li>
-                <a href="{{ $item->url ?: ($item->page ? url('/'.$item->page->slug) : '#') }}">
+                <a href="{{ $item->href() }}">
                     {{ $item->title }}
                 </a>
             </li>

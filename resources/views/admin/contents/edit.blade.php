@@ -19,6 +19,19 @@
 
 @if (session('status'))
     <div class="alert alert-success">{{ session('status') }}</div>
+    @if (! empty($isPageType))
+        <x-admin.help-next context="pages_after_save" />
+    @elseif (($type->slug ?? '') === 'post')
+        <x-admin.help-next context="posts_after_save" />
+    @elseif (($type->slug ?? '') === 'campaign')
+        <x-admin.help-next context="campaigns_after_save" />
+    @endif
+@elseif (! empty($isPageType))
+    <x-admin.help-next context="pages_edit" />
+@elseif (($type->slug ?? '') === 'post')
+    <x-admin.help-next context="posts_edit" />
+@elseif (($type->slug ?? '') === 'campaign')
+    <x-admin.help-next context="campaigns_edit" />
 @endif
 
 <form method="POST"
@@ -40,7 +53,18 @@
                 @error('title') <div class="text-danger small">{{ $message }}</div> @enderror
 
                 <label class="form-label mt-3">{{ __('admin.contents.slug') }}</label>
-                <input class="form-control" name="slug" value="{{ old('slug', $content->slug) }}">
+                <div class="input-group">
+                    @if (! empty($isPageType))
+                        <span class="input-group-text">/</span>
+                    @endif
+                    <input class="form-control" name="slug" id="content-slug" value="{{ old('slug', $content->slug) }}" @if (! empty($isPageType)) placeholder="about" @endif>
+                </div>
+                @if (! empty($isPageType))
+                    <div class="form-text" id="public-url-hint">
+                        {{ __('admin.contents.public_url') }}:
+                        <code id="public-url-preview">{{ $publicPath ?? ('/'.ltrim((string) old('slug', $content->slug ?: '…'), '/')) }}</code>
+                    </div>
+                @endif
 
                 <label class="form-label mt-3">{{ __('admin.contents.content') }}</label>
                 <p class="form-text mb-2">{!! __('admin.contents.content_help') !!}</p>
@@ -122,6 +146,95 @@
         </div>
 
         <div class="col-lg-4">
+            @if (! empty($isPageType))
+                <div class="panel mb-3 border-primary">
+                    <h2 class="h6 mb-2">{{ __('admin.contents.page_setup') }}</h2>
+                    <p class="small text-muted mb-3">{{ __('admin.contents.page_setup_help') }}</p>
+
+                    <label class="form-label">{{ __('admin.contents.status') }}</label>
+                    <select class="form-select" name="status" id="content-status">
+                        @foreach ([
+                            'draft' => __('admin.contents.draft'),
+                            'published' => __('admin.contents.published'),
+                            'pending' => __('admin.contents.pending'),
+                            'private' => __('admin.contents.private'),
+                            'scheduled' => __('admin.contents.scheduled'),
+                            'trash' => __('admin.contents.trash'),
+                        ] as $st => $stLabel)
+                            <option value="{{ $st }}" @selected(old('status', $content->status instanceof \BackedEnum ? $content->status->value : ($content->status ?: 'draft')) === $st)>{{ $stLabel }}</option>
+                        @endforeach
+                    </select>
+
+                    <label class="form-label mt-3">{{ __('admin.contents.template') }}</label>
+                    <select class="form-select" name="template">
+                        @foreach ($pageTemplates as $key => $label)
+                            <option value="{{ $key }}" @selected(old('template', $content->template ?: 'default') === $key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">{{ __('admin.contents.template_help') }}</div>
+
+                    @if ($type->hierarchical)
+                        <label class="form-label mt-3">{{ __('admin.contents.parent') }}</label>
+                        <select class="form-select" name="parent_id">
+                            <option value="">{{ __('admin.contents.none_parent') }}</option>
+                            @foreach ($parents as $parent)
+                                <option value="{{ $parent->id }}" @selected((int) old('parent_id', $content->parent_id) === $parent->id)>{{ $parent->title }}</option>
+                            @endforeach
+                        </select>
+                    @endif
+
+                    <label class="form-label mt-3">{{ __('admin.contents.add_to_menu') }}</label>
+                    <select class="form-select" name="add_to_menu_id">
+                        <option value="">{{ __('admin.contents.add_to_menu_none') }}</option>
+                        @foreach ($menus as $menu)
+                            <option value="{{ $menu->id }}">{{ $menu->name }}</option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">{{ __('admin.contents.add_to_menu_help') }}</div>
+
+                    @if (($inMenus ?? collect())->isNotEmpty())
+                        <div class="small mt-2">
+                            {{ __('admin.contents.already_in_menus') }}:
+                            @foreach ($inMenus as $menu)
+                                <a href="{{ route('admin.menus.edit', $menu) }}">{{ $menu->name }}</a>@if (! $loop->last), @endif
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if ($type->supports('featured_image'))
+                        <div class="mt-3">
+                            <label class="form-label">{{ __('admin.contents.featured_image') }}</label>
+                            <x-admin.media-picker
+                                name="featured_media_id"
+                                :value="old('featured_media_id', $content->featured_media_id)"
+                                :label="__('admin.contents.select_featured_image')"
+                            />
+                        </div>
+                    @endif
+
+                    <div class="d-grid gap-2 mt-3">
+                        <button class="btn btn-outline-secondary" type="submit" name="action" value="draft" id="save-draft">{{ __('admin.contents.save_draft') }}</button>
+                        <button class="btn btn-primary" type="submit" name="action" value="publish" id="publish-content">{{ __('admin.contents.publish') }}</button>
+                        @if ($content->exists)
+                            <button class="btn btn-outline-danger" type="submit" name="action" value="trash">{{ __('admin.contents.move_to_trash') }}</button>
+                        @endif
+                    </div>
+
+                    <details class="mt-3">
+                        <summary class="small text-muted" style="cursor:pointer">{{ __('admin.contents.advanced_options') }}</summary>
+                        <label class="form-label mt-2">{{ __('admin.contents.schedule_at') }}</label>
+                        <input class="form-control" type="datetime-local" name="scheduled_at"
+                               value="{{ old('scheduled_at', optional($content->scheduled_at)->format('Y-m-d\\TH:i')) }}">
+                        @if ($type->supports('comments'))
+                            <label class="form-label mt-3">{{ __('admin.contents.discussion') }}</label>
+                            <select class="form-select" name="comment_status">
+                                <option value="open" @selected(old('comment_status', $content->comment_status ?: 'open') === 'open')>{{ __('admin.contents.open') }}</option>
+                                <option value="closed" @selected(old('comment_status', $content->comment_status) === 'closed')>{{ __('admin.contents.closed') }}</option>
+                            </select>
+                        @endif
+                    </details>
+                </div>
+            @else
             <div class="panel mb-3">
                 <label class="form-label">{{ __('admin.contents.status') }}</label>
                 <select class="form-select" name="status" id="content-status">
@@ -200,6 +313,7 @@
                     @endif
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </form>
@@ -223,6 +337,17 @@
       e.preventDefault();
       e.returnValue = '';
     });
+  }
+
+  const slugInput = document.getElementById('content-slug');
+  const preview = document.getElementById('public-url-preview');
+  if (slugInput && preview) {
+    const sync = () => {
+      const slug = (slugInput.value || '').replace(/^\/+/, '').trim() || '…';
+      preview.textContent = '/' + slug;
+    };
+    slugInput.addEventListener('input', sync);
+    sync();
   }
 
   @if($content->exists)

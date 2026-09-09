@@ -112,6 +112,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
             Route::post('/contents', [ContentAdminController::class, 'store'])->name('contents.store');
             Route::get('/contents/{content}/edit', [ContentAdminController::class, 'edit'])->name('contents.edit');
             Route::put('/contents/{content}', [ContentAdminController::class, 'update'])->name('contents.update');
+            Route::post('/contents/{content}/add-to-menu', [ContentAdminController::class, 'addToMenu'])->name('contents.add-to-menu');
             Route::post('/contents/{content}/autosave', [ContentAdminController::class, 'autosave'])->name('contents.autosave');
             Route::post('/contents/{content}/revisions/{revision}/restore', [ContentAdminController::class, 'restoreRevision'])->name('contents.revisions.restore');
             Route::get('/contents/{content}/revisions/compare', [ContentAdminController::class, 'compareRevisions'])->name('contents.revisions.compare');

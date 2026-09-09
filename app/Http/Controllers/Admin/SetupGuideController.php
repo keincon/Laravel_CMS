@@ -15,6 +15,7 @@ final class SetupGuideController extends Controller
         return view('admin.help.setup-guide', [
             'steps' => __('admin.setup_guide.steps'),
             'dynamicItems' => $this->linkedItems(__('admin.setup_guide.dynamic_steps')),
+            'themeItems' => $this->linkedItems(__('admin.setup_guide.theme_steps')),
             'howtoItems' => $this->linkedItems(__('admin.setup_guide.howto')),
             'canSeed' => auth()->user()?->can('manage_settings') ?? false,
             'markdownPath' => 'docs/guides/setup-japanese.md',

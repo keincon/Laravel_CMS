@@ -128,7 +128,26 @@
     </ol>
 </section>
 
-{{-- 4. How-to --}}
+{{-- 4. Create a new theme --}}
+<section class="panel mb-4">
+    <h2 class="h5 mb-2">{{ __('admin.setup_guide.theme_heading') }}</h2>
+    <p class="page-intro mb-2">{{ __('admin.setup_guide.theme_intro') }}</p>
+    <div class="alert alert-info py-2 small mb-3">{{ __('admin.setup_guide.theme_note') }}</div>
+
+    <ol class="setup-guide-list mb-0 ps-3">
+        @foreach ($themeItems as $index => $item)
+            <li class="mb-4">
+                <h3 class="h6 mb-2">{{ $index + 1 }}. {{ $item['title'] }}</h3>
+                <div class="text-body mb-2" style="white-space: pre-line">{{ $item['body'] }}</div>
+                @if ($item['url'])
+                    <a class="btn btn-sm btn-outline-primary" href="{{ $item['url'] }}">{{ $item['button'] }}</a>
+                @endif
+            </li>
+        @endforeach
+    </ol>
+</section>
+
+{{-- 5. How-to --}}
 <section class="panel mb-4">
     <h2 class="h5 mb-2">{{ __('admin.setup_guide.howto_heading') }}</h2>
     <p class="page-intro mb-3">{{ __('admin.setup_guide.howto_intro') }}</p>

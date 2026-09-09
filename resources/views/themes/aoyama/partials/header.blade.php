@@ -1,5 +1,5 @@
 @php
-    $menu = \App\Models\Menu::query()
+    $primaryMenu = \App\Models\Menu::query()
         ->where(function ($q) {
             $q->where('slug', 'primary')->orWhere('location', 'primary');
         })
@@ -8,25 +8,27 @@
         ])
         ->first();
 
-    $itemUrl = static function ($item): string {
-        if (! empty($item->url)) {
-            return $item->url;
-        }
-        if ($item->page) {
-            return url('/'.$item->page->slug);
-        }
-
-        return '#';
-    };
+    $utilityMenu = \App\Models\Menu::query()
+        ->where('slug', 'utility')
+        ->with([
+            'items' => fn ($q) => $q->whereNull('parent_id')->orderBy('sort_order')->with('page'),
+        ])
+        ->first();
 @endphp
 
 <header class="ao-header">
     <div class="ao-util">
         <div class="ao-container ao-util-inner">
-            <a class="is-alert" href="{{ url('/support-userguide-funshitsu-php') }}">カード紛失・盗難</a>
-            <a href="{{ url('/news') }}">お知らせ</a>
-            <a href="{{ url('/company-about') }}">企業情報</a>
-            <a href="{{ url('/faq') }}">FAQ</a>
+            @if ($utilityMenu && $utilityMenu->items->isNotEmpty())
+                @foreach ($utilityMenu->items as $utilItem)
+                    <a @if ($loop->first) class="is-alert" @endif href="{{ $utilItem->href() }}">{{ $utilItem->title }}</a>
+                @endforeach
+            @else
+                <a class="is-alert" href="{{ url('/support-userguide-funshitsu-php') }}">カード紛失・盗難</a>
+                <a href="{{ url('/news') }}">お知らせ</a>
+                <a href="{{ url('/company-about') }}">企業情報</a>
+                <a href="{{ url('/faq') }}">FAQ</a>
+            @endif
         </div>
     </div>
 
@@ -56,10 +58,10 @@
             </button>
 
             <ul class="ao-nav" id="ao-primary-nav" role="list">
-                @if ($menu && $menu->items->isNotEmpty())
-                    @foreach ($menu->items as $item)
+                @if ($primaryMenu && $primaryMenu->items->isNotEmpty())
+                    @foreach ($primaryMenu->items as $item)
                         <li>
-                            <a href="{{ $itemUrl($item) }}">
+                            <a href="{{ $item->href() }}">
                                 {{ $item->title }}
                                 @if ($item->children->isNotEmpty())
                                     <span class="ao-caret" aria-hidden="true">▼</span>
@@ -69,7 +71,7 @@
                                 <ul class="ao-dropdown" role="list">
                                     @foreach ($item->children as $child)
                                         <li>
-                                            <a href="{{ $itemUrl($child) }}">{{ $child->title }}</a>
+                                            <a href="{{ $child->href() }}">{{ $child->title }}</a>
                                         </li>
                                     @endforeach
                                 </ul>
@@ -78,10 +80,10 @@
                     @endforeach
                 @else
                     <li><a href="{{ url('/card') }}">カードをつくる</a></li>
-                    <li><a href="{{ url('/service') }}">サービス・特典</a></li>
-                    <li><a href="{{ url('/cashless') }}">キャッシング</a></li>
+                    <li><a href="{{ url('/used') }}">サービス・特典</a></li>
+                    <li><a href="{{ url('/cashing') }}">キャッシング</a></li>
                     <li><a href="{{ url('/campaign') }}">キャンペーン</a></li>
-                    <li><a href="{{ url('/membership') }}">カード会員の方</a></li>
+                    <li><a href="{{ url('/support') }}">カード会員の方</a></li>
                 @endif
             </ul>
         </div>

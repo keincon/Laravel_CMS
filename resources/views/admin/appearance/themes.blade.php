@@ -24,6 +24,8 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
 
+<x-admin.help-next context="themes" />
+
 <div class="panel mb-4">
     <h2 class="h6">Theme vs pack</h2>
     <ul class="mb-0 small">

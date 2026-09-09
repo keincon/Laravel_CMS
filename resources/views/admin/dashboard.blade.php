@@ -4,9 +4,11 @@
 
 @section('content')
 <p class="page-intro mb-3">{{ __('admin.dashboard.at_a_glance') }}</p>
-<p class="mb-4">
+<p class="mb-3">
     <a class="btn btn-outline-primary btn-sm" href="{{ route('admin.help.setup-guide') }}">{{ __('admin.dashboard.setup_guide') }}</a>
 </p>
+
+<x-admin.help-next context="dashboard" />
 
 <div class="stat-grid mb-4">
     <div class="stat-card">
@@ -17,7 +19,7 @@
     <div class="stat-card">
         <div class="label">{{ __('admin.dashboard.pages') }}</div>
         <div class="value">{{ $stats['pages'] }}</div>
-        <div class="hint"><a href="{{ route('admin.pages.index') }}">{{ __('admin.dashboard.manage_pages') }}</a></div>
+                        <div class="hint"><a href="{{ route('admin.contents.index', ['type' => 'page']) }}">{{ __('admin.dashboard.manage_pages') }}</a></div>
     </div>
     <div class="stat-card">
         <div class="label">{{ __('admin.dashboard.comments') }}</div>

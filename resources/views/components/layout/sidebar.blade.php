@@ -113,12 +113,12 @@
                     @php
                         $menuId = (int) ($widget->settings['menu_id'] ?? 0);
                         $menu = $menuId
-                            ? \App\Models\Menu::query()->with('items')->find($menuId)
-                            : \App\Models\Menu::query()->with('items')->first();
+                            ? \App\Models\Menu::query()->with('items.page')->find($menuId)
+                            : \App\Models\Menu::query()->with('items.page')->first();
                     @endphp
                     <ul style="list-style:none;padding:0;margin:0">
                         @foreach (($menu?->items ?? collect()) as $item)
-                            <li style="margin-bottom:.35rem"><a href="{{ $item->url }}">{{ $item->title }}</a></li>
+                            <li style="margin-bottom:.35rem"><a href="{{ $item->href() }}">{{ $item->title }}</a></li>
                         @endforeach
                     </ul>
                     @break
