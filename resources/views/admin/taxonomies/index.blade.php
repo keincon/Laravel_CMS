@@ -9,13 +9,20 @@
 </div>
 <div class="panel">
     <table class="table mb-0">
-        <thead><tr><th>Name</th><th>Slug</th><th>Hierarchical</th><th>Terms</th></tr></thead>
+        <thead>
+            <tr>
+                <th>{{ __('admin.taxonomies.col_name') }}</th>
+                <th>{{ __('admin.taxonomies.col_slug') }}</th>
+                <th>{{ __('admin.taxonomies.col_hierarchical') }}</th>
+                <th>{{ __('admin.taxonomies.col_terms') }}</th>
+            </tr>
+        </thead>
         <tbody>
             @foreach ($taxonomies as $taxonomy)
                 <tr>
-                    <td><a href="{{ route('admin.taxonomies.show', $taxonomy) }}">{{ $taxonomy->plural_label }}</a></td>
+                    <td><a href="{{ route('admin.taxonomies.show', $taxonomy) }}">{{ $taxonomy->displayPluralLabel() }}</a></td>
                     <td><code>{{ $taxonomy->slug }}</code></td>
-                    <td>{{ $taxonomy->hierarchical ? 'Yes' : 'No' }}</td>
+                    <td>{{ $taxonomy->hierarchical ? __('admin.ui.yes') : __('admin.ui.no') }}</td>
                     <td>{{ $taxonomy->terms_count }}</td>
                 </tr>
             @endforeach

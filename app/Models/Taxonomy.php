@@ -55,6 +55,14 @@ class Taxonomy extends Model
         return $this->hasMany(Term::class);
     }
 
+    public function displayPluralLabel(): string
+    {
+        $key = 'admin.taxonomies.labels.'.$this->slug;
+        $translated = __($key);
+
+        return $translated !== $key ? $translated : (string) $this->plural_label;
+    }
+
     /**
      * @return list<array<string, mixed>>
      */

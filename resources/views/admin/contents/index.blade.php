@@ -3,7 +3,10 @@
 @section('title', $type->plural_label)
 
 @section('content')
-@php $isPageType = $isPageType ?? ($type->slug === 'page'); @endphp
+@php
+    $isPageType = $isPageType ?? ($type->slug === 'page');
+    $permalinks = app(\App\Services\PermalinkService::class);
+@endphp
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <div>
         <h1 class="h3 mb-1">{{ $type->plural_label }}</h1>
@@ -14,6 +17,7 @@
                 {{ __('admin.contents.intro', ['slug' => $type->slug]) }}
             @endif
         </p>
+        <p class="small text-muted mb-0 mt-1">{{ __('admin.contents.list_hint') }}</p>
     </div>
     <a class="btn btn-primary" href="{{ route('admin.contents.create', ['type' => $type->slug]) }}">{{ __('admin.contents.add_new') }}</a>
 </div>
@@ -70,7 +74,7 @@
         <div class="empty-state">{{ __('admin.contents.no_content') }} <a href="{{ route('admin.contents.create', ['type' => $type->slug]) }}">{{ __('admin.contents.create_one') }}</a>.</div>
     @else
         <div class="table-responsive">
-            <table class="table mb-0 align-middle">
+            <table class="table mb-0 align-middle contents-list-table">
                 <thead>
                     <tr>
                         <th>{{ __('admin.contents.title_label') }}</th>
@@ -82,19 +86,26 @@
                         @endif
                         <th>{{ __('admin.contents.status') }}</th>
                         <th>{{ __('admin.contents.updated') }}</th>
-                        @if ($isPageType)
-                            <th></th>
-                        @endif
+                        <th class="text-end">{{ __('admin.contents.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($contents as $item)
                         @php
-                            $path = '/'.ltrim((string) $item->slug, '/');
-                            $inMenu = $isPageType && in_array($path, $menuPaths ?? [], true);
+                            $editUrl = route('admin.contents.edit', $item);
+                            $path = '/'.ltrim($permalinks->contentPath($item), '/');
+                            $statusKey = $item->status instanceof \BackedEnum ? $item->status->value : (string) $item->status;
+                            $statusLabel = __('admin.contents.'.$statusKey);
+                            if ($statusLabel === 'admin.contents.'.$statusKey) {
+                                $statusLabel = $statusKey;
+                            }
+                            $inMenu = $isPageType && in_array($path === '/' ? '/' : $path, $menuPaths ?? [], true);
                         @endphp
-                        <tr>
-                            <td><a class="fw-semibold" href="{{ route('admin.contents.edit', $item) }}">{{ $item->title }}</a></td>
+                        <tr class="contents-list-row" style="cursor:pointer" onclick="if(!event.target.closest('a,button,form,select,input')) window.location='{{ $editUrl }}'">
+                            <td>
+                                <a class="fw-semibold text-decoration-underline" href="{{ $editUrl }}">{{ $item->title }}</a>
+                                <div class="small text-muted">{{ __('admin.contents.click_to_edit') }}</div>
+                            </td>
                             @if ($isPageType)
                                 <td><code>{{ $path }}</code></td>
                                 <td>
@@ -107,24 +118,25 @@
                             @else
                                 <td>{{ $item->author?->publicName() ?? '—' }}</td>
                             @endif
-                            <td>{{ $item->status instanceof \BackedEnum ? $item->status->value : $item->status }}</td>
+                            <td><span class="badge text-bg-light border">{{ $statusLabel }}</span></td>
                             <td>{{ $item->updated_at?->diffForHumans() }}</td>
-                            @if ($isPageType)
-                                <td class="text-end text-nowrap">
-                                    <a class="btn btn-sm btn-outline-secondary" href="{{ url($path) }}" target="_blank" rel="noopener">{{ __('admin.contents.view_page') }}</a>
-                                    @if (! $inMenu && ($menus ?? collect())->isNotEmpty())
-                                        <form method="POST" action="{{ route('admin.contents.add-to-menu', $item) }}" class="d-inline-flex gap-1 align-items-center ms-1">
-                                            @csrf
-                                            <select name="menu_id" class="form-select form-select-sm" style="width:auto;max-width:140px" required>
-                                                @foreach ($menus as $menu)
-                                                    <option value="{{ $menu->id }}" @selected($menu->slug === 'primary' || $menu->location === 'primary')>{{ $menu->name }}</option>
-                                                @endforeach
-                                            </select>
-                                            <button class="btn btn-sm btn-outline-primary" type="submit">{{ __('admin.contents.add_to_menu_short') }}</button>
-                                        </form>
-                                    @endif
-                                </td>
-                            @endif
+                            <td class="text-end text-nowrap" onclick="event.stopPropagation()">
+                                <a class="btn btn-sm btn-primary" href="{{ $editUrl }}">{{ __('admin.contents.edit') }}</a>
+                                @if ($statusKey === 'published' || $statusKey === 'publish')
+                                    <a class="btn btn-sm btn-outline-secondary" href="{{ url($path) }}" target="_blank" rel="noopener">{{ __('admin.contents.view') }}</a>
+                                @endif
+                                @if ($isPageType && ! $inMenu && ($menus ?? collect())->isNotEmpty())
+                                    <form method="POST" action="{{ route('admin.contents.add-to-menu', $item) }}" class="d-inline-flex gap-1 align-items-center ms-1">
+                                        @csrf
+                                        <select name="menu_id" class="form-select form-select-sm" style="width:auto;max-width:140px" required>
+                                            @foreach ($menus as $menu)
+                                                <option value="{{ $menu->id }}" @selected($menu->slug === 'primary' || $menu->location === 'primary')>{{ $menu->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <button class="btn btn-sm btn-outline-primary" type="submit">{{ __('admin.contents.add_to_menu_short') }}</button>
+                                    </form>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -134,3 +146,10 @@
     @endif
 </div>
 @endsection
+
+@push('head')
+<style>
+    .contents-list-row:hover { background: var(--admin-hover, #f8fafc); }
+    .contents-list-table a.fw-semibold { color: var(--admin-primary, #2563eb); }
+</style>
+@endpush

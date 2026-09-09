@@ -527,6 +527,10 @@ return [
         'posts' => '投稿',
         'pages' => '固定ページ',
         'intro' => 'LaravelPress汎用コンテンツ（:slug）。',
+        'list_hint' => 'タイトルまたは「編集」ボタンをクリックすると編集画面が開きます。',
+        'click_to_edit' => 'クリックして編集',
+        'actions' => '操作',
+        'view' => '表示',
         'pages_intro' => '固定ページは /about や /card のような公開URLです。作成 → 公開 → 必要ならメニューに追加。',
         'pages_step_1' => '「新規追加」でタイトルとスラッグ（＝URL）を決めます。',
         'pages_step_2' => '本文を書き、テンプレートを選び、「公開」します。',
@@ -1070,9 +1074,25 @@ return [
     ],
 
     'taxonomies' => [
-        'intro' => 'LaravelPress汎用タクソノミー（category、tag、カスタム）。',
+        'intro' => 'LaravelPress汎用タクソノミー（カテゴリー、タグ、カスタム）。',
         'all' => 'すべてのタクソノミー',
         'confirm_delete_term' => 'タームを削除しますか？',
+        'col_name' => '名前',
+        'col_slug' => 'スラッグ',
+        'col_hierarchical' => '階層型',
+        'col_terms' => 'ターム数',
+        'add_term' => 'タームを追加',
+        'add_term_button' => 'タームを追加',
+        'description' => '説明',
+        'parent' => '親',
+        'none_parent' => '— なし —',
+        'child_of' => ':name の子',
+        'empty_terms' => 'タームはまだありません。',
+        'labels' => [
+            'category' => 'カテゴリー',
+            'post_tag' => 'タグ',
+            'tag' => 'タグ',
+        ],
     ],
 
     'tokens' => [
